@@ -3,11 +3,11 @@ using MCGalaxy;
 using MCGalaxy.Events;
 using MCGalaxy.Events.PlayerEvents;
 
-namespace PluginLockedModel {    
+namespace PluginLockedModel {
     public sealed class Core : Plugin_Simple {
-        public override string creator { get { return "Not UnknownShadow200"; } }
+        public override string creator { get { return "UnknownShadow200"; } }
         public override string name { get { return "LockedModel"; } }
-        public override string MCGalaxy_Version { get { return "1.9.0.1"; } }
+        public override string MCGalaxy_Version { get { return Server.VersionString; } } // evil
         
         public override void Load(bool startup) {
             OnSendingMotdEvent.Register(OnSendMOTD, Priority.Low);
@@ -22,50 +22,56 @@ namespace PluginLockedModel {
         void OnSendMOTD(Player p, byte[] motdPacket) {
             string[] models = GetLockedModels(p.level.GetMotd(p));
             const string key = "US200.LockedModel.Model";
+            // Model user had before joining a level with locked model
+            string originalModel = p.Extras.GetString(key);
             
             if (models == null) {
-                // Model user had before joining a level with locked model
-                string originalModel = p.Extras.GetString(key);
+                // Restore the model back to user's original model
                 if (originalModel == null) return;
-
-                // Restore the model back
                 p.Extras.Remove(key);
                 p.ScaleX = (float)p.Extras.Get(key + "_X");
                 p.ScaleY = (float)p.Extras.Get(key + "_Y");
                 p.ScaleZ = (float)p.Extras.Get(key + "_Z");
                 Entities.UpdateModel(p, originalModel);
-            } else if (!ContainsCaseless(models, p.Model)) {
-                // Switch user to the level's locked model
-                string currentModel = p.Model;
-                float curX = p.ScaleX, curY = p.ScaleY, curZ = p.ScaleZ;               
-                p.ScaleX = 0; p.ScaleY = 0; p.ScaleZ = 0;
-                Entities.UpdateModel(p, models[0]);
-                
-                // Don't overwrite model user had before joining a level with locked model
-                string originalModel = p.Extras.GetString(key);
-                if (originalModel != null) return;
-                
-                p.Extras.PutString(key, currentModel);
-                p.Extras[key + "_X"] = curX;
-                p.Extras[key + "_Y"] = curY;
-                p.Extras[key + "_Z"] = curZ;
+                return;
             }
+            
+            
+            string currentModel = p.Model;
+            float curX = p.ScaleX, curY = p.ScaleY, curZ = p.ScaleZ;
+            p.ScaleX = 0; p.ScaleY = 0; p.ScaleZ = 0;
+            
+            if (models.CaselessContains(p.Model)) {
+                // Still want to reset X/Y/Z per axis model scaling
+                Entities.UpdateModel(p, p.Model);
+            } else {
+                // Switch user to the level's locked model
+                Entities.UpdateModel(p, models[0]);
+            }
+
+            // Don't overwrite model user had before joining a level with locked model
+            if (originalModel != null) return;
+            p.Extras.PutString(key, currentModel);
+            p.Extras[key + "_X"] = curX;
+            p.Extras[key + "_Y"] = curY;
+            p.Extras[key + "_Z"] = curZ;
         }
         
         void OnPlayerCommand(Player p, string cmd, string args) {
             if (!(cmd == "model" || cmd == "mymodel")) return;
-            if (args.IndexOf(' ') >= 0) return; // using model on another player or bot
+            if (args.CaselessStarts("bot ")) return; // using model on bot
             
             string[] models = GetLockedModels(p.level.GetMotd(p));
             if (models == null) return;
             
-            if (!ContainsCaseless(models, args)) {
+            if (!models.CaselessContains(args)) {
                 Player.Message(p, "&cYou may only change your own model to: %S{0}", models.Join());
                 p.cancelcommand = true;
             }
         }
         
-        
+        // reuse single instance to minimise mem allocations
+        static char[] splitChars = new char[] { ',' };
         static string[] GetLockedModels(string motd) {
             // Does the motd have 'model=' in it?
             int index = motd.IndexOf("model=");
@@ -79,16 +85,6 @@ namespace PluginLockedModel {
             // Is there an actual word after 'model='?
             if (motd.Length == 0) return null;
             return motd.Split(splitChars);
-        }
-                
-        // reuse single instance to minimise mem allocations
-        static char[] splitChars = new char[] { ',' };
-        
-        static bool ContainsCaseless(string[] a, string b) {
-            for (int i = 0; i < a.Length; i++) {
-                if (a[i].CaselessEq(b)) return true;
-            }
-            return false;
         }
     }
 }
