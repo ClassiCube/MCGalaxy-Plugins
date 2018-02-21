@@ -5,9 +5,9 @@ using MCGalaxy.Events.PlayerEvents;
 
 namespace PluginLockedModel {
     public sealed class Core : Plugin_Simple {
-        public override string creator { get { return "UnknownShadow200"; } }
+        public override string creator { get { return "Not UnknownShadow200"; } }
         public override string name { get { return "LockedModel"; } }
-        public override string MCGalaxy_Version { get { return Server.VersionString; } } // evil
+        public override string MCGalaxy_Version { get { return "1.9.0.1"; } }
         
         public override void Load(bool startup) {
             OnSendingMotdEvent.Register(OnSendMOTD, Priority.Low);
