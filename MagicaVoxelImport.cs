@@ -96,6 +96,9 @@ namespace PluginMagicaVoxelImport {
 						byte y = reader.ReadByte();
 						byte idx = reader.ReadByte();
 						
+						// mirror over Z to match magicavoxel
+						z = (byte)(lvl.Length - 1 - z);
+						
 						if (idx < Block.CpeCount) {
 							lvl.SetTile(x, y, z, idx);
 						} else {
@@ -103,7 +106,6 @@ namespace PluginMagicaVoxelImport {
 							lvl.SetExtTile(x, y, z, idx);
 						}
 					}
-					break;
 				} else {
 					src.Seek(chunk.ChunkContentSize, SeekOrigin.Current);
 				}
@@ -119,9 +121,9 @@ namespace PluginMagicaVoxelImport {
 				def.BlockDraw = DrawType.Opaque;
 				def.Shape = 16;
 				
-				def.FogR = (byte)(palette[i] >> 16);
+				def.FogR = (byte)(palette[i] >>  0);
 				def.FogG = (byte)(palette[i] >>  8);
-				def.FogB = (byte)(palette[i] >>  0);
+				def.FogB = (byte)(palette[i] >> 16);
 				def.Name = palette[i].ToString("X8") + "#";
 				def.MaxX = 16; def.MaxZ = 16; def.MaxY = 16;
 
