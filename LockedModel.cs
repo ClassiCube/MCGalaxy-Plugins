@@ -7,7 +7,7 @@ namespace PluginLockedModel {
     public sealed class Core : Plugin_Simple {
         public override string creator { get { return "Not UnknownShadow200"; } }
         public override string name { get { return "LockedModel"; } }
-        public override string MCGalaxy_Version { get { return "1.9.0.1"; } }
+        public override string MCGalaxy_Version { get { return "1.9.0.7"; } }
         
         public override void Load(bool startup) {
             OnSendingMotdEvent.Register(OnSendMOTD, Priority.Low);
@@ -19,7 +19,7 @@ namespace PluginLockedModel {
             OnPlayerCommandEvent.Unregister(OnPlayerCommand);
         }
         
-        void OnSendMOTD(Player p, byte[] motdPacket) {
+        void OnSendMOTD(Player p, ref string motd) {
             string[] models = GetLockedModels(p.level.GetMotd(p));
             const string key = "US200.LockedModel.Model";
             // Model user had before joining a level with locked model
@@ -57,7 +57,7 @@ namespace PluginLockedModel {
             p.Extras[key + "_Z"] = curZ;
         }
         
-        void OnPlayerCommand(Player p, string cmd, string args) {
+        void OnPlayerCommand(Player p, string cmd, string args, CommandData data) {
             if (!(cmd == "model" || cmd == "mymodel")) return;
             if (args.CaselessStarts("bot ")) return; // using model on bot
             
@@ -65,7 +65,7 @@ namespace PluginLockedModel {
             if (models == null) return;
             
             if (!models.CaselessContains(args)) {
-                Player.Message(p, "&cYou may only change your own model to: %S{0}", models.Join());
+                p.Message("&cYou may only change your own model to: %S{0}", models.Join());
                 p.cancelcommand = true;
             }
         }
