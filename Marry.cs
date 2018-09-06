@@ -6,11 +6,11 @@ using MCGalaxy.DB;
 namespace Core {
 	public sealed class MarryPlugin : Plugin_Simple {
 		public override string name { get { return "marryplugin"; } }
-		public override string creator { get { return "UnknownShadow200"; } }
+		public override string creator { get { return ""; } }
 		public override string welcome { get { return ""; } }
 		public override string MCGalaxy_Version { get { return "1.9.0.7"; } }
 		
-		public const string ExtraName = "US200_Marry_Name";
+		public const string ExtraName = "__Marry_Name";
 		public static PlayerExtList marriages;	
 		static OnlineStatPrinter onlineLine;
 		static OfflineStatPrinter offlineLine;
