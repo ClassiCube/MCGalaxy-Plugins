@@ -36,14 +36,14 @@ namespace MCGalaxy.Commands.CPE {
         	// Sort block definitions by inventory position           
         	List<BlockDefinition> defs = new List<BlockDefinition>();
         	foreach (BlockDefinition def in globalDefs) {
-        		if (def == null || def.InventoryOrder == 255) continue;
+        		if (def == null || def.InventoryOrder == 0) continue;
         		defs.Add(def);
         	}
         	defs.Sort((a, b) => Order(a).CompareTo(Order(b)));
         	int srcOrder = Order(globalDefs[src]);
         	int dstOrder = Order(globalDefs[dst]);
         	
-        	// Shift all following block definitions after target down by one position
+        	// Shift all following block definitions after source down by one position
         	// A B C s X Y Z --> A B C X Y Z
         	for (int i = defs.Count - 1; i >= 0; i--) {
         		if (Order(defs[i]) < srcOrder) break;
@@ -51,12 +51,13 @@ namespace MCGalaxy.Commands.CPE {
         	}
         	
         	// Shift all following block definitions after target up by one position
-        	// A B C d X Y Z --> A B C - d X Y Z
+        	// A B C t X Y Z --> A B C - t X Y Z
         	for (int i = defs.Count - 1; i >= 0; i--) {
         		if (Order(defs[i]) < dstOrder) break;
         		defs[i].InventoryOrder = Order(defs[i]) + 1;
         	}
         	
+            // Insert source into spare slot just before target
         	globalDefs[src].InventoryOrder = dstOrder;
         	BlockDefinition.UpdateOrder(globalDefs[src], true, null);
         	BlockDefinition.Save(true, null);
@@ -64,7 +65,7 @@ namespace MCGalaxy.Commands.CPE {
         }
         
         static int Order(BlockDefinition def) {
-        	return def.InventoryOrder == -1 ? def.BlockID : def.InventoryOrder;
+        	return def.InventoryOrder == -1 ? def.RawID : def.InventoryOrder;
         }
 
         public override void Help(Player p) {
