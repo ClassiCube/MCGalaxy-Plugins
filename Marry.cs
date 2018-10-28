@@ -124,7 +124,7 @@ namespace Core {
 			if (marriedTo == null) { p.Message("You are not married to anyone."); return; }
 			
 			if (p.money < 50) {
-				p.Message("You need at least 50 &3{0} %Sto divorce your partner.", ServerConfig.Currency); return;
+				p.Message("You need at least 50 &3{0} %Sto divorce your partner.", Server.Config.Currency); return;
 			}
 			p.SetMoney(p.money - 50);
 			
@@ -142,7 +142,7 @@ namespace Core {
 		public override void Help(Player p) {
 			p.Message("%T/Divorce");
 			p.Message("%HLeaves the player you are currently married to.");
-            p.Message("  %HCosts 50 &3" + ServerConfig.Currency);
+            p.Message("  %HCosts 50 &3" + Server.Config.Currency);
 		}
 	}
 
@@ -157,7 +157,7 @@ namespace Core {
 			}
 			
 			if (p.money < 200) {
-                p.Message("You need at least 200 &3{0} %Sto marry someone.", ServerConfig.Currency); return;
+                p.Message("You need at least 200 &3{0} %Sto marry someone.", Server.Config.Currency); return;
 			}
 			
 			Player partner = PlayerInfo.FindMatches(p, message);
@@ -182,7 +182,7 @@ namespace Core {
 		public override void Help(Player p) {
 			p.Message("%T/Marry [player]");
 			p.Message("%HProposes to the given player.");
-            p.Message(" % HCosts 200 &3" + ServerConfig.Currency);
+            p.Message(" % HCosts 200 &3" + Server.Config.Currency);
 		}
 	}	
 }
