@@ -1,4 +1,3 @@
-
 using System;
 using MCGalaxy;
 
@@ -9,7 +8,7 @@ namespace MyCommandThingy {
         public override LevelPermission defaultRank { get { return LevelPermission.Nobody; } }
 
         public override void Use(Player p, string message) {
-        	Server.SoftwareName = message;
+        	Server.SoftwareName = Colors.Escape(message);
         }
 
         public override void Help(Player p) {
