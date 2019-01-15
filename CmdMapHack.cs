@@ -16,7 +16,7 @@ namespace MCGalaxy {
 		public override void Use(Player p, string message, CommandData data) {
 			if (!hooked) { // not thread-safe but meh
 				OnSentMapEvent.Register(HandleOnSentMap, Priority.High);
-				OnSendingMotdEvent.Register(HandleSendingMotd, Priority.High);
+				OnGettingMotdEvent.Register(HandleSendingMotd, Priority.High);
 				hooked = true;
 			}
 
@@ -37,13 +37,13 @@ namespace MCGalaxy {
 			Player.Message(p, "%HHacks bypassing reset, use %T/MapHack %Hto turn on again");
 		}
 		
-		void HandleSendingMotd(Player p, ref string motd) {
+		void HandleGettingMotd(Player p, ref string motd) {
 			if (!p.Extras.GetBoolean(ext_allowed_key)) return;
 			motd = "+hax";
 		}
 		
 		public override void Help(Player p) {
-			Player.Message(p, "%T/MapHack %H");
+			Player.Message(p, "%T/MapHack");
 			Player.Message(p, "%HLets you bypass hacks restrictions on your own map");
 			Player.Message(p, "%H  (e.g. for when making a parkour map with -hax on)");
 		}
