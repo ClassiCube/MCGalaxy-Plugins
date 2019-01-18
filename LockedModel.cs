@@ -10,17 +10,17 @@ namespace PluginLockedModel {
         public override string MCGalaxy_Version { get { return "1.9.1.2"; } }
         
         public override void Load(bool startup) {
-            OnGettingMotdEvent.Register(OnSendMOTD, Priority.Low);
+            OnGettingMotdEvent.Register(HandleGettingMOTD, Priority.Low);
             OnPlayerCommandEvent.Register(OnPlayerCommand, Priority.Low);
         }
         
         public override void Unload(bool shutdown) {
-            OnGettingMotdEvent.Unregister(OnSendMOTD);
+            OnGettingMotdEvent.Unregister(HandleGettingMOTD);
             OnPlayerCommandEvent.Unregister(OnPlayerCommand);
         }
         
-        void OnSendMOTD(Player p, ref string motd) {
-        	string[] models = GetLockedModels(p.GetMotd());
+        void HandleGettingMOTD(Player p, ref string motd) {
+        	string[] models = GetLockedModels(motd);
             const string key = "US200.LockedModel.Model";
             // Model user had before joining a level with locked model
             string originalModel = p.Extras.GetString(key);
