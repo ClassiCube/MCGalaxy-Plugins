@@ -16,7 +16,7 @@ namespace MCGalaxy {
 		public override void Use(Player p, string message, CommandData data) {
 			if (!hooked) { // not thread-safe but meh
 				OnSentMapEvent.Register(HandleOnSentMap, Priority.High);
-				OnGettingMotdEvent.Register(HandleSendingMotd, Priority.High);
+				OnGettingMotdEvent.Register(HandleGettingMotd, Priority.High);
 				hooked = true;
 			}
 
