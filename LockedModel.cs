@@ -7,20 +7,20 @@ namespace PluginLockedModel {
     public sealed class Core : Plugin_Simple {
         public override string creator { get { return "Not UnknownShadow200"; } }
         public override string name { get { return "LockedModel"; } }
-        public override string MCGalaxy_Version { get { return "1.9.0.7"; } }
+        public override string MCGalaxy_Version { get { return "1.9.1.2"; } }
         
         public override void Load(bool startup) {
-            OnSendingMotdEvent.Register(OnSendMOTD, Priority.Low);
+            OnGettingMotdEvent.Register(OnSendMOTD, Priority.Low);
             OnPlayerCommandEvent.Register(OnPlayerCommand, Priority.Low);
         }
         
         public override void Unload(bool shutdown) {
-            OnSendingMotdEvent.Unregister(OnSendMOTD);
+            OnGettingMotdEvent.Unregister(OnSendMOTD);
             OnPlayerCommandEvent.Unregister(OnPlayerCommand);
         }
         
         void OnSendMOTD(Player p, ref string motd) {
-            string[] models = GetLockedModels(p.level.GetMotd(p));
+        	string[] models = GetLockedModels(p.GetMotd());
             const string key = "US200.LockedModel.Model";
             // Model user had before joining a level with locked model
             string originalModel = p.Extras.GetString(key);
@@ -61,7 +61,7 @@ namespace PluginLockedModel {
             if (!(cmd == "model" || cmd == "mymodel")) return;
             if (args.CaselessStarts("bot ")) return; // using model on bot
             
-            string[] models = GetLockedModels(p.level.GetMotd(p));
+            string[] models = GetLockedModels(p.GetMotd());
             if (models == null) return;
             
             if (!models.CaselessContains(args)) {
