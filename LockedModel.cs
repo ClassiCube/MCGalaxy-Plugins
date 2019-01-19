@@ -58,7 +58,7 @@ namespace PluginLockedModel {
         }
         
         void OnPlayerCommand(Player p, string cmd, string args, CommandData data) {
-            if (!(cmd == "model" || cmd == "mymodel")) return;
+            if (!cmd.CaselessEq("model")) return;
             if (args.CaselessStarts("bot ")) return; // using model on bot
             
             string[] models = GetLockedModels(p.GetMotd());
