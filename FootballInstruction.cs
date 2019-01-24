@@ -1,10 +1,28 @@
 using System;
 using System.IO;
+using MCGalaxy.Bots;
 using MCGalaxy.Maths;
 
-namespace MCGalaxy.Bots {
+namespace MCGalaxy {
 	
-	public sealed class FootballInstruction : BotInstruction {
+	public sealed class FootballPlugin : Plugin_Simple {
+		BotInstruction ins;
+		
+		public override string name { get { return "FootballInstruction"; } }
+		public override string MCGalaxy_Version { get { return "1.9.1.1"; } }
+		public override string creator { get { return ""; } }
+		
+		public override void Load(bool startup) {
+			ins = new FootballInstruction();
+			BotInstruction.Instructions.Add(ins);
+		}
+		
+		public override void Unload(bool shutdown) {
+			BotInstruction.Instructions.Remove(ins);
+		}
+	}
+	
+	sealed class FootballInstruction : BotInstruction {
 		public FootballInstruction() { Name = "football"; }
 		
 		public override bool Execute(PlayerBot bot, InstructionData data) {
@@ -13,7 +31,7 @@ namespace MCGalaxy.Bots {
 			
 			if (bot.movementSpeed > 0) {
 				Step(bot);
-				Server.s.Log("STEP: " + bot.movementSpeed);
+				//Server.s.Log("STEP: " + bot.movementSpeed);
 				bot.movementSpeed--;
 			}
 			
