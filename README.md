@@ -7,10 +7,12 @@ Some custom command and plugins for MCGalaxy.
 - The .cs file be placed in */extra/commands/source*
 - /compile [command name]
 - /cmdload [commd name]
+- Add the command name (e.g. GBInsert) to text/cmdautoload.txt to make it load on server start.
 #### Plugins
 - The .cs file must be placed in */plugins*
 - /pcompile [plugin name]
 - /pload [plugin name]
+- Plugins automatically load on server start.
 
 ### List
 | Name | Description |
