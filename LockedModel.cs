@@ -10,12 +10,12 @@ namespace PluginLockedModel {
         public override string MCGalaxy_Version { get { return "1.9.1.2"; } }
         
         public override void Load(bool startup) {
-            OnGettingMotdEvent.Register(HandleGettingMOTD, Priority.Low);
+            OnSendingMotdEvent.Register(HandleGettingMOTD, Priority.Low);
             OnPlayerCommandEvent.Register(OnPlayerCommand, Priority.Low);
         }
         
         public override void Unload(bool shutdown) {
-            OnGettingMotdEvent.Unregister(HandleGettingMOTD);
+            OnSendingMotdEvent.Unregister(HandleGettingMOTD);
             OnPlayerCommandEvent.Unregister(OnPlayerCommand);
         }
         
