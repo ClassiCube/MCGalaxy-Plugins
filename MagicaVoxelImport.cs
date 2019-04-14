@@ -1,5 +1,4 @@
 reference Newtonsoft.Json.dll
-reference System.Core.dll
 using System;
 using System.IO;
 using System.Text;
@@ -8,12 +7,13 @@ using MCGalaxy.Blocks;
 using MCGalaxy.Levels.IO;
 using MCGalaxy.Maths;
 using Newtonsoft.Json;
+using BlockID = System.UInt16;
 
 namespace PluginMagicaVoxelImport {
 	public sealed class Core : Plugin_Simple {
 		public override string creator { get { return "UnknownShadow200"; } }
 		public override string name { get { return "MagicaVoxelImport"; } }
-		public override string MCGalaxy_Version { get { return "1.8.9.8"; } }
+		public override string MCGalaxy_Version { get { return "1.9.1.0"; } } 
 		
 		IMapImporter importer;
 		public override void Load(bool startup) {
@@ -29,6 +29,7 @@ namespace PluginMagicaVoxelImport {
 	public sealed class VoxImporter : IMapImporter {
 
 		public override string Extension { get { return ".vox"; } }
+		public override string Description { get { return "MagicaVoxel map"; } }
 
 		public override Vec3U16 ReadDimensions(Stream src) {
 			throw new NotSupportedException();
@@ -114,7 +115,7 @@ namespace PluginMagicaVoxelImport {
 			
 			for (int i = 1; i <= 255; i++) {
 				BlockDefinition def = new BlockDefinition();
-				def.BlockID = (byte)i;
+				def.RawID = (BlockID)i;
 				def.CollideType = CollideType.Solid;
 				def.BlocksLight = false;
 				def.Speed = 1.0f;
@@ -126,9 +127,7 @@ namespace PluginMagicaVoxelImport {
 				def.FogB = (byte)(palette[i] >> 16);
 				def.Name = palette[i].ToString("X8") + "#";
 				def.MaxX = 16; def.MaxZ = 16; def.MaxY = 16;
-
-				def.Version2 = true;
-				lvl.UpdateCustomBlock(def.BlockID, def);
+				lvl.UpdateCustomBlock(def.RawID, def);
 			}
 			SaveBlockDefs(lvl);
 			lvl.Config.EdgeLevel = 0;
