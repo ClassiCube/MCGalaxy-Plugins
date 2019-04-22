@@ -1,4 +1,3 @@
-reference Newtonsoft.Json.dll
 using System;
 using System.IO;
 using System.Text;
@@ -6,7 +5,6 @@ using MCGalaxy;
 using MCGalaxy.Blocks;
 using MCGalaxy.Levels.IO;
 using MCGalaxy.Maths;
-using Newtonsoft.Json;
 using BlockID = System.UInt16;
 
 namespace PluginMagicaVoxelImport {
@@ -129,7 +127,7 @@ namespace PluginMagicaVoxelImport {
 				def.MaxX = 16; def.MaxZ = 16; def.MaxY = 16;
 				lvl.UpdateCustomBlock(def.RawID, def);
 			}
-			SaveBlockDefs(lvl);
+			BlockDefinition.Save(false, lvl);
 			lvl.Config.EdgeLevel = 0;
 			lvl.Config.Terrain = "https://i.imgur.com/kuuDIkw.png";
 			return lvl;
@@ -148,12 +146,5 @@ namespace PluginMagicaVoxelImport {
 				return c;
 			}
 		}
-
-        void SaveBlockDefs(Level lvl) {
-            BlockDefinition[] defs = lvl.CustomBlockDefs;
-            string json = JsonConvert.SerializeObject(defs, Formatting.Indented);
-            string path = "blockdefs/lvl_" + lvl.MapName + ".json";
-            File.WriteAllText(path, json);
-        }
 	}
 }
