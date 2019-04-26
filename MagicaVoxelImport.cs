@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using MCGalaxy;
@@ -6,12 +7,13 @@ using MCGalaxy.Blocks;
 using MCGalaxy.Levels.IO;
 using MCGalaxy.Maths;
 using BlockID = System.UInt16;
+using AttribsDict = System.Collections.Generic.Dictionary<string, string>;
 
 namespace PluginMagicaVoxelImport {
 	public sealed class Core : Plugin_Simple {
 		public override string creator { get { return "UnknownShadow200"; } }
 		public override string name { get { return "MagicaVoxelImport"; } }
-		public override string MCGalaxy_Version { get { return "1.9.1.0"; } } 
+		public override string MCGalaxy_Version { get { return "1.9.1.0"; } }
 		
 		IMapImporter importer;
 		public override void Load(bool startup) {
@@ -33,11 +35,51 @@ namespace PluginMagicaVoxelImport {
 			throw new NotSupportedException();
 		}
 		
+		
+		// data reading stuff
+		struct Chunk {
+			public string FourCC;
+			public int ChunkContentSize;
+			public int ChildChunkContentSize;
+		}
+		
+		static Chunk ReadChunk(BinaryReader reader) {
+			Chunk c;
+			c.FourCC = ReadFourCC(reader);
+			c.ChunkContentSize = reader.ReadInt32();
+			c.ChildChunkContentSize = reader.ReadInt32();
+			return c;
+		}
+		
 		static string ReadFourCC(BinaryReader reader) {
 			byte[] bytes = reader.ReadBytes(4);
 			return Encoding.ASCII.GetString(bytes);
 		}
 		
+		static void ReadNode(BinaryReader reader, Node node) {
+			node.Id      = reader.ReadInt32();
+			node.Attribs = ReadDict(reader);
+		}
+		
+		static string ReadString(BinaryReader reader) {
+			int len = reader.ReadInt32();
+			byte[] bytes = reader.ReadBytes(len);
+			return Encoding.ASCII.GetString(bytes);
+		}
+		
+		static AttribsDict ReadDict(BinaryReader reader) {
+			AttribsDict dict = new AttribsDict();
+			int count = reader.ReadInt32();
+			
+			for (int i = 0; i < count; i++) {
+				string key = ReadString(reader);
+				string val = ReadString(reader);
+				dict.Add(key, val);
+			}
+			return dict;
+		}
+		
+		// actual decoding stuff
 		public override Level Read(Stream src, string name, bool metadata) {
 			BinaryReader reader = new BinaryReader(src);
 			if (ReadFourCC(reader) != "VOX ")
@@ -45,7 +87,7 @@ namespace PluginMagicaVoxelImport {
 			if (reader.ReadInt32() != 150)
 				throw new NotSupportedException("Unsupported version number");
 			
-			Chunk main = Chunk.Read(reader);
+			Chunk main = ReadChunk(reader);
 			if (main.FourCC != "MAIN")
 				throw new NotSupportedException("MAIN chunk expected" );
 			
@@ -71,8 +113,13 @@ namespace PluginMagicaVoxelImport {
 			src.Seek(main.ChunkContentSize, SeekOrigin.Current);
 			long end = src.Position + main.ChildChunkContentSize;
 			Level lvl = null;
+			List<Model> models = new List<Model>();
+			Dictionary<int, Node> nodes = new Dictionary<int, Node>();
+			
 			while (src.Position < end) {
-				Chunk chunk = Chunk.Read(reader);
+				Chunk chunk = ReadChunk(reader);
+				Server.s.Log(chunk.FourCC + " - " + chunk.ChunkContentSize);
+				
 				if (chunk.FourCC == "RGBA") {
 					if (chunk.ChunkContentSize != 4 * 256)
 						throw new NotSupportedException("RGBA chunk must be 1024 bytes");
@@ -83,34 +130,150 @@ namespace PluginMagicaVoxelImport {
 				} else if (chunk.FourCC == "SIZE") {
 					if (chunk.ChunkContentSize != 12)
 						throw new NotSupportedException("Size chunk must be 12 bytes");
-					int width = reader.ReadInt32();
-					int length = reader.ReadInt32();
-					int height = reader.ReadInt32();
-					lvl = new Level(name, (ushort)width, (ushort)height, (ushort)length);
+					Model part = new Model();
+					
+					// voxel offsets are from centre of model
+					part.SizeX = reader.ReadInt32(); part.X = -part.SizeX / 2;
+					part.SizeY = reader.ReadInt32(); part.Y = -part.SizeY / 2;
+					part.SizeZ = reader.ReadInt32(); part.Z = -part.SizeZ / 2;
+					models.Add(part);
 				} else if (chunk.FourCC == "XYZI") {
 					int numVoxels = reader.ReadInt32();
+					Model part = models[models.Count - 1];
+					part.Voxels = new Voxel[numVoxels];
+					
 					for (int i = 0; i < numVoxels; i++) {
-						byte x = reader.ReadByte();
-						byte z = reader.ReadByte();
-						byte y = reader.ReadByte();
-						byte idx = reader.ReadByte();
-						
-						// mirror over Z to match magicavoxel
-						z = (byte)(lvl.Length - 1 - z);
-						
-						if (idx < Block.CpeCount) {
-							lvl.SetTile(x, y, z, idx);
-						} else {
-							lvl.SetTile(x, y, z, Block.custom_block);
-							lvl.SetExtTile(x, y, z, idx);
-						}
+						part.Voxels[i].X   = reader.ReadByte();
+						part.Voxels[i].Z   = reader.ReadByte();
+						part.Voxels[i].Y   = reader.ReadByte();
+						part.Voxels[i].Idx = reader.ReadByte();
 					}
+				} else if (chunk.FourCC == "nTRN") {
+					TransformNode node = new TransformNode();
+					node.Type = NodeType.Transform;
+					ReadNode(reader, node);
+					node.Children = new int[1];
+					
+					node.Children[0] = reader.ReadInt32();
+					int reservedID = reader.ReadInt32();
+					int layerID    = reader.ReadInt32();
+					int numFrames  = reader.ReadInt32();
+					
+					if (numFrames != 1) throw new NotSupportedException("Transform node must only have one frame");
+					node.FrameAttribs = ReadDict(reader);
+					nodes[node.Id] = node;
+				} else if (chunk.FourCC == "nGRP") {
+					GroupNode node = new GroupNode();
+					node.Type = NodeType.Group;
+					ReadNode(reader, node);
+					node.Children = new int[reader.ReadInt32()];
+					
+					for (int i = 0; i < node.Children.Length; i++) {
+						node.Children[i] = reader.ReadInt32();
+					}
+					nodes[node.Id] = node;
+				} else if (chunk.FourCC == "nSHP") {
+					ShapeNode node = new ShapeNode();
+					node.Type = NodeType.Shape;
+					ReadNode(reader, node);
+					node.Children = new int[0];
+					
+					int numModels  = reader.ReadInt32();
+					if (numModels != 1) throw new NotSupportedException("Shape node must only have one model");
+
+					int modelID = reader.ReadInt32();
+					node.Model = models[modelID];
+					node.ModelAttribs = ReadDict(reader);
+					nodes[node.Id] = node;
 				} else {
 					src.Seek(chunk.ChunkContentSize, SeekOrigin.Current);
 				}
 				src.Seek(chunk.ChildChunkContentSize, SeekOrigin.Current);
 			}
 			
+			// assume root node is 0
+			Transform(0, "", Vec3S32.Zero, nodes);
+			
+			int minX = 0, maxX = 0, minY = 0, maxY = 0, minZ = 0, maxZ = 0;
+			foreach (Model m in models) {
+				minX = Math.Min(minX, m.X); maxX = Math.Max(maxX, m.X + (m.SizeX - 1));
+				minY = Math.Min(minY, m.Y); maxY = Math.Max(maxY, m.Y + (m.SizeY - 1));
+				minZ = Math.Min(minZ, m.Z); maxZ = Math.Max(maxZ, m.Z + (m.SizeZ - 1));
+			}
+			
+			// magicavox uses Z for vertical
+			int width = (maxX - minX) + 1, length = (maxY - minY) + 1, height = (maxZ - minZ) + 1, 
+			lvl = new Level(name, (ushort)width, (ushort)height, (ushort)length);
+			
+			ComposeParts(lvl, models, minX, minY, minZ);
+			ComposePalette(lvl, palette);
+			return lvl;
+		}
+		
+		static void Transform(int id, string indent, Vec3S32 offset, Dictionary<int, Node> nodes) {
+			Node node = nodes[id];
+			Server.s.Log(indent + node.Type + " = " + offset.X + ", " + offset.Y + ", " + offset.Z);
+			switch (node.Type) {
+					// traverse the multiple children nodes
+				case NodeType.Group:
+					for (int i = 0; i < node.Children.Length; i++) {
+						Transform(node.Children[i], indent + "   ", offset, nodes);
+					}
+					break;
+					
+					// transform might or might not change parent transformation
+				case NodeType.Transform:
+					TransformNode trans = (TransformNode)node;
+					string raw;
+					
+					if (trans.FrameAttribs.TryGetValue("_t", out raw)) {
+						string[] bits = raw.SplitSpaces(3);
+						offset.X += int.Parse(bits[0]);
+						offset.Y += int.Parse(bits[1]);
+						offset.Z += int.Parse(bits[2]);
+					}
+					if (trans.FrameAttribs.TryGetValue("_r", out raw)) {
+						byte flags = byte.Parse(raw);
+						Vec3S32 X = Vec3S32.Zero, Y = Vec3S32.Zero, Z = Vec3S32.Zero;
+						
+						
+						//unsigned char _r = (1 << 0) | (2 << 2) | (0 << 4) | (1 << 5) | (1 << 6)
+					}
+					Transform(node.Children[0], indent + "   ", offset, nodes);
+					break;
+					
+					// apply transformation to model
+				case NodeType.Shape:
+					ShapeNode shape = (ShapeNode)node;
+					shape.Model.X += offset.X;
+					shape.Model.Y += offset.Y;
+					shape.Model.Z += offset.Z;
+					break;
+			}
+		}
+		
+		static void ComposeParts(Level lvl, List<Model> parts, int minX, int minY, int minZ) {
+			foreach (Model part in parts) {
+				for (int i = 0; i < part.Voxels.Length; i++) {
+					Voxel v  = part.Voxels[i];
+					int x = v.X, y = v.Z, z = v.Y; // need to switch here for whatever reason
+					byte idx = v.Idx;		
+					
+					x += part.X - minX;
+					y += part.Y - minY;
+					z += part.Z - minZ;
+
+					if (idx < Block.CpeCount) {
+						lvl.SetTile((ushort)x, (ushort)z, (ushort)y, idx);
+					} else {
+						lvl.SetTile((ushort)x, (ushort)z, (ushort)y, Block.custom_block);
+						lvl.SetExtTile((ushort)x, (ushort)z, (ushort)y, idx);
+					}
+				}
+			}
+		}
+		
+		static void ComposePalette(Level lvl, uint[] palette) {
 			for (int i = 1; i <= 255; i++) {
 				BlockDefinition def = new BlockDefinition();
 				def.RawID = (BlockID)i;
@@ -130,21 +293,34 @@ namespace PluginMagicaVoxelImport {
 			BlockDefinition.Save(false, lvl);
 			lvl.Config.EdgeLevel = 0;
 			lvl.Config.Terrain = "https://i.imgur.com/kuuDIkw.png";
-			return lvl;
 		}
 		
-		struct Chunk {
-			public string FourCC;
-			public int ChunkContentSize;
-			public int ChildChunkContentSize;
-			
-			public static Chunk Read(BinaryReader reader) {
-				Chunk c;
-				c.FourCC = ReadFourCC(reader);
-				c.ChunkContentSize = reader.ReadInt32();
-				c.ChildChunkContentSize = reader.ReadInt32();
-				return c;
-			}
+		struct Voxel { public byte X, Y, Z, Idx; }
+		class Model {
+			public int SizeX, SizeY, SizeZ;
+			public int X, Y, Z;
+			public Voxel[] Voxels;
+		}
+		
+		enum NodeType { Transform, Group, Shape };
+		class Node {
+			public NodeType Type;
+			public int Id;
+			public AttribsDict Attribs;
+			public int[] Children;
+		}
+		
+		class TransformNode : Node {
+			// NOTE: Spec says must be 1 frame
+			public AttribsDict FrameAttribs;
+		}
+		
+		class GroupNode : Node { }
+		
+		class ShapeNode : Node {
+			// NOTE: Spec says must be 1 model
+			public Model Model;
+			public AttribsDict ModelAttribs;
 		}
 	}
 }
