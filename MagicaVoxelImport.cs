@@ -118,7 +118,6 @@ namespace PluginMagicaVoxelImport {
 			
 			while (src.Position < end) {
 				Chunk chunk = ReadChunk(reader);
-				Server.s.Log(chunk.FourCC + " - " + chunk.ChunkContentSize);
 				
 				if (chunk.FourCC == "RGBA") {
 					if (chunk.ChunkContentSize != 4 * 256)
@@ -132,10 +131,9 @@ namespace PluginMagicaVoxelImport {
 						throw new NotSupportedException("Size chunk must be 12 bytes");
 					Model part = new Model();
 					
-					// voxel offsets are from centre of model
-					part.SizeX = reader.ReadInt32(); part.X = -part.SizeX / 2;
-					part.SizeY = reader.ReadInt32(); part.Y = -part.SizeY / 2;
-					part.SizeZ = reader.ReadInt32(); part.Z = -part.SizeZ / 2;
+					part.SizeX = reader.ReadInt32();
+					part.SizeY = reader.ReadInt32();
+					part.SizeZ = reader.ReadInt32();
 					models.Add(part);
 				} else if (chunk.FourCC == "XYZI") {
 					int numVoxels = reader.ReadInt32();
@@ -143,10 +141,10 @@ namespace PluginMagicaVoxelImport {
 					part.Voxels = new Voxel[numVoxels];
 					
 					for (int i = 0; i < numVoxels; i++) {
-						part.Voxels[i].X   = reader.ReadByte();
-						part.Voxels[i].Z   = reader.ReadByte();
-						part.Voxels[i].Y   = reader.ReadByte();
-						part.Voxels[i].Idx = reader.ReadByte();
+						part.Voxels[i].X = reader.ReadByte();
+						part.Voxels[i].Y = reader.ReadByte();
+						part.Voxels[i].Z = reader.ReadByte();
+						part.Voxels[i].B = reader.ReadByte(); // index into palette
 					}
 				} else if (chunk.FourCC == "nTRN") {
 					TransformNode node = new TransformNode();
@@ -192,32 +190,30 @@ namespace PluginMagicaVoxelImport {
 			}
 			
 			// assume root node is 0
-			Transform(0, "", Vec3S32.Zero, nodes);
+			Transform(0, Vec3S32.Zero, null, nodes);
 			
-			int minX = 0, maxX = 0, minY = 0, maxY = 0, minZ = 0, maxZ = 0;
+			Vec3S32 min = Vec3S32.Zero, max = Vec3S32.Zero;
 			foreach (Model m in models) {
-				minX = Math.Min(minX, m.X); maxX = Math.Max(maxX, m.X + (m.SizeX - 1));
-				minY = Math.Min(minY, m.Y); maxY = Math.Max(maxY, m.Y + (m.SizeY - 1));
-				minZ = Math.Min(minZ, m.Z); maxZ = Math.Max(maxZ, m.Z + (m.SizeZ - 1));
+				min = Vec3S32.Min(min, m.Transform(0,           0,          0));
+				max = Vec3S32.Max(max, m.Transform(m.SizeX - 1, m.SizeY - 1, m.SizeZ - 1));
 			}
 			
 			// magicavox uses Z for vertical
-			int width = (maxX - minX) + 1, length = (maxY - minY) + 1, height = (maxZ - minZ) + 1, 
+			int width = (max.X - min.X) + 1, height = (max.Z - min.Z) + 1, length = (max.Y - min.Y) + 1;
 			lvl = new Level(name, (ushort)width, (ushort)height, (ushort)length);
-			
-			ComposeParts(lvl, models, minX, minY, minZ);
+
+			ComposeParts(lvl, models, min.X, min.Y, min.Z);
 			ComposePalette(lvl, palette);
 			return lvl;
 		}
 		
-		static void Transform(int id, string indent, Vec3S32 offset, Dictionary<int, Node> nodes) {
+		static void Transform(int id, Vec3S32 offset, int[,] rot, Dictionary<int, Node> nodes) {
 			Node node = nodes[id];
-			Server.s.Log(indent + node.Type + " = " + offset.X + ", " + offset.Y + ", " + offset.Z);
 			switch (node.Type) {
 					// traverse the multiple children nodes
 				case NodeType.Group:
 					for (int i = 0; i < node.Children.Length; i++) {
-						Transform(node.Children[i], indent + "   ", offset, nodes);
+						Transform(node.Children[i], offset, rot, nodes);
 					}
 					break;
 					
@@ -233,21 +229,23 @@ namespace PluginMagicaVoxelImport {
 						offset.Z += int.Parse(bits[2]);
 					}
 					if (trans.FrameAttribs.TryGetValue("_r", out raw)) {
-						byte flags = byte.Parse(raw);
-						Vec3S32 X = Vec3S32.Zero, Y = Vec3S32.Zero, Z = Vec3S32.Zero;
+						byte flags = byte.Parse(raw);				
+						rot = new int[3, 3];
 						
-						
-						//unsigned char _r = (1 << 0) | (2 << 2) | (0 << 4) | (1 << 5) | (1 << 6)
+						rot[0, (flags >> 0) & 3] = (flags & 0x10) != 0 ? -1 : 1;
+						rot[1, (flags >> 2) & 3] = (flags & 0x20) != 0 ? -1 : 1;
+						rot[2,                2] = (flags & 0x40) != 0 ? -1 : 1;
 					}
-					Transform(node.Children[0], indent + "   ", offset, nodes);
+					Transform(node.Children[0], offset, rot, nodes);
 					break;
 					
 					// apply transformation to model
 				case NodeType.Shape:
 					ShapeNode shape = (ShapeNode)node;
-					shape.Model.X += offset.X;
-					shape.Model.Y += offset.Y;
-					shape.Model.Z += offset.Z;
+					shape.Model.X = offset.X;
+					shape.Model.Y = offset.Y;
+					shape.Model.Z = offset.Z;
+					if (rot != null) shape.Model.Rot = rot;
 					break;
 			}
 		}
@@ -256,18 +254,21 @@ namespace PluginMagicaVoxelImport {
 			foreach (Model part in parts) {
 				for (int i = 0; i < part.Voxels.Length; i++) {
 					Voxel v  = part.Voxels[i];
-					int x = v.X, y = v.Z, z = v.Y; // need to switch here for whatever reason
-					byte idx = v.Idx;		
+					byte block = v.B;
 					
-					x += part.X - minX;
-					y += part.Y - minY;
-					z += part.Z - minZ;
+					Vec3S32 p = part.Transform(v.X, v.Y, v.Z);
+					// need to make the global coordinates fit inside the level
+					int x = p.X - minX, y = p.Y - minY, z = p.Z - minZ;
+					
+					// mirror over Y to match magicavoxel
+					y = (lvl.Length - 1 - y);
 
-					if (idx < Block.CpeCount) {
-						lvl.SetTile((ushort)x, (ushort)z, (ushort)y, idx);
+					// magicavox uses Z for vertical
+					if (block < Block.CpeCount) {
+						lvl.SetTile((ushort)x, (ushort)z, (ushort)y, block);
 					} else {
 						lvl.SetTile((ushort)x, (ushort)z, (ushort)y, Block.custom_block);
-						lvl.SetExtTile((ushort)x, (ushort)z, (ushort)y, idx);
+						lvl.SetExtTile((ushort)x, (ushort)z, (ushort)y, block);
 					}
 				}
 			}
@@ -295,11 +296,25 @@ namespace PluginMagicaVoxelImport {
 			lvl.Config.Terrain = "https://i.imgur.com/kuuDIkw.png";
 		}
 		
-		struct Voxel { public byte X, Y, Z, Idx; }
+		struct Voxel { public byte X, Y, Z, B; }
 		class Model {
 			public int SizeX, SizeY, SizeZ;
 			public int X, Y, Z;
+			public int[,] Rot = new int[3, 3] { {1,0,0}, {0,1,0}, {0,0,1} };
 			public Voxel[] Voxels;
+			
+			// input is a point from [0,sizeX),[0,sizeY),[0,sizeZ)]
+			// returned is point in global coordinates
+			public Vec3S32 Transform(int x, int y, int z) {
+				x -= SizeX / 2; y -= SizeY / 2; z -= SizeZ / 2;
+				
+				int rotX = x * Rot[0,0] + y * Rot[0,1] + z * Rot[0,2];
+				int rotY = x * Rot[1,0] + y * Rot[1,1] + z * Rot[1,2];
+				int rotZ = x * Rot[2,0] + y * Rot[2,1] + z * Rot[2,2];
+				
+				x = rotX + X; y = rotY + Y; z = rotZ + Z;
+				return new Vec3S32(x, y, z);
+			}
 		}
 		
 		enum NodeType { Transform, Group, Shape };
