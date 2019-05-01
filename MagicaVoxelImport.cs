@@ -190,7 +190,7 @@ namespace PluginMagicaVoxelImport {
 			}
 			
 			// assume root node is 0
-			Transform(0, Vec3S32.Zero, null, nodes);
+			if (nodes.Count > 0) Transform(0, Vec3S32.Zero, null, nodes);
 			
 			Vec3S32 min = Vec3S32.Zero, max = Vec3S32.Zero;
 			foreach (Model m in models) {
