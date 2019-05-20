@@ -6,7 +6,7 @@ namespace PluginNoTP {
 	public sealed class Core : Plugin_Simple {
 		public override string creator { get { return "Not UnknownShadow200"; } }
 		public override string name { get { return "NoTp"; } }
-		public override string MCGalaxy_Version { get { return "1.8.9.7"; } }
+		public override string MCGalaxy_Version { get { return "1.9.1.2"; } }
 		
 		public override void Load(bool startup) {
 			OnPlayerCommandEvent.Register(OnPlayerCommand, Priority.Low);
@@ -15,12 +15,12 @@ namespace PluginNoTP {
 		public override void Unload(bool shutdown) {
 			OnPlayerCommandEvent.Unregister(OnPlayerCommand);
 		}
-		void OnPlayerCommand(Player p, string cmd, string args) {
+		void OnPlayerCommand(Player p, string cmd, string args, CommandData data) {
 			cmd = cmd.ToLower();
 			if (!(cmd == "tp" || cmd == "teleport" || cmd == "tpa" || cmd == "spawn")) return;
 			
 			if (p.level.name.CaselessStarts("zs")) {
-				Player.Message(p, "You cannot use that command in this gamemode.");
+				p.Message("You cannot use that command in this gamemode.");
 				p.cancelcommand = true;
 				return;
 			}
@@ -36,7 +36,7 @@ namespace PluginNoTP {
 			}
 			
 			if (who.level.name.CaselessStarts("zs")) {
-				Player.Message(p, "You cannot use that command in this gamemode.");
+				p.Message("You cannot use that command in this gamemode.");
 				p.cancelcommand = true;
 				return;
 			}
