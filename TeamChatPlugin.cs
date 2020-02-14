@@ -21,9 +21,9 @@ namespace MCGalaxy {
 			if (p.cancelchat || message.Length <= 1 || message[0] != '=') return;
 			
 			if (p.Game.Team == null) {
-				Player.Message(p, "You are not on a team, so cannot send a team message.");
+				p.Message("You are not on a team, so cannot send a team message.");
 			} else {
-				p.Game.Team.Chat(p, message.Substring(1));
+				p.Game.Team.Message(p, message.Substring(1));
 			}
 			p.cancelchat = true;
 		}
