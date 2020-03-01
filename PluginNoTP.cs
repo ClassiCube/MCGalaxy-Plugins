@@ -30,13 +30,16 @@ namespace PluginNoTP {
 			string[] bits = args.SplitSpaces();
 			if (bits.Length > 1) return; // Don't want to do /tp x y z
 			
+			// don't want to intercept /tpaccept and /tpdeny
+			if (cmd == "tpa" && (bits[0].CaselessEq("accept") || bits[0].CaselessEq("deny"))) return;
+			
 			Player who = PlayerInfo.FindMatches(p, bits[0]);
 			if (who == null) { 
 				p.cancelcommand = true; return; // Don't want double 'Player not found' message
 			}
 			
 			if (who.level.name.CaselessStarts("zs")) {
-				p.Message("You cannot use that command in this gamemode.");
+				p.Message("You cannot teleport to someone in that gamemode.");
 				p.cancelcommand = true;
 				return;
 			}
