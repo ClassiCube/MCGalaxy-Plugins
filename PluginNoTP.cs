@@ -15,11 +15,16 @@ namespace PluginNoTP {
 		public override void Unload(bool shutdown) {
 			OnPlayerCommandEvent.Unregister(OnPlayerCommand);
 		}
+
+		static bool OnGameMap(string map) {
+			return map.CaselessStarts("zs");
+		}
+
 		void OnPlayerCommand(Player p, string cmd, string args, CommandData data) {
 			cmd = cmd.ToLower();
 			if (!(cmd == "tp" || cmd == "teleport" || cmd == "tpa" || cmd == "spawn")) return;
 			
-			if (p.level.name.CaselessStarts("zs")) {
+			if (OnGameMap(p.level.name)) {
 				p.Message("You cannot use that command in this gamemode.");
 				p.cancelcommand = true;
 				return;
@@ -38,7 +43,7 @@ namespace PluginNoTP {
 				p.cancelcommand = true; return; // Don't want double 'Player not found' message
 			}
 			
-			if (who.level.name.CaselessStarts("zs")) {
+			if (OnGameMap(who.level.name)) {
 				p.Message("You cannot teleport to someone in that gamemode.");
 				p.cancelcommand = true;
 				return;
