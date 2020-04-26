@@ -393,6 +393,8 @@ namespace MCGalaxy {
 		    SpawnersFile.Load(lvl);
 		}
 		static void OnLevelUnload(Level lvl) {
+			//if the level is forced to stay loaded, don't remove spawners
+			if (lvl.cancelunload) return;
 		    RemoveAllSpawners(lvl, false);
 		}
 		static void OnLevelDeleted(string map) {
