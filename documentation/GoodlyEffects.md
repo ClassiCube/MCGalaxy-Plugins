@@ -1,5 +1,3 @@
-[Back to main page](../)
-
 # GoodlyEffects
 Adds support for CustomParticles CPE
 
