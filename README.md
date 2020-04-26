@@ -18,11 +18,12 @@ Some custom command and plugins for MCGalaxy.
 | Name | Description |
 | ------------- | -----|
 | **BinVoxImport** | Imports [binvox](http://www.patrickmin.com/binvox/) files from /extra/import. BinBox is useful for voxelising .obj models.
-|  **CmdBiggestTables** | Lists the database tables with most rows. Unlikely to be useful except for debugging.
-|  **CmdGBInsert** | Reorders a global block's position in the inventory.
-|  **CmdImpersonate** | Fake a chat message as if it came from another player.
-|  **CmdMapHack** | Allows you to bypass -hax on your own /os maps. (or ranks >= the extra permission)
+| **CmdBiggestTables** | Lists the database tables with most rows. Unlikely to be useful except for debugging.
+| **CmdGBInsert** | Reorders a global block's position in the inventory.
+| **CmdImpersonate** | Fake a chat message as if it came from another player.
+| **CmdMapHack** | Allows you to bypass -hax on your own /os maps. (or ranks >= the extra permission)
 | **CmdSetSoftwareName** | Sets the name of the software shown in /sinfo and in the server list.
+| **GoodlyEffects** | Adds support for CustomParticles CPE. Documentation can be found [here](documentation/GoodlyEffects.md).
 | **KickJini** | Prevents people using Jini client from logging in.
 | **LockedModel** | Forces players to only use specified model(s) on a map.
 | **MagicaVoxelImport** | Importa [MagicaVoxel](https://ephtracy.github.io/) files from /extra/import.
