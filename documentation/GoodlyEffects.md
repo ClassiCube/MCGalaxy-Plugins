@@ -1,4 +1,4 @@
-[Back to main page](../README.md)
+[Back to main page](../)
 
 # GoodlyEffects
 Adds support for CustomParticles CPE
