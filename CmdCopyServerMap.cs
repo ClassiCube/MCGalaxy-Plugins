@@ -1,3 +1,12 @@
+//reference System.Data.dll
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.IO;
+using MCGalaxy.Blocks;
+using MCGalaxy.SQL;
+using BlockID = System.UInt16;
+
 namespace MCGalaxy {
 	public sealed class CmdCopyServerMap : Command {
 		public override string name { get { return "CopyServerMap"; } }
@@ -10,46 +19,43 @@ namespace MCGalaxy {
 
 		public override void Use(Player p, string message) {
 			string[] args = message.SplitSpaces(2);
-			string map    = args[0];
+			string src    = args[0];
+			string dst    = args.Length > 1 ? args[1] : src;
 			
-			if (args.Length != 1) { Help(p); return; }
-			if (!Formatter.ValidMapName(p, map)) return;
+			if (message.Length == 0) { Help(p); return; }
+			if (!Formatter.ValidMapName(p, src)) return;
+			if (!Formatter.ValidMapName(p, dst)) return;
 			
-			string path = Path.Combine(oldServer, LevelInfo.MapPath(map));
+			string path = Path.Combine(oldServer, LevelInfo.MapPath(src));
 			if (!File.Exists(path)) {
-				p.Message("%WMap does not exist on old server."); return;
+				p.Message("%WLevel {0} does not exist on old server.", src); return;
 			}
-			if (LevelInfo.MapExists(map)) {
-				p.Message("%WMap already exists on new server."); return;
+			if (LevelInfo.MapExists(dst)) {
+				p.Message("%WLevel {1} already exists on new server.", dst); return;
 			}
 			
-			File.Copy(path, LevelInfo.MapPath(map), true);
-			CopyProperties(map);
-			CopyBlockDefs(map);
+			File.Copy(path, LevelInfo.MapPath(dst), true);
+			CopyProperties(src, dst);
+			CopyBlockDefs(src, dst);
 			ExportPortals(p, map);
 			ExportMessages(p, map);
-			p.Message("Successfully copied across map {0}!", map);
+			p.Message("Successfully imported level {0} as {1}", src, dst);
 		}
 		
-		static void CopyProperties(string map) {
-			string props = null;
-			if (File.Exists(PropsPathOld(oldServer, map))) {
-				props = File.ReadAllText(PropsPathOld(oldServer, map));
-			} else if (File.Exists(PropsPath(oldServer, map))) {
-				props = File.ReadAllText(PropsPath(oldServer, map));
-			}
-			// TODO fixup
+		static void CopyProperties(string src, string dst) {
+			string path = Path.Combine(oldServer, LevelInfo.PropsPath(src));
+			if (!File.Exists(path)) return;
 			
-			if (props == null) return;
-			File.WriteAllText(LevelInfo.PropsPath(map), props);
+			string props = File.ReadAllText(path);
+			File.WriteAllText(LevelInfo.PropsPath(dst), props);
 		}
 		
-		static void CopyBlockDefs(string map) {
+		static void CopyBlockDefs(string src, string dst) {
 			string path = null;
 			
 			path = Path.Combine(oldServer, BlockDefinition.GlobalPath);
 			BlockDefinition[] defs = BlockDefinition.Load(path);
-			path = Path.Combine(oldServer, Paths.MapBlockDefs(map));
+			path = Path.Combine(oldServer, Paths.MapBlockDefs(src));
 			
 			// Local/Level custom blocks override global ones
 			if (File.Exists(path)) {
@@ -69,15 +75,7 @@ namespace MCGalaxy {
 			}
 			
 			defs[0] = null;
-			BlockDefinition.Save(false, defs, Paths.MapBlockDefs(map));
-		}
-
-		static string PropsPath(string dir, string file) {
-			return dir + @"levels\level properties\" + file + ".properties";
-		}
-
-		static string PropsPathOld(string dir, string file) {
-			return dir + @"levels\level properties\" + file;
+			BlockDefinition.Save(false, defs, Paths.MapBlockDefs(dst));
 		}
 		
 		// TODO The database api kinda sucks, need to rewrite
@@ -184,7 +182,7 @@ Message CHAR(255));";
 		// ===========================================================
 		sealed class OldSQLiteConnection : SQLiteConnection {
 			protected override bool ConnectionPooling { get { return false; } }
-			protected override string DBPath { get { return Path.Combine(oldServer, "MCGalaxy.db"; } }
+			protected override string DBPath { get { return Path.Combine(oldServer, "MCGalaxy.db"); } }
 		}
 
 		static void ExecuteSql(Player p, SQLiteConnection conn, string sql, params object[] args) {
@@ -215,8 +213,9 @@ Message CHAR(255));";
 		}
 		
 		public override void Help(Player p) {
-			p.Message("%T/CopyServerMap [map]");
-			p.Message("%HCopies a map across from old server to this server");
+			p.Message("%T/CopyServerMap [old name] <new name>");
+			p.Message("%HCopies a level across from old server to this server");
+			p.Message("%HIf <new name> is not given, then [old name] is used as name for the new level");
 		}
 	}
 }
