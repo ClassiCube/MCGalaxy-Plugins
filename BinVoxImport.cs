@@ -10,7 +10,7 @@ namespace PluginBinVoxelImport {
 	public sealed class Core : Plugin_Simple {
 		public override string creator { get { return "UnknownShadow200"; } }
 		public override string name { get { return "BinVoxelImport"; } }
-		public override string MCGalaxy_Version { get { return "1.8.9.8"; } }
+		public override string MCGalaxy_Version { get { return "1.9.0.9"; } }
 		
 		IMapImporter importer;
 		public override void Load(bool startup) {
@@ -25,6 +25,7 @@ namespace PluginBinVoxelImport {
     public sealed class BinVoxImporter : IMapImporter {
 
         public override string Extension { get { return ".binvox"; } }
+        public override string Description { get { return "Binvox map"; } }
         
         public override Vec3U16 ReadDimensions(Stream src) {
             BinaryReader reader = new BinaryReader(src);

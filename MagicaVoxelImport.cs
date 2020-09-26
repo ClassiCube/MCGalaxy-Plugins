@@ -253,9 +253,7 @@ namespace PluginMagicaVoxelImport {
 		static void ComposeParts(Level lvl, List<Model> parts, int minX, int minY, int minZ) {
 			foreach (Model part in parts) {
 				for (int i = 0; i < part.Voxels.Length; i++) {
-					Voxel v  = part.Voxels[i];
-					byte block = v.B;
-					
+					Voxel v   = part.Voxels[i];
 					Vec3S32 p = part.Transform(v.X, v.Y, v.Z);
 					// need to make the global coordinates fit inside the level
 					int x = p.X - minX, y = p.Y - minY, z = p.Z - minZ;
@@ -264,12 +262,7 @@ namespace PluginMagicaVoxelImport {
 					y = (lvl.Length - 1 - y);
 
 					// magicavox uses Z for vertical
-					if (block < Block.CpeCount) {
-						lvl.SetTile((ushort)x, (ushort)z, (ushort)y, block);
-					} else {
-						lvl.SetTile((ushort)x, (ushort)z, (ushort)y, Block.custom_block);
-						lvl.SetExtTile((ushort)x, (ushort)z, (ushort)y, block);
-					}
+					lvl.SetBlock((ushort)x, (ushort)z, (ushort)y, Block.FromRaw(v.B));
 				}
 			}
 		}
