@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using MCGalaxy.Blocks;
+using MCGalaxy.Blocks.Extended;
 using MCGalaxy.SQL;
 using BlockID = System.UInt16;
 
@@ -37,8 +38,8 @@ namespace MCGalaxy {
 			File.Copy(path, LevelInfo.MapPath(dst), true);
 			CopyProperties(src, dst);
 			CopyBlockDefs(src, dst);
-			ExportPortals(p, map);
-			ExportMessages(p, map);
+			ExportPortals(p, src, dst);
+			ExportMessages(p, src, dst);
 			p.Message("Successfully imported level {0} as {1}", src, dst);
 		}
 		
@@ -79,38 +80,25 @@ namespace MCGalaxy {
 		}
 		
 		// TODO The database api kinda sucks, need to rewrite
-
 		// ===========================================================
 		// ========================= PORTALS =========================
 		// ===========================================================
-		static void ExportPortals(Player p, string[] args) {
-			string table = "Portals" + args[0];
-			if (!TableUsed(table)) return;
-			p.Message("Creating portals table..");
-
+		static void ExportPortals(Player p, string src, string dst) {
 			List<PortalInfo> list = new List<PortalInfo>();
 			Database.Backend.ReadRows(table, "EntryX,EntryY,EntryZ,ExitX,ExitY,ExitZ", list, ProcessPortal);
 
-			table = "Portals" + args[1];
 			using (SQLiteConnection conn = new OldSQLiteConnection()) {
-				ResetTable(p, conn, table, portals_fmt);
+				if (!OldTableUsed(conn, "Portals" + dst)) return;
+				p.Message("Creating portals table..");
+				Database.Backend.DeleteTable("Portals" + src);
 
 				foreach (PortalInfo i in list) {
-					ExecuteSql(p, conn, "INSERT INTO `" + table + "` VALUES(@0,@1,@2,@3,@4,@5,@6)",
-					           i.EntryX, i.EntryY, i.EntryZ, args[1], i.ExitX, i.ExitY, i.ExitZ);
+					Portal.Set(src, i.EntryX, i.EntryY, i.EntryZ,
+					           i.ExitX, i.ExitY, i.ExitZ, src);
 				}
 			}
 			p.Message("Done copying portals");
 		}
-
-		const string portals_fmt = @"(
-EntryX MEDIUMINT UNSIGNED,
-EntryY MEDIUMINT UNSIGNED,
-EntryZ MEDIUMINT UNSIGNED,
-ExitMap CHAR(20),
-ExitX MEDIUMINT UNSIGNED,
-ExitY MEDIUMINT UNSIGNED,
-ExitZ MEDIUMINT UNSIGNED);";
 
 		class PortalInfo {
 			public int EntryX, EntryY, EntryZ;
@@ -135,31 +123,21 @@ ExitZ MEDIUMINT UNSIGNED);";
 		// ===========================================================
 		// ===================== MESSAGE BLOCKS ======================
 		// ===========================================================
-		static void ExportMessages(Player p, string[] args) {
-			string table = "Messages" + args[0];
-			if (!TableUsed(table)) return;
-			p.Message("Creating message blocks table..");
-
+		static void ExportMessages(Player p, string src, string dst) {
 			List<MessageInfo> list = new List<MessageInfo>();
 			Database.Backend.ReadRows(table, "X,Y,Z,Message", list, ProcessMessage);
 
-			table = "Messages" + args[1];
 			using (SQLiteConnection conn = new OldSQLiteConnection()) {
-				ResetTable(p, conn, table, messages_fmt);
+				if (!OldTableUsed(conn, "Messages" + dst)) return;
+				p.Message("Creating message blocks table..");
+				Database.Backend.DeleteTable("Messages" + src);
 
 				foreach (MessageInfo i in list) {
-					ExecuteSql(p, conn, "INSERT INTO `" + table + "` VALUES(@0,@1,@2,@3)",
-					           i.X, i.Y, i.Z, i.Text.UnicodeToCp437());
+					MessageBlock.Set(src, i.X, i.Y, i.Z, i.Text);
 				}
 			}
 			p.Message("Done copying message blocks");
 		}
-
-		const string messages_fmt = @"(
-X MEDIUMINT UNSIGNED,
-Y MEDIUMINT UNSIGNED,
-Z MEDIUMINT UNSIGNED,
-Message CHAR(255));";
 
 		class MessageInfo {
 			public int X, Y, Z;
@@ -184,32 +162,17 @@ Message CHAR(255));";
 			protected override bool ConnectionPooling { get { return false; } }
 			protected override string DBPath { get { return Path.Combine(oldServer, "MCGalaxy.db"); } }
 		}
-
-		static void ExecuteSql(Player p, SQLiteConnection conn, string sql, params object[] args) {
-			try {
-				using (IDbCommand cmd = new SQLiteCommand(sql, conn)) {
-					for (int i = 0; i < args.Length; i++) {
-						IDbDataParameter arg = new SQLiteParameter();
-						arg.ParameterName = "@" + i;
-						arg.Value         = args[i];
-						cmd.Parameters.Add(arg);
-					}					
-					cmd.ExecuteNonQuery();
-				}
-			} catch (Exception ex) {
-				p.Message("Error executing SQL " + sql);
-				p.Message(ex.Message);
+		
+		static bool OldTableUsed(SQLiteConnection conn, string table) {
+			const string sql = "SELECT Count(*) FROM sqlite_master WHERE type='table' AND name=@0";
+			SQLiteParameter arg = new SQLiteParameter();
+			arg.ParameterName = "@0";
+			arg.Value         = table;
+			
+			using (SQLiteCommand cmd = new SQLiteCommand(sql, conn)) {	
+				cmd.Parameters.Add(arg);
+				return cmd.ExecuteScalar() != null;
 			}
-		}
-
-		static bool TableUsed(string table) {
-			return Database.TableExists(table) && Database.CountRows(table) > 0;
-		}
-
-		static void ResetTable(Player p, SQLiteConnection conn, string table, string fmt) {
-			conn.Open();
-			ExecuteSql(p, conn, "DROP TABLE IF EXISTS `" + table + "`");
-			ExecuteSql(p, conn, "CREATE TABLE IF NOT EXISTS `" + table + "` " + fmt);
 		}
 		
 		public override void Help(Player p) {
