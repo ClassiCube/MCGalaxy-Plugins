@@ -109,10 +109,7 @@ namespace MCGalaxy.Commands.Moderation {
 				if (names[i] == null) return null;
 				
 				Group grp = Group.GroupIn(names[i]);
-				if (!p.name.CaselessEq(names[i])) {
-					if (!CheckRank(p, data, grp.Permission, "prune", false)) return null;
-				}
-
+				if (!CheckRank(p, data, names[i], grp.Permission, "prune", false)) return null;
 				ids.AddRange(NameConverter.FindIds(names[i]));
 			}
 			return ids.ToArray();
