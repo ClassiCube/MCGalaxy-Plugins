@@ -20,8 +20,8 @@ namespace MCGalaxy {
 
 		public override void Use(Player p, string message) {
 			string[] args = message.SplitSpaces(2);
-			string src    = args[0];
-			string dst    = args.Length > 1 ? args[1] : src;
+			string src    = args[0].ToLower();
+			string dst    = args.Length > 1 ? args[1].ToLower() : src;
 			
 			if (message.Length == 0) { Help(p); return; }
 			if (!Formatter.ValidMapName(p, src)) return;
@@ -32,13 +32,14 @@ namespace MCGalaxy {
 				p.Message("%WLevel {0} does not exist on old server.", src); return;
 			}
 			if (LevelInfo.MapExists(dst)) {
-				p.Message("%WLevel {1} already exists on new server.", dst); return;
+				p.Message("%WLevel {0} already exists on new server.", dst); return;
 			}
 			
 			File.Copy(path, LevelInfo.MapPath(dst), true);
 			CopyProperties(src, dst);
-			CopyBlockDefs(src, dst);
-			ExportPortals(p, src, dst);
+			CopyBlockDefs(src,  dst);
+			CopyBlockProps(src, dst);
+			ExportPortals(p,  src, dst);
 			ExportMessages(p, src, dst);
 			p.Message("Successfully imported level {0} as {1}", src, dst);
 		}
@@ -46,9 +47,7 @@ namespace MCGalaxy {
 		static void CopyProperties(string src, string dst) {
 			string path = Path.Combine(oldServer, LevelInfo.PropsPath(src));
 			if (!File.Exists(path)) return;
-			
-			string props = File.ReadAllText(path);
-			File.WriteAllText(LevelInfo.PropsPath(dst), props);
+			File.Copy(path, LevelInfo.PropsPath(dst), true);
 		}
 		
 		static void CopyBlockDefs(string src, string dst) {
@@ -79,42 +78,46 @@ namespace MCGalaxy {
 			BlockDefinition.Save(false, defs, Paths.MapBlockDefs(dst));
 		}
 		
+		static void CopyBlockProps(string src, string dst) {
+			string path = Path.Combine(oldServer, BlockProps.PropsPath("_" + src));
+			if (!File.Exists(path)) return;
+			File.Copy(path, BlockProps.PropsPath("_" + dst), true);
+		}
+		
 		// TODO The database api kinda sucks, need to rewrite
 		// ===========================================================
 		// ========================= PORTALS =========================
 		// ===========================================================
 		static void ExportPortals(Player p, string src, string dst) {
 			List<PortalInfo> list = new List<PortalInfo>();
-			Database.Backend.ReadRows(table, "EntryX,EntryY,EntryZ,ExitX,ExitY,ExitZ", list, ProcessPortal);
-
-			using (SQLiteConnection conn = new OldSQLiteConnection()) {
-				if (!OldTableUsed(conn, "Portals" + dst)) return;
-				p.Message("Creating portals table..");
-				Database.Backend.DeleteTable("Portals" + src);
-
-				foreach (PortalInfo i in list) {
-					Portal.Set(src, i.EntryX, i.EntryY, i.EntryZ,
-					           i.ExitX, i.ExitY, i.ExitZ, src);
-				}
+			OldReadRows("Portals" + src, "EntryX,EntryY,EntryZ,ExitX,ExitY,ExitZ,ExitMap", list, ProcessPortal);
+			if (list.Count == 0) return;
+			
+			p.Message("Creating portals table..");
+			foreach (PortalInfo i in list) {
+				Portal.Set(dst, i.EntryX, i.EntryY, i.EntryZ,
+				           i.ExitX, i.ExitY, i.ExitZ, i.ExitMap.Replace(src, dst));
 			}
 			p.Message("Done copying portals");
 		}
 
 		class PortalInfo {
-			public int EntryX, EntryY, EntryZ;
-			public int ExitX,  ExitY,  ExitZ;
+			public ushort EntryX, EntryY, EntryZ;
+			public ushort ExitX,  ExitY,  ExitZ;
+			public string ExitMap;
 		}
 
 		static object ProcessPortal(IDataRecord record, object arg) {
 			PortalInfo i = new PortalInfo();
-			i.EntryX = record.GetInt32(0);
-			i.EntryY = record.GetInt32(1);
-			i.EntryZ = record.GetInt32(2);
+			i.EntryX = (ushort)record.GetInt32(0);
+			i.EntryY = (ushort)record.GetInt32(1);
+			i.EntryZ = (ushort)record.GetInt32(2);
 
-			i.ExitX = record.GetInt32(3);
-			i.ExitY = record.GetInt32(4);
-			i.ExitZ = record.GetInt32(5);
+			i.ExitX  = (ushort)record.GetInt32(3);
+			i.ExitY  = (ushort)record.GetInt32(4);
+			i.ExitZ  = (ushort)record.GetInt32(5);
 
+			i.ExitMap = record.GetString(6);
 			((List<PortalInfo>)arg).Add(i);
 			return arg;
 		}
@@ -125,32 +128,28 @@ namespace MCGalaxy {
 		// ===========================================================
 		static void ExportMessages(Player p, string src, string dst) {
 			List<MessageInfo> list = new List<MessageInfo>();
-			Database.Backend.ReadRows(table, "X,Y,Z,Message", list, ProcessMessage);
-
-			using (SQLiteConnection conn = new OldSQLiteConnection()) {
-				if (!OldTableUsed(conn, "Messages" + dst)) return;
-				p.Message("Creating message blocks table..");
-				Database.Backend.DeleteTable("Messages" + src);
-
-				foreach (MessageInfo i in list) {
-					MessageBlock.Set(src, i.X, i.Y, i.Z, i.Text);
-				}
+			OldReadRows("Messages" + src, "X,Y,Z,Message", list, ProcessMessage);
+			if (list.Count == 0) return;
+			
+			p.Message("Creating message blocks table..");
+			foreach (MessageInfo i in list) {
+				MessageBlock.Set(dst, i.X, i.Y, i.Z, i.Text);
 			}
 			p.Message("Done copying message blocks");
 		}
 
 		class MessageInfo {
-			public int X, Y, Z;
+			public ushort X, Y, Z;
 			public string Text;
 		}
 
 		static object ProcessMessage(IDataRecord record, object arg) {
 			MessageInfo i = new MessageInfo();
-			i.X = record.GetInt32(0);
-			i.Y = record.GetInt32(1);
-			i.Z = record.GetInt32(2);
+			i.X = (ushort)record.GetInt32(0);
+			i.Y = (ushort)record.GetInt32(1);
+			i.Z = (ushort)record.GetInt32(2);
 
-			i.Text = record.GetString(3).Cp437ToUnicode();
+			i.Text = record.GetString(3).Replace("\\'", "\'").Cp437ToUnicode();
 			((List<MessageInfo>)arg).Add(i);
 			return arg;
 		}
@@ -163,14 +162,25 @@ namespace MCGalaxy {
 			protected override string DBPath { get { return Path.Combine(oldServer, "MCGalaxy.db"); } }
 		}
 		
+		static void OldReadRows(string table, string columns, object arg, ReaderCallback callback) {
+			using (SQLiteConnection conn = new OldSQLiteConnection()) {
+				conn.Open();
+				if (!OldTableUsed(conn, table)) return;
+				string sql = SQLiteBackend.Instance.ReadRowsSql(table, columns, "");
+
+				using (SQLiteCommand cmd = new SQLiteCommand(sql, conn)) {
+					using (IDataReader r = cmd.ExecuteReader()) {
+						while (r.Read()) callback(r, arg);
+					}
+				}
+			}
+		}
+		
 		static bool OldTableUsed(SQLiteConnection conn, string table) {
-			const string sql = "SELECT Count(*) FROM sqlite_master WHERE type='table' AND name=@0";
-			SQLiteParameter arg = new SQLiteParameter();
-			arg.ParameterName = "@0";
-			arg.Value         = table;
-			
-			using (SQLiteCommand cmd = new SQLiteCommand(sql, conn)) {	
-				cmd.Parameters.Add(arg);
+			string sql = SQLiteBackend.Instance.ReadRowsSql("sqlite_master", "COUNT(*)", "WHERE type='table' AND name=@0");
+
+			using (SQLiteCommand cmd = new SQLiteCommand(sql, conn)) {
+				SqlQuery.FillParams(cmd, new object[] { table });
 				return cmd.ExecuteScalar() != null;
 			}
 		}
