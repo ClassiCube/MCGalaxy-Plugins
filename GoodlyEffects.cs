@@ -293,7 +293,6 @@ namespace MCGalaxy {
 		
 		static Random rnd;
 		public static Dictionary<string, EffectConfig> effectAtEffectName = new Dictionary<string, EffectConfig>();
-		public static PlayerExtList playerEffects;
 		public DateTime startTime = DateTime.UtcNow;
 		public override void Load(bool startup) {
 			Command.Register(new CmdReloadEffects());
@@ -304,9 +303,7 @@ namespace MCGalaxy {
 			LoadEffects();
 			DefineEffectsAll();
 			
-			playerEffects = PlayerExtList.Load("extra/playereffects.txt");	
-			
-			OnPlayerMoveEvent.Register(OnPlayerMove, Priority.Low);
+
 			OnPlayerFinishConnectingEvent.Register(OnPlayerFinishConnecting, Priority.Low);
 			OnLevelLoadedEvent.Register(OnLevelLoaded, Priority.Low);
 			OnLevelUnloadEvent.Register(OnLevelUnload, Priority.Low);
@@ -330,7 +327,6 @@ namespace MCGalaxy {
 			Command.Unregister(Command.Find("Effect"));
 			Command.Unregister(Command.Find("Spawner"));
 			
-			OnPlayerMoveEvent.Unregister(OnPlayerMove);
 			OnPlayerFinishConnectingEvent.Unregister(OnPlayerFinishConnecting);
 			OnLevelLoadedEvent.Unregister(OnLevelLoaded);
 			OnLevelUnloadEvent.Unregister(OnLevelUnload);
@@ -340,50 +336,6 @@ namespace MCGalaxy {
 			
 			spawnersAtLevel.Clear();
 			instance.Cancel(tickSpawners);
-		}
-		
-		void OnPlayerMove(Player p, Position next, byte yaw, byte pitch) {
-			string data = playerEffects.FindData(p.name);
-			if (data == null) return;
-			
-			if (rnd.NextDouble() > 0.125f && !data.StartsWith("puff")) { return; }
-			float x = p.Pos.X * 0.03125f;
-			float y = (p.Pos.Y+ModelInfo.CalcEyeHeight(p) -Entities.CharacterHeight) * 0.03125f;
-			float z = p.Pos.Z * 0.03125f;
-			float originX = x;
-			float originY = y;
-			float originZ = z;
-			Player notShownTo = null;
-			//ugly hack
-			if (data.StartsWith("leaf")) {
-				if (rnd.NextDouble() > 0.5f) { return; }
-				originX+= 32;
-				originZ+= 8;
-			} else if (data.StartsWith("puff")) {
-				Random playerRandom = new Random(p.name.GetHashCode());
-				const int cycle = 4000;
-				const int breatheOut = 1000;
-				int offset = playerRandom.Next(0, cycle+1);
-				
-				TimeSpan delta = DateTime.UtcNow - (startTime.AddMilliseconds(offset));
-				int ms = (int)delta.TotalMilliseconds;
-				bool phase1 = (ms % cycle) < breatheOut;
-				if (!phase1) { return; }
-				
-				
-				Vec3F32 dir = DirUtils.GetDirVector(yaw, pitch);
-				dir.X *= 0.3f;
-				dir.Y *= 0.3f;
-				dir.Z *= 0.3f;
-				originY = y;
-				x += dir.X;
-				y += dir.Y;
-				z += dir.Z;
-				y -= 0.15f;
-				originY -= 0.15f;
-				notShownTo = p;
-			}
-			SpawnEffectAt(p.level, data, x, y, z, originX, originY, originZ);
 		}
 		
 		static void OnPlayerFinishConnecting(Player p) {
