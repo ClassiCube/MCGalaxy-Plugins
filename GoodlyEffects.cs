@@ -177,8 +177,11 @@ namespace MCGalaxy {
                 List<EffectSpawner> spawners = new List<EffectSpawner>();
                 if (elems == null) elems = ConfigElement.GetAll(typeof(EffectSpawner));
                 
-                JsonContext ctx = new JsonContext(); ctx.Val = json;
-                JsonArray array = (JsonArray)Json.ParseStream(ctx);
+                //JsonContext ctx = new JsonContext(); ctx.Val = json;
+                //JsonArray array = (JsonArray)Json.ParseStream(ctx);
+                bool success;
+                JsonArray array = (JsonArray)Json.Parse(json, out success);
+				
                 if (array == null) return spawners;
                 
                 foreach (object raw in array) {
