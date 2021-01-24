@@ -182,7 +182,7 @@ namespace Core {
 		public override void Help(Player p) {
 			p.Message("%T/Marry [player]");
 			p.Message("%HProposes to the given player.");
-            p.Message(" % HCosts 200 &3" + Server.Config.Currency);
+            p.Message("  %HCosts 200 &3" + Server.Config.Currency);
 		}
 	}	
 }

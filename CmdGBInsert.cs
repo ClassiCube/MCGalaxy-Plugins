@@ -18,18 +18,18 @@ namespace MCGalaxy.Commands.CPE {
         	BlockID src;
         	if (!CommandParser.GetBlock(p, args[0], out src)) return;   	
         	if (globalDefs[src] == null) {
-        		Player.Message(p, "No global block with that ID for source."); return;
+        		p.Message("%WNo global block with that ID for source."); return;
         	}
         	
         	BlockID dst;
         	if (!CommandParser.GetBlock(p, args[1], out dst)) return;   	
         	if (globalDefs[dst] == null) {
-        		Player.Message(p, "No global block with that ID for target."); return;
+        		p.Message("%WNo global block with that ID for target."); return;
         	}
             
             // lazy fix
             if (globalDefs[src].InventoryOrder == -1) {
-        		Player.Message(p, "Give source block an explicit order first. (too lazy to fix)");
+        		p.Message("Give source block an explicit order first. (too lazy to fix)");
         		return;
             }
         	
@@ -61,7 +61,7 @@ namespace MCGalaxy.Commands.CPE {
         	globalDefs[src].InventoryOrder = dstOrder;
         	BlockDefinition.UpdateOrder(globalDefs[src], true, null);
         	BlockDefinition.Save(true, null);
-        	Player.Message(p, "Inserted block. You might need to rejoin though.");
+        	p.Message("Inserted block. You might need to rejoin though.");
         }
         
         static int Order(BlockDefinition def) {
@@ -69,8 +69,8 @@ namespace MCGalaxy.Commands.CPE {
         }
 
         public override void Help(Player p) {
-            Player.Message(p, "%T/GBInsert [source id] [target id]");
-            Player.Message(p, "%HInserts source block at target block's position in inventory");
+            p.Message("%T/GBInsert [source id] [target id]");
+            p.Message("%HInserts source block at target block's position in inventory");
         }
     }
 }
