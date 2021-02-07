@@ -4,9 +4,9 @@ using MCGalaxy.Events.PlayerEvents;
 
 namespace MCGalaxy {
 	
-	public class PluginKickJini : Plugin_Simple {
+	public class PluginKickJini : Plugin {
 		public override string creator { get { return "aaaa"; } }
-		public override string MCGalaxy_Version { get { return "1.9.0.0"; } }
+		public override string MCGalaxy_Version { get { return "1.9.1.4"; } }
 		public override string name { get { return "KickJini"; } }
 		
 		public override void Load(bool startup) {

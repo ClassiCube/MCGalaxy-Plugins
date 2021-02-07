@@ -4,9 +4,9 @@ using MCGalaxy.Events.PlayerEvents;
 
 namespace MCGalaxy {
 
-	public class TeamChatPlugin : Plugin_Simple {
+	public class TeamChatPlugin : Plugin {
 		public override string creator { get { return "Not UnknownShadow200"; } }
-		public override string MCGalaxy_Version { get { return "1.9.0.1"; } }
+		public override string MCGalaxy_Version { get { return "1.9.1.4"; } }
 		public override string name { get { return "TeamChatPlugin"; } }
 		
 		public override void Load(bool startup) {

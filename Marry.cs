@@ -4,11 +4,10 @@ using MCGalaxy.Commands;
 using MCGalaxy.DB;
 
 namespace Core {
-	public sealed class MarryPlugin : Plugin_Simple {
+	public sealed class MarryPlugin : Plugin {
 		public override string name { get { return "marryplugin"; } }
 		public override string creator { get { return ""; } }
-		public override string welcome { get { return ""; } }
-		public override string MCGalaxy_Version { get { return "1.9.0.7"; } }
+		public override string MCGalaxy_Version { get { return "1.9.1.4"; } }
 		
 		public const string ExtraName = "__Marry_Name";
 		public static PlayerExtList marriages;	

@@ -5,11 +5,11 @@ using MCGalaxy.Maths;
 
 namespace MCGalaxy {
 	
-	public sealed class FootballPlugin : Plugin_Simple {
+	public sealed class FootballPlugin : Plugin {
 		BotInstruction ins;
 		
 		public override string name { get { return "FootballInstruction"; } }
-		public override string MCGalaxy_Version { get { return "1.9.1.1"; } }
+		public override string MCGalaxy_Version { get { return "1.9.1.4"; } }
 		public override string creator { get { return ""; } }
 		
 		public override void Load(bool startup) {

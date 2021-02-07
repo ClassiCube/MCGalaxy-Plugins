@@ -17,7 +17,7 @@ namespace MCGalaxy {
 	
 	public sealed class PluginGoodlyEffects : Plugin {
 		public override string name { get { return "GoodlyEffects"; } }
-		public override string MCGalaxy_Version { get { return "1.9.2.0"; } }
+		public override string MCGalaxy_Version { get { return "1.9.2.9"; } }
 		public override string creator { get { return "Goodly"; } }
 		const float notAllowedBelowZero = 0;
 		public class EffectConfig {
@@ -347,9 +347,9 @@ namespace MCGalaxy {
 		static void OnLevelLoaded(Level lvl) {
 		    SpawnersFile.Load(lvl);
 		}
-		static void OnLevelUnload(Level lvl) {
+		static void OnLevelUnload(Level lvl, ref bool cancel) {
 			//if the level is forced to stay loaded, don't remove spawners
-			if (lvl.cancelunload) return;
+			if (cancel) return;
 		    RemoveAllSpawners(lvl, false);
 		}
 		static void OnLevelDeleted(string map) {

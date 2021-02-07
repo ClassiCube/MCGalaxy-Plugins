@@ -10,10 +10,10 @@ using BlockID = System.UInt16;
 using AttribsDict = System.Collections.Generic.Dictionary<string, string>;
 
 namespace PluginMagicaVoxelImport {
-	public sealed class Core : Plugin_Simple {
+	public sealed class Core : Plugin {
 		public override string creator { get { return "UnknownShadow200"; } }
 		public override string name { get { return "MagicaVoxelImport"; } }
-		public override string MCGalaxy_Version { get { return "1.9.1.0"; } }
+		public override string MCGalaxy_Version { get { return "1.9.1.4"; } }
 		
 		IMapImporter importer;
 		public override void Load(bool startup) {

@@ -4,10 +4,10 @@ using MCGalaxy.Events;
 using MCGalaxy.Events.PlayerEvents;
 
 namespace PluginLockedModel {
-    public sealed class Core : Plugin_Simple {
+    public sealed class Core : Plugin {
         public override string creator { get { return "Not UnknownShadow200"; } }
         public override string name { get { return "LockedModel"; } }
-        public override string MCGalaxy_Version { get { return "1.9.1.2"; } }
+        public override string MCGalaxy_Version { get { return "1.9.1.4"; } }
         
         public override void Load(bool startup) {
             OnSendingMotdEvent.Register(HandleGettingMOTD, Priority.Low);
