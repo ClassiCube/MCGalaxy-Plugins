@@ -16,7 +16,7 @@ namespace MCGalaxy.Commands {
 			string[] maps = LevelInfo.AllMapNames();
 			List<string> madeBy = new List<string>();
 			foreach (string map in maps) {
-				if (!LevelInfo.IsRealmOwner(author, map)) continue;
+				if (!IsMapAuthor(author, map)) continue;
 				madeBy.Add(map);
 			}
 
@@ -28,10 +28,31 @@ namespace MCGalaxy.Commands {
 			}
 		}
 
+		public static bool IsMapAuthor(string name, string map) {
+			Level lvl = null;
+			LevelConfig cfg = LevelInfo.GetConfig(map, out lvl);
+
+			string[] owners = cfg.RealmOwner.SplitComma();
+			string[] authors = cfg.Authors.SplitComma();
+			if (owners.Length > 0) {
+				foreach (string owner in owners) {
+					if (owner.CaselessEq(name)) return true;
+				}
+			}
+			if (authors.Length > 0) {
+				foreach (string author in authors) {
+					if (author.CaselessEq(name)) return true;
+				}
+			}
+
+			// For backwards compatibility, treat name+XYZ map names as belonging to name+
+			// If no + though, don't use because otherwise people can register accounts and claim maps
+			return Server.Config.ClassicubeAccountPlus && map.CaselessStarts(name);
+		}
+
 		public override void Help(Player p) {
 			p.Message("%T/mapsby %H[player]");
 			p.Message("%HLists all maps authored by the given player.");
 		}
 	}
 }
-
