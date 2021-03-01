@@ -20,7 +20,7 @@ namespace MCGalaxy.Commands {
 				madeBy.Add(map);
 			}
 
-			author = PlayerInfo.GetColoredName(p, author);
+			author = p.FormatNick(author);
 			if (madeBy.Count == 0) {
 				p.Message("{0} %Shas not made any maps", author);
 			} else {
@@ -32,22 +32,14 @@ namespace MCGalaxy.Commands {
 			Level lvl = null;
 			LevelConfig cfg = LevelInfo.GetConfig(map, out lvl);
 
-			string[] owners = cfg.RealmOwner.SplitComma();
 			string[] authors = cfg.Authors.SplitComma();
-			if (owners.Length > 0) {
-				foreach (string owner in owners) {
-					if (owner.CaselessEq(name)) return true;
-				}
-			}
 			if (authors.Length > 0) {
 				foreach (string author in authors) {
 					if (author.CaselessEq(name)) return true;
 				}
 			}
 
-			// For backwards compatibility, treat name+XYZ map names as belonging to name+
-			// If no + though, don't use because otherwise people can register accounts and claim maps
-			return Server.Config.ClassicubeAccountPlus && map.CaselessStarts(name);
+			return LevelInfo.IsRealmOwner(map, cfg, name);
 		}
 
 		public override void Help(Player p) {
