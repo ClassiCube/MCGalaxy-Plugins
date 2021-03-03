@@ -37,7 +37,7 @@ namespace PluginReward {
 					return;
 				}
 				
-				string[] bits = message.SplitSpaces(2);
+				string[] bits = message.SplitSpaces(3);
 				int amount    = 0;
 				// money amount must be 0 or a positive number
 				if (!CommandParser.GetInt(p, bits[0], "Amount", ref amount, 0)) return;
@@ -46,18 +46,24 @@ namespace PluginReward {
 				TimeSpan period = default(TimeSpan);
 				if (!CommandParser.GetTimespan(p, timeout, ref period, "specify a period of", "h")) return;
 				
+				// some MBs might use a custom per-user timer instead of global per-user timer
+				string prefix = bits.Length > 2 ? bits[2] + "##" : "";
+				
 				// only allow using once every [period]
 				long now   = DateTime.UtcNow.ToUnixTime();
-				string raw = list.FindData(p.name);
+				string raw = list.FindData(prefix + p.name);
 				long last  = raw == null ? 0 : long.Parse(raw);
-				
-				if (last + period.TotalSeconds > now) {
-					p.Message("%WYou can only claim a reward every {0}", period.Shorten(true));
+				double end = last + period.TotalSeconds;
+
+				if (end > now) {
+					TimeSpan left = TimeSpan.FromSeconds(end - now);
+					p.Message("%WYou can only claim this reward every {0}, and must therefore wait another {1}", 
+						period.Shorten(true), left.Shorten(true));
 					return;
 				}
 				
 				// Remember point in time user last used /Reward
-				list.Update(p.name, now.ToString());
+				list.Update(prefix + p.name, now.ToString());
 				list.Save();
 				
 				p.SetMoney(p.money + amount);
@@ -68,6 +74,8 @@ namespace PluginReward {
 				p.Message("%T/Reward [amount] <period>");
 				p.Message("%HGives you [amount] {0} as a reward", Server.Config.Currency);
 				p.Message("%H<period> is how long you must wait between being able to claim a reward, and defaults to 24 hours.");
+				p.Message("%T/Reward [amount] [period] [ID]");
+				p.Message("%H Uses a ID-specific <period> cooldown instead of global cooldown");
 				p.Message("%HNote that %T/Reward %Hcan ony be used in a %T/MB");
 			}
 		}
