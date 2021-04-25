@@ -17,22 +17,13 @@ namespace MCGalaxy {
 		public override void Unload(bool shutdown) {
 			OnPlayerConnectEvent.Unregister(KickNoCC);
 		}
-		
-                void KickPlayer(Player p) {
-                        p.Leave("Please connect using the ClassiCube client with Enhanced mode.", true);
-                        p.cancellogin = true; 
-                        return;
-                }
 
-                void KickNoCC(Player p) {
-                        string app = p.appName;			
-                        if(app == null) {
-                                KickPlayer(p);
-                        } else if(app.CaselessContains("ClassiCube ")) {
-				p.cancellogin = false; 
-				return;
-                        }
-                        KickPlayer(p);
-                }
+		void KickNoCC(Player p) {
+			string app = p.appName;            
+			if (app == null || !app.CaselessContains("ClassiCube ")) {
+			p.Leave("Please connect using the ClassiCube client with Enhanced mode.", true);
+			p.cancellogin = true; 
+		    }
+		}
     }
 }
