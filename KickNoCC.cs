@@ -29,7 +29,8 @@ namespace MCGalaxy {
                         if(app == null) {
                                 KickPlayer(p);
                         } else if(!app.CaselessContains("ClassiCube ")) {
-                                KickPlayer(p);
+				p.cancellogin = false; 
+				return;
                         }
                         KickPlayer(p);
                 }
