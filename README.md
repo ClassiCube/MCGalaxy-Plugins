@@ -1,5 +1,5 @@
 # MCGalaxy-Plugins
-Some custom command and plugins for MCGalaxy.
+Some custom commands and plugins for MCGalaxy.
 
 ### Usage
 
@@ -31,7 +31,7 @@ Some custom command and plugins for MCGalaxy.
 | Name | Description |
 | ------------- | -----|
 | **BinVoxImport** | Imports [binvox](http://www.patrickmin.com/binvox/) files from /extra/import. BinBox is useful for voxelising .obj models.
-| **FootballInstruction** | Adds support for CustomParticles CPE. Documentation can be found [here](documentation/GoodlyEffects.md).
+| **FootballInstruction** | Adds a bot AI instruction which allows kicking a bot around like a football.
 | **GoodlyEffects** | Adds support for CustomParticles CPE. Documentation can be found [here](documentation/GoodlyEffects.md).
 | **KickJini** | Prevents people using Jini client from logging in.
 | **KickNoCC** | Only allows people using the ClassiCube client in Enhanced mode to login.
