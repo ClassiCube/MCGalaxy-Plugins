@@ -14,20 +14,33 @@ Some custom command and plugins for MCGalaxy.
 - /pload [plugin name]
 - Plugins automatically load on server start.
 
-### List
+### Commands list
 | Name | Description |
 | ------------- | -----|
-| **BinVoxImport** | Imports [binvox](http://www.patrickmin.com/binvox/) files from /extra/import. BinBox is useful for voxelising .obj models.
 | **CmdBiggestTables** | Lists the database tables with most rows. Unlikely to be useful except for debugging.
+| **CmdServerMap** | Copies a map from another server located on the same computer.
 | **CmdGBInsert** | Reorders a global block's position in the inventory.
 | **CmdImpersonate** | Fake a chat message as if it came from another player.
 | **CmdMapHack** | Allows you to bypass -hax on your own /os maps. (or ranks >= the extra permission)
+| **CmdMapsBy** | Lists all maps created by the given user.
+| **CmdPruneDB** | Removes a player's entries from a level's BlockDB. **Use at your own risk.**
 | **CmdSetSoftwareName** | Sets the name of the software shown in /sinfo and in the server list.
+| **CmdTempBlock** | Creates a client-side block. (only the given player sees the block change)
+
+### Plugins list
+| Name | Description |
+| ------------- | -----|
+| **BinVoxImport** | Imports [binvox](http://www.patrickmin.com/binvox/) files from /extra/import. BinBox is useful for voxelising .obj models.
+| **FootballInstruction** | Adds support for CustomParticles CPE. Documentation can be found [here](documentation/GoodlyEffects.md).
 | **GoodlyEffects** | Adds support for CustomParticles CPE. Documentation can be found [here](documentation/GoodlyEffects.md).
 | **KickJini** | Prevents people using Jini client from logging in.
+| **KickNoCC** | Only allows people using the ClassiCube client in Enhanced mode to login.
 | **LockedModel** | Forces players to only use specified model(s) on a map.
-| **MagicaVoxelImport** | Importa [MagicaVoxel](https://ephtracy.github.io/) files from /extra/import.
+| **LockedReach** | Restricts reach distance of players on a map.
+| **MagicaVoxelImport** | Imports [MagicaVoxel](https://ephtracy.github.io/) files from /extra/import.
 | **Marry** | Allows you to show as married to another player in /whois.
 | **PluginNoTp** | Prevents using /tp on certain maps. (you may need to change the source code)
 | **Rainbow** | Makes the %r custom colour constantly change in rainbow pattern/ (you must define %r first)
-| **TeamChatPlugin** | Allows using *=message* as shortcut for */team message*.
+| **Reward** | Allows using /Reward in Message Blocks, which will give the player money when clicked on.
+| **SchematicImporter** | Imports [Schematic](https://minecraft.fandom.com/wiki/Schematic_file_format) files from /extra/import.
+| **TeamChat** | Allows using *=message* as shortcut for */team message*.
