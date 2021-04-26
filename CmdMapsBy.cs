@@ -16,16 +16,30 @@ namespace MCGalaxy.Commands {
 			string[] maps = LevelInfo.AllMapNames();
 			List<string> madeBy = new List<string>();
 			foreach (string map in maps) {
-				if (!LevelInfo.IsRealmOwner(author, map)) continue;
+				if (!IsMapAuthor(author, map)) continue;
 				madeBy.Add(map);
 			}
 
-			author = PlayerInfo.GetColoredName(p, author);
+			author = p.FormatNick(author);
 			if (madeBy.Count == 0) {
 				p.Message("{0} %Shas not made any maps", author);
 			} else {
 				p.Message("{0} %Sauthored these maps: {1}", author, madeBy.Join());
 			}
+		}
+
+		public static bool IsMapAuthor(string name, string map) {
+			Level lvl = null;
+			LevelConfig cfg = LevelInfo.GetConfig(map, out lvl);
+
+			string[] authors = cfg.Authors.SplitComma();
+			if (authors.Length > 0) {
+				foreach (string author in authors) {
+					if (author.CaselessEq(name)) return true;
+				}
+			}
+
+			return LevelInfo.IsRealmOwner(map, cfg, name);
 		}
 
 		public override void Help(Player p) {
@@ -34,4 +48,3 @@ namespace MCGalaxy.Commands {
 		}
 	}
 }
-
