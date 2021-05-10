@@ -29,7 +29,7 @@ namespace MCGalaxy.Commands {
             
             Player who = PlayerInfo.FindMatches(p, args[0]);
             if (who == null) { Help(p); return; }
-            if (who.muted)   { Player.Message(p, "Cannot impersonate a muted player"); return; }
+            if (who.muted)   { p.Message("Cannot impersonate a muted player"); return; }
             
             if (CheckRank(p, data, who, "impersonate", false)) {
                 Chat.MessageChat(who, "λFULL: &f" + args[1], null, true);
@@ -37,8 +37,8 @@ namespace MCGalaxy.Commands {
         }
         
         public override void Help(Player p) {
-            Player.Message(p, "%T/Impersonate [player] [message]");
-            Player.Message(p, "%HSends a message as if it came from [player]");
+            p.Message("%T/Impersonate [player] [message]");
+            p.Message("%HSends a message as if it came from [player]");
         }
     }
 }
