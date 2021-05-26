@@ -101,7 +101,7 @@ namespace MCGalaxy {
 			return data;
 		}
 		
-		public override void Output(Player p, string[] args, StreamWriter w) {
+		public override void Output(Player p, string[] args, TextWriter w) {
 			if (args.Length > 3) {
 				w.WriteLine(Name + " " + ushort.Parse(args[3]));
 			} else {
