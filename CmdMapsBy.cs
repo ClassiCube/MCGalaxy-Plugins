@@ -29,8 +29,7 @@ namespace MCGalaxy.Commands {
 		}
 
 		public static bool IsMapAuthor(string name, string map) {
-			Level lvl = null;
-			LevelConfig cfg = LevelInfo.GetConfig(map, out lvl);
+			LevelConfig cfg = LevelInfo.GetConfig(map);
 
 			string[] authors = cfg.Authors.SplitComma();
 			if (authors.Length > 0) {

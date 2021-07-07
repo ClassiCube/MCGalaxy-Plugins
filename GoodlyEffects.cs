@@ -179,8 +179,8 @@ namespace MCGalaxy {
                 
                 //JsonContext ctx = new JsonContext(); ctx.Val = json;
                 //JsonArray array = (JsonArray)Json.ParseStream(ctx);
-                bool success;
-                JsonArray array = (JsonArray)Json.Parse(json, out success);
+                JsonReader reader = new JsonReader(json);
+                JsonArray array = (JsonArray)reader.Parse();
 				
                 if (array == null) return spawners;
                 

@@ -79,9 +79,9 @@ namespace MCGalaxy {
 		}
 		
 		static void CopyBlockProps(string src, string dst) {
-			string path = Path.Combine(oldServer, BlockProps.PropsPath("_" + src));
+			string path = Path.Combine(oldServer, Paths.BlockPropsPath("_" + src));
 			if (!File.Exists(path)) return;
-			File.Copy(path, BlockProps.PropsPath("_" + dst), true);
+			File.Copy(path, Paths.BlockPropsPath("_" + dst), true);
 		}
 		
 		// TODO The database api kinda sucks, need to rewrite

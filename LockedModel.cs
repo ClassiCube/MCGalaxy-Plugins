@@ -32,7 +32,7 @@ namespace PluginLockedModel {
                 p.ScaleX = (float)p.Extras.Get(key + "_X");
                 p.ScaleY = (float)p.Extras.Get(key + "_Y");
                 p.ScaleZ = (float)p.Extras.Get(key + "_Z");
-                Entities.UpdateModel(p, originalModel);
+                p.UpdateModel(originalModel);
                 return;
             }
             
@@ -43,15 +43,15 @@ namespace PluginLockedModel {
             
             if (models.CaselessContains(p.Model)) {
                 // Still want to reset X/Y/Z per axis model scaling
-                Entities.UpdateModel(p, p.Model);
+                p.UpdateModel(p.Model);
             } else {
                 // Switch user to the level's locked model
-                Entities.UpdateModel(p, models[0]);
+                p.UpdateModel(models[0]);
             }
 
             // Don't overwrite model user had before joining a level with locked model
             if (originalModel != null) return;
-            p.Extras.PutString(key, currentModel);
+            p.Extras[key] = currentModel;
             p.Extras[key + "_X"] = curX;
             p.Extras[key + "_Y"] = curY;
             p.Extras[key + "_Z"] = curZ;

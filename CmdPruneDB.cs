@@ -50,7 +50,7 @@ namespace MCGalaxy.Commands.Moderation {
 					if (w.entries.Count > 0) format.WriteEntries(dst, w.entries);
 				}
 				
-				string namesStr = names.Join(name => PlayerInfo.GetColoredName(p, name));
+				string namesStr = names.Join(name => p.FormatNick(name));
 				if (w.left > 0) {
 					File.Delete(db.FilePath);
 					File.Move(db.FilePath + ".tmp", db.FilePath);
