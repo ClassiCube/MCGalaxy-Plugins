@@ -40,7 +40,7 @@ namespace Core {
 		static void FormatMarriedTo(Player p, string who) {
 			string data = marriages.FindData(who);
 			if (data == null) return;
-			p.Message("  Married to {0}", PlayerInfo.GetColoredName(p, data));
+			p.Message("  Married to {0}", p.FormatNick(data));
 		}
 	}
 	
@@ -60,8 +60,8 @@ namespace Core {
 			p.Message("&bYou &aaccepted &b{0}&b's proposal", proposer.ColoredName);
 			proposer.SetMoney(proposer.money - 200);
 			
-			MarryPlugin.marriages.AddOrReplace(p.name, proposer.name);
-			MarryPlugin.marriages.AddOrReplace(proposer.name, p.name);
+			MarryPlugin.marriages.Update(p.name, proposer.name);
+			MarryPlugin.marriages.Update(proposer.name, p.name);
 			MarryPlugin.marriages.Save();
 			p.Extras.Remove(MarryPlugin.ExtraName);
 		}
@@ -133,7 +133,7 @@ namespace Core {
 			Player partner = PlayerInfo.FindExact(marriedTo);
 			
 			Chat.MessageGlobal("-{0}%S just divorced {1}%S-",
-			                p.ColoredName, PlayerInfo.GetColoredName(p, marriedTo));
+			                p.ColoredName, p.FormatNick(marriedTo));
 			if (partner != null)
 				partner.Message("{0} &bjust divorced you.", p.ColoredName);
 		}
@@ -173,7 +173,7 @@ namespace Core {
 			Chat.MessageGlobal("{0}%S is asking {1}%S for their hand in marriage!",
 			                   p.ColoredName, partner.ColoredName);
 			
-			partner.Extras.PutString(MarryPlugin.ExtraName, p.name);
+			partner.Extras[MarryPlugin.ExtraName] = p.name;
 			partner.Message("&bTo accept their proposal type &a/Accept");
 			partner.Message("&bOr to deny it, type &c/Deny");
 		}
