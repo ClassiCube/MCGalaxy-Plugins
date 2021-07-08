@@ -52,3 +52,9 @@ https://github.com/Goodlyay/Nas
 https://github.com/NotAwesome2/MCGalaxy-CustomModels
 
 https://github.com/derekdinan/ClassiCube-Stuff
+
+https://github.com/NotAwesome2/Not-Awesome-Script
+
+https://github.com/NotAwesome2/Commands
+
+https://github.com/NotAwesome2/Plugins
