@@ -75,9 +75,10 @@ namespace Marry {
 			Player proposer = MarryPlugin.CheckProposal(p);
 			if (proposer == null) return;
 			
-			Chat.MessageGlobal("-{0} &aaccepted {1}&S's proposal, and they are now happily married-",
-								p.ColoredName, proposer.ColoredName);
-			p.Message("&bYou &aaccepted &b{0}&b's proposal", proposer.ColoredName);
+			const string msg = "-λNICK &aaccepted {0}&S's proposal, and they are now happily married-";
+			Chat.MessageFrom(p, string.Format(msg, p.FormatNick(proposer)));
+			
+			p.Message("&bYou &aaccepted &b{0}&b's proposal", p.FormatNick(proposer));
 			proposer.SetMoney(proposer.money - 200);
 			
 			MarryPlugin.marriages.Update(p.name, proposer.name);
@@ -99,10 +100,10 @@ namespace Marry {
 			Player proposer = MarryPlugin.CheckProposal(p);
 			if (proposer == null) return;
 			
-			Chat.MessageGlobal("-{0} &Sdenied {1}&S's proposal, it just wasn't meant to be-",
-								p.ColoredName, proposer.ColoredName);
-			p.Message("&bYou &cdenied &b{0}&b's proposal", proposer.ColoredName);
+			const string msg = "-λNICK &Sdenied {0}&S's proposal, it just wasn't meant to be-";
+			Chat.MessageFrom(p, string.Format(msg, p.FormatNick(proposer)));
 			
+			p.Message("&bYou &cdenied &b{0}&b's proposal", p.FormatNick(proposer));
 			p.Extras.Remove(MarryPlugin.EXTRA_KEY);
 		}
 		
@@ -120,19 +121,21 @@ namespace Marry {
 			if (marriedTo == null) { p.Message("You are not married to anyone."); return; }
 			
 			if (p.money < 50) {
-				p.Message("You need at least 50 &3{0} &Sto divorce your partner.", Server.Config.Currency); return;
+				p.Message("You need at least 50 &3{0} &Sto divorce your partner.", Server.Config.Currency); 
+				return;
 			}
 			p.SetMoney(p.money - 50);
 			
 			MarryPlugin.marriages.Remove(p.name);
 			MarryPlugin.marriages.Remove(marriedTo);
 			MarryPlugin.marriages.Save();
-			Player partner = PlayerInfo.FindExact(marriedTo);
 			
-			Chat.MessageGlobal("-{0}&S just divorced {1}&S-",
-			                p.ColoredName, p.FormatNick(marriedTo));
+			const string msg = "-λNICK&S just divorced {0}&S-";
+			Chat.MessageFrom(p, string.Format(msg, p.FormatNick(marriedTo)));
+			
+			Player partner = PlayerInfo.FindExact(marriedTo);
 			if (partner != null)
-				partner.Message("{0} &bjust divorced you.", p.ColoredName);
+				partner.Message("{0} &bjust divorced you.", partner.FormatNick(p));
 		}
 		
 		public override void Help(Player p) {
@@ -153,22 +156,23 @@ namespace Marry {
 			}
 			
 			if (p.money < 200) {
-				p.Message("You need at least 200 &3{0} &Sto marry someone.", Server.Config.Currency); return;
+				p.Message("You need at least 200 &3{0} &Sto marry someone.", Server.Config.Currency); 
+				return;
 			}
 			
 			Player partner = PlayerInfo.FindMatches(p, message);
 			if (partner == null) return;
-			if (partner == p) { p.Message("You cannot marry yourself."); return; }
+			if (partner == p) { p.Message("&WYou cannot marry yourself."); return; }
 			
 			entry = MarryPlugin.marriages.FindData(partner.name);
 			if (entry != null) {
-				p.Message("{0} &Sis already married to someone else", partner.ColoredName); return;
+				p.Message("{0} &Sis already married to someone else", p.FormatNick(partner)); 
+				return;
 			}
 			
-			Chat.MessageGlobal("-{0}&S gets down on one knee-",
-			                   p.ColoredName);
-			Chat.MessageGlobal("{0}&S is asking {1}&S for their hand in marriage!",
-			                   p.ColoredName, partner.ColoredName);
+			const string msg = "λNICK&S is asking {0}&S for their hand in marriage!";
+			Chat.MessageFrom(p, "-λNICK&S gets down on one knee-");
+			Chat.MessageFrom(p, string.Format(msg, p.FormatNick(partner)));
 			
 			partner.Extras[MarryPlugin.EXTRA_KEY] = p.name;
 			partner.Message("&bTo accept their proposal type &a/Accept");
