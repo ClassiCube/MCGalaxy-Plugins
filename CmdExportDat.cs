@@ -4,6 +4,8 @@ using System.IO.Compression;
 using System.Net;
 using System.Text;
 using MCGalaxy.Levels.IO;
+// Credit to https://github.com/NickstaDB/SerializationDumper 
+//  as that program was majorly helpful for validating exported output
 
 namespace MCGalaxy.Commands.World {
 
