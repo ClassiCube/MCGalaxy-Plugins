@@ -1,3 +1,4 @@
+//reference System.dll
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -170,11 +171,8 @@ namespace MCGalaxy.Commands.World {
 		public override LevelPermission defaultRank { get { return LevelPermission.Admin; } }
 		
 		public override void Use(Player p, string message, CommandData data) {
-			if (message.Length == 0) { Help(p); return; }
-			if (!Formatter.ValidMapName(p, message)) return;
-			
 			Directory.CreateDirectory("extra/dat");
-			string path = "extra/dat/" + message + ".dat";
+			string path = "extra/dat/" + p.level.name + ".dat";
 			
 			DatExporter exporter = new DatExporter();
 			exporter.Write(path, p.level);
@@ -182,8 +180,8 @@ namespace MCGalaxy.Commands.World {
 		}
 		
 		public override void Help(Player p) {
-			p.Message("&T/ExportDat [filename]");
-			p.Message("&HSaves current level to the /extra/dat/ folder");
+			p.Message("&T/ExportDat");
+			p.Message("&HSaves current level to the /extra/dat/ folder as a .dat file");
 		}
 	}
 }
