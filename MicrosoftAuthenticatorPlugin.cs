@@ -61,7 +61,7 @@ namespace AuthPlugin
 
 		public override bool VerifyLogin(Player p, string mppass)
 		{
-			bool mppass_valid = base.VerifyLogin(p, mppass);
+			bool mppass_valid = underlyingAuthenticator.VerifyLogin(p, mppass);
 			if (mppass_valid) return true;
 
 			string serverId = externalIP + ":" + Server.Config.Port;
