@@ -36,7 +36,7 @@ namespace AuthPlugin
 		public MicrosoftFallbackAuthenticator(Authenticator underlyingAuthenticator)
         {
 			this.underlyingAuthenticator = underlyingAuthenticator;
-			externalIP = new WebClient().DownloadString("http://icanhazip.com").Replace("\\r\\n", "").Replace("\\n", "").Trim();
+			externalIP = new WebClient().DownloadString("http://ipv4.icanhazip.com").Replace("\\r\\n", "").Replace("\\n", "").Trim();
 		}
 
         public override bool HasPassword(string name)
