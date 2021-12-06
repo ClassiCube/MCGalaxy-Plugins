@@ -45,6 +45,7 @@ Some custom commands and plugins for MCGalaxy.
 | **Reward** | Allows using /Reward in Message Blocks, which will give the player money when clicked on.
 | **SchematicImporter** | Imports [Schematic](https://minecraft.fandom.com/wiki/Schematic_file_format) files from /extra/import.
 | **TeamChat** | Allows using *=message* as shortcut for */team message*.
+| **MicrosoftAuthentication** | Allows users to authenticate using the online-mode protocol, if verify-names fails or no mppass is provided.
 
 
 ## Other plugins available
