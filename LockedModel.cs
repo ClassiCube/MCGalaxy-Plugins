@@ -65,7 +65,7 @@ namespace PluginLockedModel {
             if (models == null) return;
             
             if (!models.CaselessContains(args)) {
-                p.Message("&cYou may only change your own model to: %S{0}", models.Join());
+                p.Message("&cYou may only change your own model to: &S{0}", models.Join());
                 p.cancelcommand = true;
             }
         }

@@ -29,10 +29,10 @@ namespace MCGalaxy {
 			
 			string path = Path.Combine(oldServer, LevelInfo.MapPath(src));
 			if (!File.Exists(path)) {
-				p.Message("%WLevel {0} does not exist on old server.", src); return;
+				p.Message("&WLevel {0} does not exist on old server.", src); return;
 			}
 			if (LevelInfo.MapExists(dst)) {
-				p.Message("%WLevel {0} already exists on new server.", dst); return;
+				p.Message("&WLevel {0} already exists on new server.", dst); return;
 			}
 			
 			File.Copy(path, LevelInfo.MapPath(dst), true);
@@ -186,9 +186,9 @@ namespace MCGalaxy {
 		}
 		
 		public override void Help(Player p) {
-			p.Message("%T/CopyServerMap [old name] <new name>");
-			p.Message("%HCopies a level across from old server to this server");
-			p.Message("%HIf <new name> is not given, then [old name] is used as name for the new level");
+			p.Message("&T/CopyServerMap [old name] <new name>");
+			p.Message("&HCopies a level across from old server to this server");
+			p.Message("&HIf <new name> is not given, then [old name] is used as name for the new level");
 		}
 	}
 }

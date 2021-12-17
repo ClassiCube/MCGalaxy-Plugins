@@ -33,7 +33,7 @@ namespace MCGalaxy.Commands.Moderation {
 			
 			using (IDisposable locker = db.Locker.AccquireWrite()) {
 				if (!File.Exists(db.FilePath)) {
-					p.Message("%WBlockDB file for this map doesn't exist.");
+					p.Message("&WBlockDB file for this map doesn't exist.");
 					return;
 				}
 				
@@ -54,11 +54,11 @@ namespace MCGalaxy.Commands.Moderation {
 				if (w.left > 0) {
 					File.Delete(db.FilePath);
 					File.Move(db.FilePath + ".tmp", db.FilePath);
-					p.Message("Pruned {1}%S's changes ({2} entries left now) for the past &b{0}",
+					p.Message("Pruned {1}&S's changes ({2} entries left now) for the past &b{0}",
 					          delta.Shorten(true), namesStr, w.left);
 				} else {
 					File.Delete(db.FilePath + ".tmp");
-					p.Message("No changes found by {1} %Sin the past &b{0}",
+					p.Message("No changes found by {1} &Sin the past &b{0}",
 					          delta.Shorten(true), namesStr);
 				}
 			}
@@ -129,7 +129,7 @@ namespace MCGalaxy.Commands.Moderation {
 			if (delta.TotalSeconds == 0)
 				delta = TimeSpan.FromMinutes(90);
 			if (!self && delta > p.group.MaxUndo) {
-				p.Message("{0}%Ss may only undo up to {1}",
+				p.Message("{0}&Ss may only undo up to {1}",
 				          p.group.ColoredName, p.group.MaxUndo.Shorten(true, true));
 				return p.group.MaxUndo;
 			}
@@ -152,8 +152,8 @@ namespace MCGalaxy.Commands.Moderation {
 		}
 
 		public override void Help(Player p) {
-			p.Message("%T/PruneDB [player1] <player2..> <timespan>");
-			p.Message("%HDeletes the block changes of [players] in the past <timespan> from BlockDB.");
+			p.Message("&T/PruneDB [player1] <player2..> <timespan>");
+			p.Message("&HDeletes the block changes of [players] in the past <timespan> from BlockDB.");
 			p.Message("&cSlow and dangerous. Use with care.");
 		}
 	}

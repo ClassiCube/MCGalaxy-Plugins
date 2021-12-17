@@ -22,9 +22,9 @@ namespace MCGalaxy.Commands {
 
 			author = p.FormatNick(author);
 			if (madeBy.Count == 0) {
-				p.Message("{0} %Shas not made any maps", author);
+				p.Message("{0} &Shas not made any maps", author);
 			} else {
-				p.Message("{0} %Sauthored these maps: {1}", author, madeBy.Join());
+				p.Message("{0} &Sauthored these maps: {1}", author, madeBy.Join());
 			}
 		}
 
@@ -42,8 +42,8 @@ namespace MCGalaxy.Commands {
 		}
 
 		public override void Help(Player p) {
-			p.Message("%T/mapsby %H[player]");
-			p.Message("%HLists all maps authored by the given player.");
+			p.Message("&T/mapsby &H[player]");
+			p.Message("&HLists all maps authored by the given player.");
 		}
 	}
 }

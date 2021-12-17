@@ -37,8 +37,8 @@ namespace MCGalaxy.Commands {
         }
         
         public override void Help(Player p) {
-            p.Message("%T/Impersonate [player] [message]");
-            p.Message("%HSends a message as if it came from [player]");
+            p.Message("&T/Impersonate [player] [message]");
+            p.Message("&HSends a message as if it came from [player]");
         }
     }
 }

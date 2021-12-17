@@ -33,7 +33,7 @@ namespace PluginReward {
 			public override void Use(Player p, string message, CommandData data) {
 				// this command can only be used from within an /MB
 				if (data.Context != CommandContext.MessageBlock) {
-					p.Message("%W/RewardMoney can only be used in an /MB");
+					p.Message("&W/RewardMoney can only be used in an /MB");
 					return;
 				}
 				
@@ -57,7 +57,7 @@ namespace PluginReward {
 
 				if (end > now) {
 					TimeSpan left = TimeSpan.FromSeconds(end - now);
-					p.Message("%WYou can only claim this reward every {0}, and must therefore wait another {1}", 
+					p.Message("&WYou can only claim this reward every {0}, and must therefore wait another {1}", 
 						period.Shorten(true), left.Shorten(true));
 					return;
 				}
@@ -71,12 +71,12 @@ namespace PluginReward {
 			}
 
 			public override void Help(Player p) {
-				p.Message("%T/Reward [amount] <period>");
-				p.Message("%HGives you [amount] {0} as a reward", Server.Config.Currency);
-				p.Message("%H<period> is how long you must wait between being able to claim a reward, and defaults to 24 hours.");
-				p.Message("%T/Reward [amount] [period] [ID]");
-				p.Message("%H Uses a ID-specific <period> cooldown instead of global cooldown");
-				p.Message("%HNote that %T/Reward %Hcan ony be used in a %T/MB");
+				p.Message("&T/Reward [amount] <period>");
+				p.Message("&HGives you [amount] {0} as a reward", Server.Config.Currency);
+				p.Message("&H<period> is how long you must wait between being able to claim a reward, and defaults to 24 hours.");
+				p.Message("&T/Reward [amount] [period] [ID]");
+				p.Message("&H Uses a ID-specific <period> cooldown instead of global cooldown");
+				p.Message("&HNote that &T/Reward &Hcan ony be used in a &T/MB");
 			}
 		}
 	}

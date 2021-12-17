@@ -22,7 +22,7 @@ namespace MCGalaxy {
 		void DisableHacksBypass(Player p) {
 			p.Extras[ext_allowed_key] = false;
 			p.SendMapMotd();
-			p.Message("%HHacks bypassing reset, use %T/MapHack %Hto turn on again");
+			p.Message("&HHacks bypassing reset, use &T/MapHack &Hto turn on again");
 		}
 		
 		public override void Use(Player p, string message, CommandData data) {
@@ -57,8 +57,8 @@ namespace MCGalaxy {
 		}
 		
 		public override void Help(Player p) {
-			p.Message("%T/MapHack %H- Lets you bypass hacks restrictions on your own map (e.g. for when making a parkour map with -hax on)");
-			p.Message("%T/MapHack stop &H- Enables hacks restrictions again");
+			p.Message("&T/MapHack &H- Lets you bypass hacks restrictions on your own map (e.g. for when making a parkour map with -hax on)");
+			p.Message("&T/MapHack stop &H- Enables hacks restrictions again");
 		}
 	}
 }

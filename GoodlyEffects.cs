@@ -119,7 +119,7 @@ namespace MCGalaxy {
                 if (CanEditAny(p)) { return true; }
                 if (owner == p.name) { return true; }
                 
-                p.Message("%WYou are not allowed to {0} spawners that you did not create.", attemptedAction);
+                p.Message("&WYou are not allowed to {0} spawners that you did not create.", attemptedAction);
                 return false;
             }
 		}
@@ -410,7 +410,7 @@ namespace MCGalaxy {
 		}
 		public static void DefineEffectsFor(Player p) {
 			if  (!p.Supports(CpeExt.CustomParticles)) {
-				p.Message("%WCould not define custom particles because your client is outdated.");
+				p.Message("&WCould not define custom particles because your client is outdated.");
 				return;
 			}
             p.Socket.LowLatency = true;
@@ -441,7 +441,7 @@ namespace MCGalaxy {
 		public static void SpawnEffectFor(Player p, string effectName, float x, float y, float z, float originX, float originY, float originZ) {
 			EffectConfig effect;
 			if (!effectAtEffectName.TryGetValue(effectName, out effect)) {
-				p.Message("%WCould not find effect named \"{0}\" !", effectName);
+				p.Message("&WCould not find effect named \"{0}\" !", effectName);
 				return;
 			}
 			if (!p.Supports(CpeExt.CustomParticles)) { return; }
@@ -467,8 +467,8 @@ namespace MCGalaxy {
 		}
 		public override void Help(Player p)
 		{
-            p.Message("%T/ReloadEffects");
-            p.Message("%HReloads the effects from the config files.");
+            p.Message("&T/ReloadEffects");
+            p.Message("&HReloads the effects from the config files.");
 		}
 	}
 	
@@ -492,7 +492,7 @@ namespace MCGalaxy {
             
 			string[] words = message.Split(' ');
 			if (words.Length < 7) {
-				p.Message("%WYou need to provide effect, x, y, z, originX, originY, and originZ.");
+				p.Message("&WYou need to provide effect, x, y, z, originX, originY, and originZ.");
 				return;
 			}
 			string effectName = words[0];
@@ -510,7 +510,7 @@ namespace MCGalaxy {
 			}
 			PluginGoodlyEffects.EffectConfig effect;
 			if (!PluginGoodlyEffects.effectAtEffectName.TryGetValue(effectName, out effect)) {
-				p.Message("%WUnknown effect \"{0}\".", effectName);
+				p.Message("&WUnknown effect \"{0}\".", effectName);
 				return;
 			}
 			
@@ -532,18 +532,18 @@ namespace MCGalaxy {
 			p.Message("Currently available effects:");
 			foreach(KeyValuePair<string, PluginGoodlyEffects.EffectConfig> entry in PluginGoodlyEffects.effectAtEffectName)
 			{
-				p.Message("%H{0}", entry.Key);
+				p.Message("&H{0}", entry.Key);
 			}
 			p.Message("Scroll up to see more effects.");
 		}
 		public override void Help(Player p)
 		{
-            p.Message("%T/Effect [effect] [x y z] [originX originY originZ] <show to all players>");
-            p.Message("%HSpawns an effect");
-			p.Message("%HOrigin is relative and determines the particle's direction.");
-			p.Message("%HE.G. origin of 0 -1 0 will make the particles move up.");
-			p.Message("%H[show to all players] is optional true or false.");
-            p.Message("%T/Effect list %H- Lists currently available effects.");
+            p.Message("&T/Effect [effect] [x y z] [originX originY originZ] <show to all players>");
+            p.Message("&HSpawns an effect");
+			p.Message("&HOrigin is relative and determines the particle's direction.");
+			p.Message("&HE.G. origin of 0 -1 0 will make the particles move up.");
+			p.Message("&H[show to all players] is optional true or false.");
+            p.Message("&T/Effect list &H- Lists currently available effects.");
 		}
 	}
 	
@@ -578,17 +578,17 @@ namespace MCGalaxy {
 		    if (func.CaselessEq("add")) { DoAdd(p, args); return; }
 		    if (func.CaselessEq("remove")) { DoRemove(p, args); return; }
 		    if (func.CaselessEq("summon")) { DoSummon(p, args); return; }
-		    p.Message("%W\"{0}\" is not a recognized argument.", func);
-		    p.Message("Please use %T/help spawner%S.");
+		    p.Message("&W\"{0}\" is not a recognized argument.", func);
+		    p.Message("Please use &T/help spawner&S.");
 		    return;
 		}
 		static void DoList(Player p, string message) {
 	        if (message.CaselessEq("all")) {
-		        p.Message("%fADMIN DEBUG LIST");
+		        p.Message("&fADMIN DEBUG LIST");
     		    foreach (KeyValuePair<Level, List<PluginGoodlyEffects.EffectSpawner>> value in PluginGoodlyEffects.spawnersAtLevel) {
-    		        p.Message("%fKey is {0}", value.Key.MapName);
+    		        p.Message("&fKey is {0}", value.Key.MapName);
     		        foreach (PluginGoodlyEffects.EffectSpawner spawner in value.Value) {
-    		            p.Message("%fSpawner is {0}", spawner.name);
+    		            p.Message("&fSpawner is {0}", spawner.name);
     		        }
     		    }
 	        }
@@ -600,20 +600,20 @@ namespace MCGalaxy {
 		            p.Message("{0}, made by {1}", spawner.name, spawner.owner);
 		            count++;
 		        }
-		        p.Message("There are {0} spawners in {1}%S.", count, p.level.ColoredName);
+		        p.Message("There are {0} spawners in {1}&S.", count, p.level.ColoredName);
 		    } else {
-		        p.Message("There are no spawners in {0}%S.", p.level.ColoredName);
+		        p.Message("There are no spawners in {0}&S.", p.level.ColoredName);
 		    }
 		}
 		static void DoAdd(Player p, string message) {
 		    if (SpawnerCount(p.level) >= PluginGoodlyEffects.spawnerLimit) {
-		        p.Message("%WThe limit of {0} spawners per level has been reached.", PluginGoodlyEffects.spawnerLimit);
-		        p.Message("You may remove spawners with %T/spawner remove%S.");
+		        p.Message("&WThe limit of {0} spawners per level has been reached.", PluginGoodlyEffects.spawnerLimit);
+		        p.Message("You may remove spawners with &T/spawner remove&S.");
 		        return;
 		    }
 			string[] words = message.Split(' ');
 			if (words.Length < 8) {
-				p.Message("%WTo add a spawner you need to provide spawner name, effect, x, y, z, originX, originY, and originZ.");
+				p.Message("&WTo add a spawner you need to provide spawner name, effect, x, y, z, originX, originY, and originZ.");
 				return;
 			}
 			string spawnerName = words[0];
@@ -621,7 +621,7 @@ namespace MCGalaxy {
 			string effectName = words[1];
 			PluginGoodlyEffects.EffectConfig effect;
 			if (!PluginGoodlyEffects.effectAtEffectName.TryGetValue(effectName, out effect)) {
-				p.Message("%WUnknown effect \"{0}\".", effectName);
+				p.Message("&WUnknown effect \"{0}\".", effectName);
 				return;
 			}
 			
@@ -677,15 +677,15 @@ namespace MCGalaxy {
 		    if (message.CaselessEq("all")) {
 		        if (PluginGoodlyEffects.EffectSpawner.CanEditAny(p)) {
     		        PluginGoodlyEffects.RemoveAllSpawners(p.level, true);
-    		        p.Message("Removed all spawners from {0}%S.", p.level.ColoredName);
+    		        p.Message("Removed all spawners from {0}&S.", p.level.ColoredName);
 		        } else {
-		            p.Message("%WYou cannot remove all spawners unless you are the owner of this map.");
+		            p.Message("&WYou cannot remove all spawners unless you are the owner of this map.");
 		        }
 		        return;
 		    }
-		    if (message == "") { p.Message("%WPlease provide the name of a spawner to remove."); return; }
+		    if (message == "") { p.Message("&WPlease provide the name of a spawner to remove."); return; }
 		    if (!PluginGoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) {
-		        p.Message("There are no spawners in {0}%S.", p.level.ColoredName);
+		        p.Message("There are no spawners in {0}&S.", p.level.ColoredName);
 		        return;
 		    }
 		    int matches;
@@ -702,12 +702,12 @@ namespace MCGalaxy {
 		}
 		static void DoTP(Player p, string message) {
 		    if (!Hacks.CanUseHacks(p)) {
-		        p.Message("%WYou can't teleport to spawners because hacks are disabled in {0}", p.level.ColoredName);
+		        p.Message("&WYou can't teleport to spawners because hacks are disabled in {0}", p.level.ColoredName);
 		        return;
 		    }
-		    if (message == "") { p.Message("%WPlease provide the name of a spawner to teleport to."); return; }
+		    if (message == "") { p.Message("&WPlease provide the name of a spawner to teleport to."); return; }
 		    if (!PluginGoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) {
-		        p.Message("There are no spawners in {0}%S to teleport to.", p.level.ColoredName);
+		        p.Message("There are no spawners in {0}&S to teleport to.", p.level.ColoredName);
 		        return;
 		    }
 		    int matches;
@@ -720,14 +720,14 @@ namespace MCGalaxy {
 		    Command.Find("tp").Use(p, "-precise "+(int)(spawner.x*32)+" "+(int)(spawner.y*32)+" "+(int)(spawner.z*32));
 		}
 		static void DoSummon(Player p, string message) {
-		    if (message == "") { p.Message("%WPlease provide the name of a spawner to summon."); return; }
+		    if (message == "") { p.Message("&WPlease provide the name of a spawner to summon."); return; }
 		    string[] args = message.SplitSpaces(2);
 		    string spawnerName = args[0];
 		    bool precise = (args.Length > 1) ? args[1].CaselessEq("precise") : false;
 		    p.Message("precise is {0}", precise);
 		        
 		    if (!PluginGoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) {
-		        p.Message("There are no spawners in {0}%S.", p.level.ColoredName);
+		        p.Message("There are no spawners in {0}&S.", p.level.ColoredName);
 		        return;
 		    }
 		    int matches;
@@ -770,47 +770,47 @@ namespace MCGalaxy {
 		
 		public override void Help(Player p)
 		{
-		    p.Message("%HSpawner help page 1:");
-            p.Message("%T/Spawner add");
-            p.Message("%T[name] [effect] [x y z] [originX originY originZ]");
-            p.Message("%T<interval> <time offset> <spawn % chance = 100>");
-            p.Message("%HAdds an effect spawner to the world.");
-            p.Message("%HPlease use %T/help spawner add %Hfor details on adding.");
-			p.Message("%HTo read help page 2, type %T/help spawner 2");
+		    p.Message("&HSpawner help page 1:");
+            p.Message("&T/Spawner add");
+            p.Message("&T[name] [effect] [x y z] [originX originY originZ]");
+            p.Message("&T<interval> <time offset> <spawn % chance = 100>");
+            p.Message("&HAdds an effect spawner to the world.");
+            p.Message("&HPlease use &T/help spawner add &Hfor details on adding.");
+			p.Message("&HTo read help page 2, type &T/help spawner 2");
 		}
 		public override void Help(Player p, string message) {
 		    if (message.CaselessEq("2")) {
-		        p.Message("%HSpawner help page 2:");
-    			p.Message("%T/Spawner remove [name] %H- removes a spawner.");
-    			p.Message("%HIf [name] is \"all\", all spawners are removed.");
-    			p.Message("%T/Spawner tp [name] %H- teleports you to a spawner.");
-    			p.Message("%T/Spawner summon [name] <style> %H- summons a spawner to");
-    			p.Message("%Hyour block position. If <style> is \"precise\",");
-    			p.Message("%Hthe spawner is summoned to your exact feet position.");
-    			p.Message("%T/Spawner list %H- lists spawners in current level.");
+		        p.Message("&HSpawner help page 2:");
+    			p.Message("&T/Spawner remove [name] &H- removes a spawner.");
+    			p.Message("&HIf [name] is \"all\", all spawners are removed.");
+    			p.Message("&T/Spawner tp [name] &H- teleports you to a spawner.");
+    			p.Message("&T/Spawner summon [name] <style> &H- summons a spawner to");
+    			p.Message("&Hyour block position. If <style> is \"precise\",");
+    			p.Message("&Hthe spawner is summoned to your exact feet position.");
+    			p.Message("&T/Spawner list &H- lists spawners in current level.");
     			return;
 		    }
 		    if (message.CaselessEq("add")) {
-		        p.Message("%fRequired arguments for adding a spawner:");
-		        p.Message("%T[name] %His used to identify the spawner.");
-		        p.Message("%T[effect] %H- the effect this spawner creates.");
-		        p.Message("%HUse %T/effect list %Hto view available effects.");
-		        p.Message("%T[x y z] %H- the coords the effect spawns around.");
-    			p.Message("%T[origin] %H- the coords the effect moves away from.");
-    			p.Message("%HTIP: use ~ for coords relative to you.");
-    			p.Message("%HE.G. %T~ ~0.5 ~");
-    			p.Message("%Hwould make coords at the top of the block you're standing in.");
-    			p.Message("%HUse %T/help spawner options %Hfor optional arguments");
+		        p.Message("&fRequired arguments for adding a spawner:");
+		        p.Message("&T[name] &His used to identify the spawner.");
+		        p.Message("&T[effect] &H- the effect this spawner creates.");
+		        p.Message("&HUse &T/effect list &Hto view available effects.");
+		        p.Message("&T[x y z] &H- the coords the effect spawns around.");
+    			p.Message("&T[origin] &H- the coords the effect moves away from.");
+    			p.Message("&HTIP: use ~ for coords relative to you.");
+    			p.Message("&HE.G. &T~ ~0.5 ~");
+    			p.Message("&Hwould make coords at the top of the block you're standing in.");
+    			p.Message("&HUse &T/help spawner options &Hfor optional arguments");
     			return;
 		    }
 		    if (message.CaselessEq("options")) {
-		        p.Message("%fOptional arguments for adding a spawner:");
-    			p.Message("%T<interval> %H- how long to wait between spawns.");
-    			p.Message("%HAn interval of 10 would spawn once per second.");
-    			p.Message("%T<time offset> %Hoffsets when the effect spawns.");
-    			p.Message("%HAn offset of 5 means half a second.");
-    			p.Message("%T<spawn % chance> %H- chance the effect spawns.");
-    			p.Message("%HThe default is 100, which means it always spawns.");
+		        p.Message("&fOptional arguments for adding a spawner:");
+    			p.Message("&T<interval> &H- how long to wait between spawns.");
+    			p.Message("&HAn interval of 10 would spawn once per second.");
+    			p.Message("&T<time offset> &Hoffsets when the effect spawns.");
+    			p.Message("&HAn offset of 5 means half a second.");
+    			p.Message("&T<spawn % chance> &H- chance the effect spawns.");
+    			p.Message("&HThe default is 100, which means it always spawns.");
     			return;
 		    }
 		    p.Message("There is no help page named \"{0}\".", message);

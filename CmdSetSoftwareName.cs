@@ -12,8 +12,8 @@ namespace MyCommandThingy {
         }
 
         public override void Help(Player p) {
-        	p.Message("%T/SetSoftwareName [software name]");
-        	p.Message("%HSets software name to the given name.");
+        	p.Message("&T/SetSoftwareName [software name]");
+        	p.Message("&HSets software name to the given name.");
         }
     }
 }

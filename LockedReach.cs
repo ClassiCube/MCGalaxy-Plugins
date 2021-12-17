@@ -55,7 +55,7 @@ namespace PluginLockedReach {
             if (!Utils.TryParseSingle(args, out reach)) return;
             if (reach <= max) return;
             
-            p.Message("%WReach distance must be %S{0} %Wblocks or less in this level", max);
+            p.Message("&WReach distance must be &S{0} &Wblocks or less in this level", max);
             p.cancelcommand = true;
         }
 

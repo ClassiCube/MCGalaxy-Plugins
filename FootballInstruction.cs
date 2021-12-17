@@ -111,10 +111,10 @@ namespace MCGalaxy {
 		
 		public override string[] Help { get { return help; } }
 		static string[] help = new string[] {
-			"%T/BotAI add [name] football <strength>",
-			"%HCauses the bot to get kicked around when players touch it.",
-			"%H[strength] is how much a power a 'kick' does to the ball",
-			"%H  <strength> defaults to 20.",
+			"&T/BotAI add [name] football <strength>",
+			"&HCauses the bot to get kicked around when players touch it.",
+			"&H[strength] is how much a power a 'kick' does to the ball",
+			"&H  <strength> defaults to 20.",
 		};
 	}
 }

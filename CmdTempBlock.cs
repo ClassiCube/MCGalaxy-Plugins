@@ -14,7 +14,7 @@ namespace MCGalaxy {
             if (!(p.group.Permission >= LevelPermission.Operator)) {
                 if (!Hacks.CanUseHacks(p)) {
                     if (data.Context != CommandContext.MessageBlock) {
-                        p.Message("%cYou cannot use this command manually when hacks are disabled.");
+                        p.Message("&cYou cannot use this command manually when hacks are disabled.");
                         return;
                     }
                 }
@@ -53,10 +53,10 @@ namespace MCGalaxy {
         }
         
         public override void Help(Player p) {
-            p.Message("%T/TempBlock <block>");
-            p.Message("%HPlaces a client-side block at your feet");
-            p.Message("%T/TempBlock <block> [x] [y] [z]");
-            p.Message("%HPlaces a client-side block at [x] [y] [z]");
+            p.Message("&T/TempBlock <block>");
+            p.Message("&HPlaces a client-side block at your feet");
+            p.Message("&T/TempBlock <block> [x] [y] [z]");
+            p.Message("&HPlaces a client-side block at [x] [y] [z]");
         }
     }
 }

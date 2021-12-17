@@ -18,13 +18,13 @@ namespace MCGalaxy.Commands.CPE {
         	BlockID src;
         	if (!CommandParser.GetBlock(p, args[0], out src)) return;   	
         	if (globalDefs[src] == null) {
-        		p.Message("%WNo global block with that ID for source."); return;
+        		p.Message("&WNo global block with that ID for source."); return;
         	}
         	
         	BlockID dst;
         	if (!CommandParser.GetBlock(p, args[1], out dst)) return;   	
         	if (globalDefs[dst] == null) {
-        		p.Message("%WNo global block with that ID for target."); return;
+        		p.Message("&WNo global block with that ID for target."); return;
         	}
             
             // lazy fix
@@ -69,8 +69,8 @@ namespace MCGalaxy.Commands.CPE {
         }
 
         public override void Help(Player p) {
-            p.Message("%T/GBInsert [source id] [target id]");
-            p.Message("%HInserts source block at target block's position in inventory");
+            p.Message("&T/GBInsert [source id] [target id]");
+            p.Message("&HInserts source block at target block's position in inventory");
         }
     }
 }
