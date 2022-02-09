@@ -55,7 +55,7 @@ namespace MCGalaxy {
 			
 			for (int i = 0; i < blocks.Length; i++) {
 				byte block = blocks[i];
-				if (block < Block.CpeCount) continue;
+				if (block < Block.CPE_COUNT) continue;
 				blocks[i] = Block.custom_block;
 				
 				ushort x, y, z;

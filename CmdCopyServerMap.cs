@@ -68,7 +68,7 @@ namespace MCGalaxy {
 			
 			// If block was original classic/CPE block on old server, but is now a custom block on new server
 			// then make a block definition to prevent textures looking wrong (e.g. for Glass)
-			for (int i = 0; i < Block.CpeCount; i++) {
+			for (int i = 0; i < Block.CPE_COUNT; i++) {
 				if (defs[i] == null && BlockDefinition.GlobalDefs[i] != null) {
 					defs[i] = DefaultSet.MakeCustomBlock((BlockID)i);
 				}
