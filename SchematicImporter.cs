@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Text;
 using fNbt;
+using MCGalaxy;
 using MCGalaxy.Levels.IO;
 using MCGalaxy.Maths;
 using BlockID = System.UInt16;

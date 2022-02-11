@@ -1,9 +1,12 @@
 using System;
+using MCGalaxy;
 using MCGalaxy.Commands;
 using MCGalaxy.Events.PlayerEvents;
 
-namespace MCGalaxy {
+namespace CommandMapHack 
+{
 	public class CmdMapHack : Command2 {
+		
 		public override string name { get { return "MapHack"; } }
 		public override string type { get { return "other"; } }
 		public override CommandPerm[] ExtraPerms {

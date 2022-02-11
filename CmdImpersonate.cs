@@ -15,9 +15,12 @@
     or implied. See the Licenses for the specific language governing
     permissions and limitations under the Licenses.
  */
-namespace MCGalaxy.Commands {
-    
-    public sealed class CmdImpersonate : Command2 {
+using MCGalaxy;
+
+namespace CommandImpersonate
+{
+    public sealed class CmdImpersonate : Command2 
+    {
         public override string name { get { return "Impersonate"; } }
         public override string shortcut { get { return "imp"; } }
         public override string type { get { return CommandTypes.Other; } }

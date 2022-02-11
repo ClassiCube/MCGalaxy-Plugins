@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
+using MCGalaxy;
 
-namespace MCGalaxy.Commands {
-
+namespace CommandMapsBy
+{
 	public sealed class CmdMapsBy : Command2 {
 		public override string name { get { return "MapsBy"; } }
 		public override string shortcut { get { return "MadeBy"; } }

@@ -13,9 +13,10 @@ using MCGalaxy.Events.ServerEvents;
 using MCGalaxy.Events.LevelEvents;
 using MCGalaxy.Events.PlayerEvents;
 
-namespace MCGalaxy {
-	
-	public sealed class PluginGoodlyEffects : Plugin {
+namespace PluginGoodlyEffects 
+{
+	public sealed class GoodlyEffects : Plugin 
+	{
 		public override string name { get { return "GoodlyEffects"; } }
 		public override string MCGalaxy_Version { get { return "1.9.2.9"; } }
 		public override string creator { get { return "Goodly"; } }
@@ -460,9 +461,9 @@ namespace MCGalaxy {
 		public override LevelPermission defaultRank { get { return LevelPermission.Admin; } }
 		public override void Use(Player p, string message, CommandData data)
 		{
-			PluginGoodlyEffects.effectAtEffectName.Clear();
-			PluginGoodlyEffects.LoadEffects();
-			PluginGoodlyEffects.DefineEffectsAll();
+			GoodlyEffects.effectAtEffectName.Clear();
+			GoodlyEffects.LoadEffects();
+			GoodlyEffects.DefineEffectsAll();
 			p.Message("Reloaded effects!");
 		}
 		public override void Help(Player p)
@@ -508,8 +509,8 @@ namespace MCGalaxy {
 			if (words.Length >= 8) {
 				if (!CommandParser.GetBool(p, words[7], ref showToAll)) { return; }
 			}
-			PluginGoodlyEffects.EffectConfig effect;
-			if (!PluginGoodlyEffects.effectAtEffectName.TryGetValue(effectName, out effect)) {
+			GoodlyEffects.EffectConfig effect;
+			if (!GoodlyEffects.effectAtEffectName.TryGetValue(effectName, out effect)) {
 				p.Message("&WUnknown effect \"{0}\".", effectName);
 				return;
 			}
@@ -523,14 +524,14 @@ namespace MCGalaxy {
 			originZ += z;
 			
 			if (showToAll) {
-				PluginGoodlyEffects.SpawnEffectAt(p.level, effectName, x, y, z, originX, originY, originZ);
+				GoodlyEffects.SpawnEffectAt(p.level, effectName, x, y, z, originX, originY, originZ);
 			} else {
-				PluginGoodlyEffects.SpawnEffectFor(p, effectName, x, y, z, originX, originY, originZ);
+				GoodlyEffects.SpawnEffectFor(p, effectName, x, y, z, originX, originY, originZ);
 			}
 		}
 		public void ListEffects(Player p) {
 			p.Message("Currently available effects:");
-			foreach(KeyValuePair<string, PluginGoodlyEffects.EffectConfig> entry in PluginGoodlyEffects.effectAtEffectName)
+			foreach(KeyValuePair<string, GoodlyEffects.EffectConfig> entry in GoodlyEffects.effectAtEffectName)
 			{
 				p.Message("&H{0}", entry.Key);
 			}
@@ -585,18 +586,18 @@ namespace MCGalaxy {
 		static void DoList(Player p, string message) {
 	        if (message.CaselessEq("all")) {
 		        p.Message("&fADMIN DEBUG LIST");
-    		    foreach (KeyValuePair<Level, List<PluginGoodlyEffects.EffectSpawner>> value in PluginGoodlyEffects.spawnersAtLevel) {
+    		    foreach (KeyValuePair<Level, List<GoodlyEffects.EffectSpawner>> value in GoodlyEffects.spawnersAtLevel) {
     		        p.Message("&fKey is {0}", value.Key.MapName);
-    		        foreach (PluginGoodlyEffects.EffectSpawner spawner in value.Value) {
+    		        foreach (GoodlyEffects.EffectSpawner spawner in value.Value) {
     		            p.Message("&fSpawner is {0}", spawner.name);
     		        }
     		    }
 	        }
 		    
-		    if (PluginGoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) {
+		    if (GoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) {
 		        int count = 0;
 		        p.Message("Spawners in {0}:", p.level.ColoredName);
-		        foreach (PluginGoodlyEffects.EffectSpawner spawner in PluginGoodlyEffects.spawnersAtLevel[p.level]) {
+		        foreach (GoodlyEffects.EffectSpawner spawner in GoodlyEffects.spawnersAtLevel[p.level]) {
 		            p.Message("{0}, made by {1}", spawner.name, spawner.owner);
 		            count++;
 		        }
@@ -606,8 +607,8 @@ namespace MCGalaxy {
 		    }
 		}
 		static void DoAdd(Player p, string message) {
-		    if (SpawnerCount(p.level) >= PluginGoodlyEffects.spawnerLimit) {
-		        p.Message("&WThe limit of {0} spawners per level has been reached.", PluginGoodlyEffects.spawnerLimit);
+		    if (SpawnerCount(p.level) >= GoodlyEffects.spawnerLimit) {
+		        p.Message("&WThe limit of {0} spawners per level has been reached.", GoodlyEffects.spawnerLimit);
 		        p.Message("You may remove spawners with &T/spawner remove&S.");
 		        return;
 		    }
@@ -619,8 +620,8 @@ namespace MCGalaxy {
 			string spawnerName = words[0];
 			if (SpawnerNameExists(p, spawnerName)) { return; }
 			string effectName = words[1];
-			PluginGoodlyEffects.EffectConfig effect;
-			if (!PluginGoodlyEffects.effectAtEffectName.TryGetValue(effectName, out effect)) {
+			GoodlyEffects.EffectConfig effect;
+			if (!GoodlyEffects.effectAtEffectName.TryGetValue(effectName, out effect)) {
 				p.Message("&WUnknown effect \"{0}\".", effectName);
 				return;
 			}
@@ -656,7 +657,7 @@ namespace MCGalaxy {
 			originY += 0.5f;
 			originZ += 0.5f;
 			
-			PluginGoodlyEffects.EffectSpawner spawner = new PluginGoodlyEffects.EffectSpawner();
+			GoodlyEffects.EffectSpawner spawner = new GoodlyEffects.EffectSpawner();
 			spawner.name = spawnerName;
 			spawner.effectName = effectName;
 			spawner.owner = p.name;
@@ -670,13 +671,13 @@ namespace MCGalaxy {
 			spawner.spawnTimeOffset = spawnTimeOffset;
 			spawner.spawnChance = spawnChance;
 			
-			PluginGoodlyEffects.AddSpawner(spawner, p.level, true);
+			GoodlyEffects.AddSpawner(spawner, p.level, true);
 			p.Message("Successfully added a spawner named {0}.", spawner.name);
 		}
 		static void DoRemove(Player p, string message) {
 		    if (message.CaselessEq("all")) {
-		        if (PluginGoodlyEffects.EffectSpawner.CanEditAny(p)) {
-    		        PluginGoodlyEffects.RemoveAllSpawners(p.level, true);
+		        if (GoodlyEffects.EffectSpawner.CanEditAny(p)) {
+    		        GoodlyEffects.RemoveAllSpawners(p.level, true);
     		        p.Message("Removed all spawners from {0}&S.", p.level.ColoredName);
 		        } else {
 		            p.Message("&WYou cannot remove all spawners unless you are the owner of this map.");
@@ -684,20 +685,20 @@ namespace MCGalaxy {
 		        return;
 		    }
 		    if (message == "") { p.Message("&WPlease provide the name of a spawner to remove."); return; }
-		    if (!PluginGoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) {
+		    if (!GoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) {
 		        p.Message("There are no spawners in {0}&S.", p.level.ColoredName);
 		        return;
 		    }
 		    int matches;
-		    PluginGoodlyEffects.EffectSpawner spawner = Matcher.Find(p, message, out matches,
-		                                                             PluginGoodlyEffects.spawnersAtLevel[p.level],
+		    GoodlyEffects.EffectSpawner spawner = Matcher.Find(p, message, out matches,
+		                                                             GoodlyEffects.spawnersAtLevel[p.level],
 		                                                             x => true,
 		                                                             x => x.name,
 		                                                             "effect spawners");
 		    if (matches > 1 || spawner == null) { return; }
 		    if (spawner.EditableBy(p, "remove")) {
     		    p.Message("Removed spawner {0}.", spawner.name);
-    		    PluginGoodlyEffects.RemoveSpawner(spawner, p.level, true);
+    		    GoodlyEffects.RemoveSpawner(spawner, p.level, true);
 		    }
 		}
 		static void DoTP(Player p, string message) {
@@ -706,13 +707,13 @@ namespace MCGalaxy {
 		        return;
 		    }
 		    if (message == "") { p.Message("&WPlease provide the name of a spawner to teleport to."); return; }
-		    if (!PluginGoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) {
+		    if (!GoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) {
 		        p.Message("There are no spawners in {0}&S to teleport to.", p.level.ColoredName);
 		        return;
 		    }
 		    int matches;
-		    PluginGoodlyEffects.EffectSpawner spawner = Matcher.Find(p, message, out matches,
-		                                                             PluginGoodlyEffects.spawnersAtLevel[p.level],
+		    GoodlyEffects.EffectSpawner spawner = Matcher.Find(p, message, out matches,
+		                                                             GoodlyEffects.spawnersAtLevel[p.level],
 		                                                             x => true,
 		                                                             x => x.name,
 		                                                             "effect spawners");
@@ -726,13 +727,13 @@ namespace MCGalaxy {
 		    bool precise = (args.Length > 1) ? args[1].CaselessEq("precise") : false;
 		    p.Message("precise is {0}", precise);
 		        
-		    if (!PluginGoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) {
+		    if (!GoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) {
 		        p.Message("There are no spawners in {0}&S.", p.level.ColoredName);
 		        return;
 		    }
 		    int matches;
-		    PluginGoodlyEffects.EffectSpawner spawner = Matcher.Find(p, spawnerName, out matches,
-		                                                             PluginGoodlyEffects.spawnersAtLevel[p.level],
+		    GoodlyEffects.EffectSpawner spawner = Matcher.Find(p, spawnerName, out matches,
+		                                                             GoodlyEffects.spawnersAtLevel[p.level],
 		                                                             x => true,
 		                                                             x => x.name,
 		                                                             "effect spawners");
@@ -764,7 +765,7 @@ namespace MCGalaxy {
 		        } else {
 		            p.Message("Summoned spawner {0} to your block position.", spawner.name);
 		        }
-    		    PluginGoodlyEffects.SpawnersFile.Save(p.level);
+    		    GoodlyEffects.SpawnersFile.Save(p.level);
 		    }
 		}
 		
@@ -828,8 +829,8 @@ namespace MCGalaxy {
             return true;
         }
 		static bool SpawnerNameExists(Player p, string name) {
-		    if (!PluginGoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) { return false; }
-		    foreach (PluginGoodlyEffects.EffectSpawner spawner in PluginGoodlyEffects.spawnersAtLevel[p.level]) {
+		    if (!GoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) { return false; }
+		    foreach (GoodlyEffects.EffectSpawner spawner in GoodlyEffects.spawnersAtLevel[p.level]) {
 		        if (name.CaselessEq(spawner.name)) {
 		            p.Message("A spawner named \"{0}\" already exists.", spawner.name);
 		            return true;
@@ -838,8 +839,8 @@ namespace MCGalaxy {
 		    return false;
 		}
 		static int SpawnerCount(Level lvl) {
-		    if (!PluginGoodlyEffects.spawnersAtLevel.ContainsKey(lvl)) { return 0; }
-		    return PluginGoodlyEffects.spawnersAtLevel[lvl].Count;
+		    if (!GoodlyEffects.spawnersAtLevel.ContainsKey(lvl)) { return 0; }
+		    return GoodlyEffects.spawnersAtLevel[lvl].Count;
 		}
 	}
 }

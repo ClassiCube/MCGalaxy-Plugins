@@ -1,15 +1,18 @@
 using System;
 using System.Collections.Generic;
-using MCGalaxy.Commands.Building;
+using System.IO;
+using MCGalaxy;
+using MCGalaxy.Commands;
 using MCGalaxy.DB;
 using MCGalaxy.Drawing.Ops;
 using MCGalaxy.Maths;
 using BlockID = System.UInt16;
-using System.IO;
 using MCGalaxy.Util;
 
-namespace MCGalaxy.Commands.Moderation {
-	public class CmdPruneDB : Command2 {
+namespace CommandPruneDB
+{
+	public class CmdPruneDB : Command2 
+	{
 		public override string name { get { return "PruneDB"; } }
 		public override string type { get { return CommandTypes.Moderation; } }
 		public override LevelPermission defaultRank { get { return LevelPermission.Admin; } }

@@ -1,15 +1,18 @@
 using System;
+using MCGalaxy;
 using MCGalaxy.Commands;
 using MCGalaxy.Blocks;
 using MCGalaxy.Maths;
 using BlockID = System.UInt16;
 
-namespace MCGalaxy {
-    public sealed class CmdTempBlock : Command2 {        
+namespace CommandTempBlock 
+{
+    public sealed class CmdTempBlock : Command2 
+    {
         public override string name { get { return "TempBlock"; } }
         public override string type { get { return CommandTypes.Building; } }
 
-        public override void Use(Player p, string message, CommandData data) {        
+        public override void Use(Player p, string message, CommandData data) {
             
             if (!(p.group.Permission >= LevelPermission.Operator)) {
                 if (!Hacks.CanUseHacks(p)) {

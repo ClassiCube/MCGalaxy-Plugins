@@ -1,11 +1,14 @@
 using System;
+using System.Collections.Generic;
+using MCGalaxy;
 using MCGalaxy.Bots;
 using MCGalaxy.Commands;
 using BlockID = System.UInt16;
-using System.Collections.Generic;
 
-namespace MCGalaxy.Commands.CPE {
-    public class CmdGBInsert : Command {
+namespace CommandGBInsert
+{
+    public class CmdGBInsert : Command 
+    {
         public override string name { get { return "GBInsert"; } }
         public override string type { get { return CommandTypes.Other; } }
         public override LevelPermission defaultRank { get { return LevelPermission.Admin; } }

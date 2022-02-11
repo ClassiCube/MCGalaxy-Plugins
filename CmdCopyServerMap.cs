@@ -3,13 +3,16 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using MCGalaxy;
 using MCGalaxy.Blocks;
 using MCGalaxy.Blocks.Extended;
 using MCGalaxy.SQL;
 using BlockID = System.UInt16;
 
-namespace MCGalaxy {
-	public sealed class CmdCopyServerMap : Command {
+namespace CommandCopyServerMap 
+{
+	public sealed class CmdCopyServerMap : Command 
+	{
 		public override string name { get { return "CopyServerMap"; } }
 		public override string type { get { return CommandTypes.World; } }
 		public override LevelPermission defaultRank { get { return LevelPermission.Admin; } }

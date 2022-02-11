@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using MCGalaxy;
 using MCGalaxy.Bots;
 using MCGalaxy.Maths;
 

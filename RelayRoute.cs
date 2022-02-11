@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using MCGalaxy;
 using MCGalaxy.Events.ServerEvents;
 using MCGalaxy.Modules.Relay;
 using MCGalaxy.Modules.Relay.Discord;

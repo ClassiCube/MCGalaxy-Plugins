@@ -1,4 +1,5 @@
 using System;
+using MCGalaxy;
 using MCGalaxy.Events;
 using MCGalaxy.Events.PlayerEvents;
 
@@ -11,15 +12,15 @@ namespace PluginKickJini
 		public override string name { get { return "KickJini"; } }
 		
 		public override void Load(bool startup) {
-			OnPlayerConnectEvent.Register(DoKickJini, Priority.High);
+			OnPlayerConnectEvent.Register(KickClient, Priority.High);
 		}
 		
 		public override void Unload(bool shutdown) {
-			OnPlayerConnectEvent.Unregister(DoKickJini);
+			OnPlayerConnectEvent.Unregister(KickClient);
 		}
 		
-		void DoKickJini(Player p) {
-			string app = p.appName;			
+		void KickClient(Player p) {
+			string app = p.appName;
 			if (app != null && app.CaselessContains("jini")) {
 				p.Leave("Do not use hack clients.", true);
 				p.cancellogin = true;

@@ -1,8 +1,10 @@
 using System;
 using MCGalaxy;
 
-namespace MyCommandThingy {
-    public sealed class CmdSetSoftwareName : Command {
+namespace CommandSetSoftwareName 
+{
+    public sealed class CmdSetSoftwareName : Command 
+    {
         public override string name { get { return "SetSoftwareName"; } }
         public override string type { get { return "other"; } }
         public override LevelPermission defaultRank { get { return LevelPermission.Nobody; } }

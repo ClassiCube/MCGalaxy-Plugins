@@ -1,4 +1,5 @@
 using System;
+using MCGalaxy;
 using MCGalaxy.Events;
 using MCGalaxy.Events.PlayerEvents;
 
@@ -11,14 +12,14 @@ namespace PluginKickNoCC
 		public override string name { get { return "KickNoCC"; } }
 
 		public override void Load(bool startup) {
-			OnPlayerConnectEvent.Register(KickNoCC, Priority.High);
+			OnPlayerConnectEvent.Register(KickClient, Priority.High);
 		}
 		
 		public override void Unload(bool shutdown) {
-			OnPlayerConnectEvent.Unregister(KickNoCC);
+			OnPlayerConnectEvent.Unregister(KickClient);
 		}
 
-		void KickNoCC(Player p) {
+		void KickClient(Player p) {
 			string app = p.appName;
 			if (app == null || !app.CaselessContains("ClassiCube ")) {
 				p.Leave("Please connect using the ClassiCube client with Enhanced mode.", true);

@@ -1,4 +1,5 @@
 using System;
+using MCGalaxy;
 using MCGalaxy.Events;
 using MCGalaxy.Events.PlayerEvents;
 
