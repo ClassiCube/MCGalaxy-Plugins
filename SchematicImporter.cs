@@ -10,10 +10,10 @@ using MCGalaxy.Levels.IO;
 using MCGalaxy.Maths;
 using BlockID = System.UInt16;
 
-namespace MCGalaxy {
-
-	public sealed class SchematicImportPlugin : Plugin {
-		
+namespace PluginSchematicImport
+{
+	public sealed class SchematicImportPlugin : Plugin 
+	{
 		public override string MCGalaxy_Version { get { return "1.9.2.4"; } }
 		public override string name { get { return "SchematicImportPlugin"; } }
 		IMapImporter schem;

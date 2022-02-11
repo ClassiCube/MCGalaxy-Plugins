@@ -3,8 +3,10 @@ using MCGalaxy;
 using MCGalaxy.Commands;
 using MCGalaxy.DB;
 
-namespace Marry {
-	public sealed class MarryPlugin : Plugin {
+namespace Marry 
+{
+	public sealed class MarryPlugin : Plugin 
+	{
 		public override string name { get { return "MarryPlugin"; } }
 		public override string MCGalaxy_Version { get { return "1.9.3.1"; } }
 		
@@ -67,7 +69,8 @@ namespace Marry {
 		}
 	}
 	
-	public sealed class CmdAccept : Command {
+	public sealed class CmdAccept : Command 
+	{
 		public override string name { get { return "Accept"; } }
 		public override string type { get { return "fun"; } }
 		
@@ -92,7 +95,8 @@ namespace Marry {
 		}
 	}
 
-	public class CmdDeny : Command {
+	public class CmdDeny : Command 
+	{
 		public override string name { get { return "Deny"; } }
 		public override string type { get { return "fun"; } }
 		
@@ -112,7 +116,8 @@ namespace Marry {
 		}
 	}
 
-	public sealed class CmdDivorce : Command {
+	public sealed class CmdDivorce : Command 
+	{
 		public override string name { get { return "Divorce"; } }
 		public override string type { get { return "fun"; } }
 		
@@ -145,7 +150,8 @@ namespace Marry {
 		}
 	}
 
-	public sealed class CmdMarry : Command {
+	public sealed class CmdMarry : Command 
+	{
 		public override string name { get { return "Marry"; } }
 		public override string type { get { return "fun"; } }
 		

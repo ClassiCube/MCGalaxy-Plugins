@@ -3,9 +3,10 @@ using System.IO;
 using MCGalaxy.Bots;
 using MCGalaxy.Maths;
 
-namespace MCGalaxy {
-	
-	public sealed class FootballPlugin : Plugin {
+namespace PluginFootball 
+{	
+	public sealed class FootballPlugin : Plugin 
+	{
 		BotInstruction ins;
 		
 		public override string name { get { return "FootballInstruction"; } }
@@ -22,7 +23,8 @@ namespace MCGalaxy {
 		}
 	}
 	
-	sealed class FootballInstruction : BotInstruction {
+	sealed class FootballInstruction : BotInstruction 
+	{
 		public FootballInstruction() { Name = "football"; }
 		
 		public override bool Execute(PlayerBot bot, InstructionData data) {

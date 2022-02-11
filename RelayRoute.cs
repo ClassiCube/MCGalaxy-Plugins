@@ -6,7 +6,7 @@ using MCGalaxy.Modules.Relay;
 using MCGalaxy.Modules.Relay.Discord;
 using MCGalaxy.Modules.Relay.IRC;
 
-namespace MCGalaxy
+namespace PluginRelayRoute
 {
 	public sealed class RelayRoutePlugin : Plugin
 	{

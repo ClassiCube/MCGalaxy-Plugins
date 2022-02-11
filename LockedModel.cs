@@ -3,8 +3,10 @@ using MCGalaxy;
 using MCGalaxy.Events;
 using MCGalaxy.Events.PlayerEvents;
 
-namespace PluginLockedModel {
-    public sealed class Core : Plugin {
+namespace PluginLockedModel 
+{
+    public sealed class LockedModel : Plugin 
+    {
         public override string creator { get { return "Not UnknownShadow200"; } }
         public override string name { get { return "LockedModel"; } }
         public override string MCGalaxy_Version { get { return "1.9.1.4"; } }

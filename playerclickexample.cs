@@ -6,9 +6,10 @@ using MCGalaxy.Events.PlayerEvents;
 using BlockID = System.UInt16;
 
 
-namespace MCGalaxy {
-	
-	public sealed class PluginPlayerClickExample : Plugin {
+namespace PluginPlayerClickExample 
+{
+	public sealed class PlayerClick : Plugin 
+	{
 		public override string name { get { return "PlayerClickExample"; } }
 		public override string MCGalaxy_Version { get { return "1.9.0.5"; } }
 		public override string creator { get { return "not goodly"; } }

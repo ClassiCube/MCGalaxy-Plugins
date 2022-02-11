@@ -3,8 +3,10 @@ using MCGalaxy;
 using MCGalaxy.Events.PlayerEvents;
 using MCGalaxy.Commands;
 
-namespace PluginPassJoin {
-    public sealed class Core : Plugin {
+namespace PluginPassJoin 
+{
+    public sealed class PassJoin : Plugin 
+    {
         public override string creator { get { return "Goodly"; } }
         public override string name { get { return "passjoin"; } }
         public override string MCGalaxy_Version { get { return "1.9.3.6"; } }

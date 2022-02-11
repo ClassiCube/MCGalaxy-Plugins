@@ -9,8 +9,10 @@ using MCGalaxy.Maths;
 using BlockID = System.UInt16;
 using AttribsDict = System.Collections.Generic.Dictionary<string, string>;
 
-namespace PluginMagicaVoxelImport {
-	public sealed class Core : Plugin {
+namespace PluginMagicaVoxelImport
+{
+	public sealed class MagicaVoxelPlugin : Plugin 
+	{
 		public override string creator { get { return "UnknownShadow200"; } }
 		public override string name { get { return "MagicaVoxelImport"; } }
 		public override string MCGalaxy_Version { get { return "1.9.1.4"; } }
@@ -26,8 +28,8 @@ namespace PluginMagicaVoxelImport {
 		}
 	}
 
-	public sealed class VoxImporter : IMapImporter {
-
+	public sealed class VoxImporter : IMapImporter 
+	{
 		public override string Extension { get { return ".vox"; } }
 		public override string Description { get { return "MagicaVoxel map"; } }
 

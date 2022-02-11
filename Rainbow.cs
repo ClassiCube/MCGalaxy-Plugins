@@ -3,9 +3,10 @@ using MCGalaxy;
 using MCGalaxy.Network;
 using MCGalaxy.Tasks;
 
-namespace RainbowPluginThingy {
-
-    public sealed class RainbowPlugin : Plugin {
+namespace PluginRainbowColors
+{
+    public sealed class RainbowPlugin : Plugin 
+    {
         public override string creator { get { return "Not UnknownShadow200"; } }
         public override string MCGalaxy_Version { get { return "1.9.1.4"; } }
         public override string name { get { return "Rainbow"; } }

@@ -3,8 +3,10 @@ using MCGalaxy;
 using MCGalaxy.Events.PlayerEvents;
 using MCGalaxy.Network;
 
-namespace PluginLockedReach {
-    public sealed class LockedReach : Plugin {
+namespace PluginLockedReach 
+{
+    public sealed class LockedReach : Plugin 
+	{
         public override string creator { get { return "Not UnknownShadow200"; } }
         public override string name { get { return "LockedReach"; } }
         public override string MCGalaxy_Version { get { return "1.9.2.4"; } }

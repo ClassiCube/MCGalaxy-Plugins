@@ -2,8 +2,10 @@ using System;
 using MCGalaxy;
 using MCGalaxy.Commands;
 
-namespace PluginReward {
-	public sealed class RewardPlugin : Plugin {
+namespace PluginReward 
+{
+	public sealed class RewardPlugin : Plugin 
+	{
 		public override string creator { get { return "Not UnknownShadow200"; } }
 		public override string MCGalaxy_Version { get { return "1.9.2.6"; } }
 		public override string name { get { return "Reward"; } }

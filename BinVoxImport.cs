@@ -6,8 +6,10 @@ using MCGalaxy;
 using MCGalaxy.Levels.IO;
 using MCGalaxy.Maths;
 
-namespace PluginBinVoxelImport {
-	public sealed class Core : Plugin {
+namespace PluginBinVoxelImport 
+{
+	public sealed class BinVoxPlugin : Plugin 
+	{
 		public override string creator { get { return "UnknownShadow200"; } }
 		public override string name { get { return "BinVoxelImport"; } }
 		public override string MCGalaxy_Version { get { return "1.9.1.4"; } }
@@ -22,8 +24,9 @@ namespace PluginBinVoxelImport {
 			IMapImporter.Formats.Remove(importer);
 		}
 	}
-    public sealed class BinVoxImporter : IMapImporter {
-
+	
+    public sealed class BinVoxImporter : IMapImporter 
+	{
         public override string Extension { get { return ".binvox"; } }
         public override string Description { get { return "Binvox map"; } }
         
