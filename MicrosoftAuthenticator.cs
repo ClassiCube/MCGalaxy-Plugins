@@ -97,7 +97,8 @@ namespace AuthPlugin
 			try
 			{
 				HttpWebRequest request   = HttpUtil.CreateRequest(url);
-				request.Timeout = 10 * 1000; // give up after 10 seconds
+				request.Timeout          = 10 * 1000; // give up after 10 seconds
+				request.ReadWriteTimeout = 10 * 1000;
 
 				HttpWebResponse response = (HttpWebResponse)request.GetResponse();
 				return response.StatusCode == HttpStatusCode.OK;
