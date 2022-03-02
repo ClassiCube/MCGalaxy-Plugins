@@ -26,6 +26,7 @@ Some custom commands and plugins for MCGalaxy.
 | **CmdPruneDB** | Removes a player's entries from a level's BlockDB. **Use at your own risk.**
 | **CmdSetSoftwareName** | Sets the name of the software shown in /sinfo and in the server list.
 | **CmdTempBlock** | Creates a client-side block. (only the given player sees the block change)
+| **CmdZoneInfo** | Shows some information of a specified zone as well as visually highlighting it in-game.
 
 ### Plugins list
 | Name | Description |
