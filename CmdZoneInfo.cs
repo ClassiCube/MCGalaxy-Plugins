@@ -15,7 +15,7 @@ namespace CommandZoneInfo
 		public override void Use(Player p, string message) {
 			if (string.IsNullOrWhiteSpace(message)) {
 				Command zones = Find("ZoneList");
-				if (p.Rank >= zones.defaultRank) zones.Use(p, "");
+				if (p.CanUse(zones)) zones.Use(p, "");
 				Help(p); return;
 			}
 			string zonename = message.ToLower();
