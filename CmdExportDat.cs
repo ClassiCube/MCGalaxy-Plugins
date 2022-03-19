@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using MCGalaxy;
 using MCGalaxy.Levels.IO;
+using BlockID = System.UInt16;
 // Credit to https://github.com/NickstaDB/SerializationDumper 
 //  as that program was majorly helpful for validating exported output
 
@@ -117,7 +118,9 @@ namespace CommandExportDat
 					w.WriteUInt8(TC_ARRAY);
 					WriteClassDesc(w, "[B", new JField[0]);
 					w.WriteInt32(((byte[])field.value).Length);
-					w.WriteBytes((byte[])field.value);
+					//w.WriteBytes((byte[])field.value);
+					// NOTE: need to convert since level might have blocks that don't exist in classic
+					WriteLevelBlocks(w.dst, (byte[])field.value);
 					break;
 				default:
 					throw new InvalidOperationException("Can't write fields of type " + field.type);
@@ -163,6 +166,48 @@ namespace CommandExportDat
 				this.klass = "[B";
 			}
 		}
+		unsafe void WriteLevelBlocks(BinaryWriter dst, byte[] blocks)
+		{
+			const int bufferSize = 64 * 1024;
+			byte[] buffer = new byte[bufferSize];
+			int bIndex = 0;
+
+			byte* conv = stackalloc byte[256];
+			for (BlockID b = 0; b < 256; b++)
+			{
+				conv[b] = ConvertBlock(b);
+			}
+
+			for (int i = 0; i < blocks.Length; ++i)
+			{
+				buffer[bIndex] = conv[blocks[i]];
+				bIndex++;
+				if (bIndex < bufferSize) continue;
+
+				dst.Write(buffer, 0, bufferSize); 
+				bIndex = 0;
+			}
+			if (bIndex > 0) dst.Write(buffer, 0, bIndex);
+		}
+
+		byte ConvertBlock(BlockID b)
+		{
+			if (b <= Block.CLASSIC_MAX_BLOCK) 
+				return (byte)b;
+			if (b <= Block.CPE_MAX_BLOCK)
+				return cpe_fallback[b - Block.CobblestoneSlab];
+
+			// fallback to orange wool on unsupported blocks
+			// TODO level custom block fallback conversion too
+			BlockID conv = Block.Convert(b);
+			return conv <= Block.CLASSIC_MAX_BLOCK ? (byte)conv : Block.Orange;
+		}
+
+		// TODO make Block.ConvertLimited public
+		static byte[] cpe_fallback = {
+			Block.Slab, Block.Mushroom, Block.Sand, Block.Air, Block.Lava, Block.Pink,Block.Green, Block.Dirt,
+			Block.Blue, Block.Cyan, Block.Glass, Block.Iron, Block.Obsidian, Block.White, Block.Wood, Block.Stone
+		};
 	}
 
 	public class CmdExportDat : Command2
