@@ -51,8 +51,6 @@ namespace PluginClassic0015
 	{
 		public Classic0015Protocol(INetSocket s) : base(s) {
 			ProtocolVersion = 2; // made up but less than Server.VERSION_0016
-			// TODO Fix SpawnEntity in ClassicProtocol
-			ProtocolVersion = Server.VERSION_0016;
 		}
 
 		protected override int HandlePacket(byte[] buffer, int offset, int left) {
