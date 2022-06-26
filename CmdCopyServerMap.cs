@@ -178,10 +178,11 @@ public sealed class CmdCopyServerMap : Command
 	}
 	
 	static bool OldTableUsed(SQLiteConnection conn, string table) {
-		string sql = SQLiteBackend.Instance.ReadRowsSql("sqlite_master", "COUNT(*)", "WHERE type='table' AND name=@0");
+		IDatabaseBackend sqliteDB = SQLiteBackend.Instance;
+		string sql = sqliteDB.ReadRowsSql("sqlite_master", "COUNT(*)", "WHERE type='table' AND name=@0");
 
 		using (SQLiteCommand cmd = new SQLiteCommand(sql, conn)) {
-			SqlQuery.FillParams(cmd, new object[] { table });
+			sqliteDB.FillParams(cmd, new object[] { table });
 			return cmd.ExecuteScalar() != null;
 		}
 	}
