@@ -55,32 +55,119 @@ namespace PluginAlphaIndev
             return socket.protocol.ProcessReceived(buffer, length);
         }
     }
-
-    class AlphaProtocol : IGameSession, INetProtocol
+    
+    abstract class AlphaIndevProtocol : IGameSession, INetProtocol
     {
-        const int OPCODE_PING      = 0x00;
-        const int OPCODE_LOGIN     = 0x01;
-        const int OPCODE_HANDSHAKE = 0x02;
-        const int OPCODE_CHAT      = 0x03;
+        public const int OPCODE_PING      = 0x00;
+        public const int OPCODE_LOGIN     = 0x01;
+        public const int OPCODE_HANDSHAKE = 0x02;
+        public const int OPCODE_CHAT      = 0x03;
 
-        const int OPCODE_SELF_STATEONLY = 0x0A;
-        const int OPCODE_SELF_MOVE      = 0x0B;
-        const int OPCODE_SELF_LOOK      = 0x0C;
-        const int OPCODE_SELF_MOVE_LOOK = 0x0D;
-        const int OPCODE_BLOCK_DIG      = 0x0E;
-        const int OPCODE_BLOCK_PLACE    = 0x0F;
+        public const int OPCODE_SELF_STATEONLY = 0x0A;
+        public const int OPCODE_SELF_MOVE      = 0x0B;
+        public const int OPCODE_SELF_LOOK      = 0x0C;
+        public const int OPCODE_SELF_MOVE_LOOK = 0x0D;
+        public const int OPCODE_BLOCK_DIG      = 0x0E;
+        public const int OPCODE_BLOCK_PLACE    = 0x0F;
+        
+        public const int OPCODE_ARM_ANIM  = 0x12;
+        public const int OPCODE_NAMED_ADD = 0x14;
+        public const int OPCODE_REMOVE_ENTITY = 0x1D;
+        public const int OPCODE_REL_MOVE  = 0x1F;
+        public const int OPCODE_LOOK      = 0x20;
+        public const int OPCODE_REL_MOVE_LOOK = 0x21;
+        public const int OPCODE_TELEPORT  = 0x22;
+        public const int OPCODE_PRE_CHUNK = 0x32;
+        public const int OPCODE_CHUNK     = 0x33;
+        public const int OPCODE_BLOCK_CHANGE = 0x35;
+        
+        
+        protected static ushort ReadU16(byte[] array, int index) {
+            return NetUtils.ReadU16(array, index);
+        }
 
-        const int OPCODE_ARM_ANIM  = 0x12;
-        const int OPCODE_NAMED_ADD = 0x14;
-        const int OPCODE_REMOVE_ENTITY = 0x1D;
-        const int OPCODE_REL_MOVE  = 0x1F;
-        const int OPCODE_LOOK      = 0x20;
-        const int OPCODE_REL_MOVE_LOOK = 0x21;
-        const int OPCODE_TELEPORT  = 0x22;
-        const int OPCODE_PRE_CHUNK = 0x32;
-        const int OPCODE_CHUNK     = 0x33;
-        const int OPCODE_BLOCK_CHANGE = 0x35;
+        protected static void WriteU16(ushort value, byte[] array, int index) {
+            NetUtils.WriteU16(value, array, index);
+        }
 
+        protected static int ReadI32(byte[] array, int index) {
+            return NetUtils.ReadI32(array, index);
+        }
+
+        protected static void WriteI32(int value, byte[] array, int index) {
+            NetUtils.WriteI32(value, array, index);
+        }
+
+        protected unsafe static float ReadF32(byte[] array, int offset) {
+            int value = ReadI32(array, offset);
+            return *(float*)&value;
+        }
+
+        protected unsafe static void WriteF32(float value, byte[] buffer, int offset) {
+            int num = *(int*)&value;
+            WriteI32(num, buffer, offset + 0);
+        }
+
+        protected unsafe static double ReadF64(byte[] array, int offset) {
+            long hi = ReadI32(array, offset + 0) & 0xFFFFFFFFL;
+            long lo = ReadI32(array, offset + 4) & 0xFFFFFFFFL;
+
+            long value = (hi << 32) | lo;
+            return *(double*)&value;
+        }
+
+        protected unsafe static void WriteF64(double value, byte[] buffer, int offset) {
+            long num = *(long*)&value;
+            WriteI32((int)(num >> 32), buffer, offset + 0);
+            WriteI32((int)(num >>  0), buffer, offset + 4);
+        }
+        
+        
+        public const byte FIELD_BYTE   = 0;
+        public const byte FIELD_SHORT  = 1;
+        public const byte FIELD_INT    = 2;
+        public const byte FIELD_FLOAT  = 3;
+        public const byte FIELD_DOUBLE = 4;
+        public const byte FIELD_STRING = 5;
+        
+        protected abstract int ReadStringLength(byte[] buffer, int offset);
+        
+        static bool CheckFieldSize(int amount, ref int offset, ref int left) {
+        	if (left < amount) return false;
+        			
+        	offset += amount; 
+        	left   -= amount;
+        	return true;
+        }
+        
+        int CheckPacketSize(byte[] buffer, int offset, int left, byte[] fields) {
+        	int total = left;
+        	
+        	foreach (byte field in fields)
+        	{
+        		if (field == FIELD_BYTE) {
+        			if (!CheckFieldSize(1, ref offset, ref left)) return 0;
+        		} else if (field == FIELD_SHORT) {
+        			if (!CheckFieldSize(2, ref offset, ref left)) return 0;
+        		} else if (field == FIELD_INT) {
+        			if (!CheckFieldSize(4, ref offset, ref left)) return 0;
+        		} else if (field == FIELD_FLOAT) {
+        			if (!CheckFieldSize(4, ref offset, ref left)) return 0;
+        		} else if (field == FIELD_DOUBLE) {
+        			if (!CheckFieldSize(8, ref offset, ref left)) return 0;
+        		} else if (field == FIELD_STRING) {
+        			if (!CheckFieldSize(2, ref offset, ref left)) return 0;
+        			
+        			int strLen = ReadStringLength(buffer, offset - 2);
+        			if (!CheckFieldSize(strLen, ref offset, ref left)) return 0;
+        		}
+        	}
+        	return total - left;
+        }
+    }
+
+    class AlphaProtocol : AlphaIndevProtocol
+    {
         const int PROTOCOL_VERSION = 2;
 
         public AlphaProtocol(INetSocket s) {
@@ -111,11 +198,11 @@ namespace PluginAlphaIndev
         
         public override bool Supports(string extName, int version) { return false; }
 
-        static int ReadStringLength(byte[] buffer, int offset) {
+        protected override int ReadStringLength(byte[] buffer, int offset) {
             return ReadU16(buffer, offset);
         }
 
-        static string ReadString(byte[] buffer, int offset) {
+        string ReadString(byte[] buffer, int offset) {
             int len = ReadStringLength(buffer, offset);
             return Encoding.UTF8.GetString(buffer, offset + 2, len);
         }
@@ -129,50 +216,13 @@ namespace PluginAlphaIndev
             WriteU16((ushort)len, buffer, offset);
         }
 
-        static ushort ReadU16(byte[] array, int index) {
-            return NetUtils.ReadU16(array, index);
+        static BlockID ReadBlock(byte[] buffer, int offset) {
+        	return Block.FromRaw(buffer[offset]); 
         }
-
-        static void WriteU16(ushort value, byte[] array, int index) {
-            NetUtils.WriteU16(value, array, index);
-        }
-
-        static int ReadI32(byte[] array, int index) {
-            return NetUtils.ReadI32(array, index);
-        }
-
-        static void WriteI32(int value, byte[] array, int index) {
-            NetUtils.WriteI32(value, array, index);
-        }
-
-        unsafe static float ReadF32(byte[] array, int offset) {
-            int value = ReadI32(array, offset);
-            return *(float*)&value;
-        }
-
-        unsafe static double ReadF64(byte[] array, int offset) {
-            long hi = ReadI32(array, offset + 0) & 0xFFFFFFFFL;
-            long lo = ReadI32(array, offset + 4) & 0xFFFFFFFFL;
-
-            long value = (hi << 32) | lo;
-            return *(double*)&value;
-        }
-
-        unsafe static void WriteF32(float value, byte[] buffer, int offset) {
-            int num = *(int*)&value;
-            WriteI32(num, buffer, offset + 0);
-        }
-
-        unsafe static void WriteF64(double value, byte[] buffer, int offset) {
-            long num = *(long*)&value;
-            WriteI32((int)(num >> 32), buffer, offset + 0);
-            WriteI32((int)(num >>  0), buffer, offset + 4);
-        }
-
-        BlockID ReadBlock(byte[] buffer, int offset) { return Block.FromRaw(buffer[offset]); }
-
+        
 
 #region Classic processing
+        static int[] login_fields = { FIELD_BYTE, FIELD_INT, FIELD_STRING, FIELD_STRING };
         int HandleLogin(byte[] buffer, int offset, int left) {
             int size = 1 + 4; // opcode + version;
             int strLen;
@@ -200,7 +250,8 @@ namespace PluginAlphaIndev
             player.CompleteLoginProcess();
             return size;
         }
-
+        
+        static int[] handshake_fields = { FIELD_BYTE,  FIELD_STRING };
         int HandleHandshake(byte[] buffer, int offset, int left) {
             int size = 1 + 2; // opcode + name length
             if (left < size) return 0;
@@ -218,7 +269,8 @@ namespace PluginAlphaIndev
 
             return size;
         }
-
+        
+        static int[] chat_fields = { FIELD_BYTE, FIELD_STRING };
         int HandleChat(byte[] buffer, int offset, int left) {
             int size = 1 + 2; // opcode + text length
             if (left < size) return 0;
@@ -232,6 +284,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
+        static int[] state_fields = { FIELD_BYTE, FIELD_BYTE };
         int HandleSelfStateOnly(byte[] buffer, int offset, int left) {
             int size = 1 + 1;
             if (left < size) return 0;
@@ -243,6 +296,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
+        static int[] move_fields = { FIELD_BYTE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE };
         int HandleSelfMove(byte[] buffer, int offset, int left) {
             int size = 1 + 8 + 8 + 8 + 8 + 1;
             if (left < size) return 0;
@@ -259,6 +313,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
+        static int[] look_fields = { FIELD_BYTE, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfLook(byte[] buffer, int offset, int left) {
             int size = 1 + 4 + 4 + 1;
             if (left < size) return 0;
@@ -273,6 +328,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
+        static int[] movelook_fields = { FIELD_BYTE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfMoveLook(byte[] buffer, int offset, int left) {
             int size = 1 + 8 + 8 + 8 + 8 + 4 + 4 + 1;
             if (left < size) return 0;
@@ -291,6 +347,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
+        static int[] dig_fields = { FIELD_BYTE, FIELD_BYTE, FIELD_INT, FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleBlockDig(byte[] buffer, int offset, int left) {
             int size = 1 + 1 + 4 + 1 + 4 + 1;
             if (left < size) return 0;
@@ -306,6 +363,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
+        static int[] place_fields = { FIELD_BYTE, FIELD_SHORT, FIELD_INT, FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleBlockPlace(byte[] buffer, int offset, int left) {
             int size = 1 + 2 + 4 + 1 + 4 + 1;
             if (left < size) return 0;
@@ -320,6 +378,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
+        static int[] anim_fields = { FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleArmAnim(byte[] buffer, int offset, int left) {
             int size = 1 + 4 + 1;
             if (left < size) return 0;
@@ -669,6 +728,7 @@ namespace PluginAlphaIndev
         public override void SendSetSpawnpoint(Position pos, Orientation rot)
         {
         }
+        
         public override byte[] MakeBulkBlockchange(BufferedBlockSender buffer) {
             int size = 1 + 4 + 1 + 4 + 1 + 1;
             byte[] data = new byte[size * buffer.count];
@@ -722,37 +782,15 @@ namespace PluginAlphaIndev
         }
     }
 
-    class IndevProtocol : IGameSession, INetProtocol
+    class IndevProtocol : AlphaIndevProtocol
     {
-        const int OPCODE_PING      = 0x00;
-        const int OPCODE_LOGIN     = 0x01;
-        const int OPCODE_HANDSHAKE = 0x02;
-        const int OPCODE_CHAT      = 0x03;
         const int OPCODE_SPAWN_POSITION = 0x06;
-
-        const int OPCODE_SELF_STATEONLY = 0x0A;
-        const int OPCODE_SELF_MOVE      = 0x0B;
-        const int OPCODE_SELF_LOOK      = 0x0C;
-        const int OPCODE_SELF_MOVE_LOOK = 0x0D;
-        const int OPCODE_BLOCK_DIG      = 0x0E;
-        const int OPCODE_BLOCK_PLACE    = 0x0F;
-
-        const int OPCODE_ARM_ANIM  = 0x12;
-        const int OPCODE_NAMED_ADD = 0x14;
-        const int OPCODE_REMOVE_ENTITY = 0x1D;
-        const int OPCODE_REL_MOVE  = 0x1F;
-        const int OPCODE_LOOK      = 0x20;
-        const int OPCODE_REL_MOVE_LOOK = 0x21;
-        const int OPCODE_TELEPORT  = 0x22;
-        const int OPCODE_PRE_CHUNK = 0x32;
-        const int OPCODE_CHUNK     = 0x33;
-        const int OPCODE_BLOCK_CHANGE = 0x35;
 
         const int PROTOCOL_VERSION = 9;
 
         // NOTE indev replaces bottom 2 layers with lava
         //  although second layer *can* be replaced via SetBlock,
-        //  bottom client will always be hardcoded to lava
+        //  bottom layer will always be hardcoded to lava
         // so have to shift the whole world up instead
         const int WORLD_SHIFT_BLOCKS = 2;
         const int WORLD_SHIFT_COORDS = 64;
@@ -785,11 +823,11 @@ namespace PluginAlphaIndev
         
         public override bool Supports(string extName, int version) { return false; }
 
-        static int ReadStringLength(byte[] buffer, int offset) {
+        protected override int ReadStringLength(byte[] buffer, int offset) {
             return ReadU16(buffer, offset) * 2;
         }
 
-        static string ReadString(byte[] buffer, int offset) {
+        string ReadString(byte[] buffer, int offset) {
             int len = ReadStringLength(buffer, offset);
             return Encoding.BigEndianUnicode.GetString(buffer, offset + 2, len);
         }
@@ -815,33 +853,7 @@ namespace PluginAlphaIndev
             }
         }
 
-        static ushort ReadU16(byte[] array, int index) {
-            return NetUtils.ReadU16(array, index);
-        }
-
-        static void WriteU16(ushort value, byte[] array, int index) {
-            NetUtils.WriteU16(value, array, index);
-        }
-
-        static int ReadI32(byte[] array, int index) {
-            return NetUtils.ReadI32(array, index);
-        }
-
-        static void WriteI32(int value, byte[] array, int index) {
-            NetUtils.WriteI32(value, array, index);
-        }
-
-        unsafe static float ReadF32(byte[] array, int offset) {
-            int value = ReadI32(array, offset);
-            return *(float*)&value;
-        }
-
-        unsafe static void WriteF32(float value, byte[] buffer, int offset) {
-            int num = *(int*)&value;
-            WriteI32(num, buffer, offset + 0);
-        }
-
-        BlockID ReadBlock(byte[] buffer, int offset) { return Block.FromRaw(buffer[offset]); }
+        static BlockID ReadBlock(byte[] buffer, int offset) { return Block.FromRaw(buffer[offset]); }
 
 
 #region Classic processing
