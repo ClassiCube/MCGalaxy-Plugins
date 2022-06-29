@@ -72,6 +72,7 @@ namespace PluginAlphaIndev
         public const int OPCODE_LOGIN     = 0x01;
         public const int OPCODE_HANDSHAKE = 0x02;
         public const int OPCODE_CHAT      = 0x03;
+        public const int OPCODE_SPAWN_POSITION = 0x06;
 
         public const int OPCODE_SELF_STATEONLY = 0x0A;
         public const int OPCODE_SELF_MOVE      = 0x0B;
@@ -90,6 +91,9 @@ namespace PluginAlphaIndev
         public const int OPCODE_PRE_CHUNK = 0x32;
         public const int OPCODE_CHUNK     = 0x33;
         public const int OPCODE_BLOCK_CHANGE = 0x35;
+
+
+        public const int OPCODE_KICK = 0xFF;
         
         
         protected static ushort ReadU16(byte[] array, int index) {
@@ -141,6 +145,10 @@ namespace PluginAlphaIndev
         public const byte FIELD_STRING = 5;
         
         protected abstract int ReadStringLength(byte[] buffer, int offset);
+        protected abstract string ReadString(byte[] buffer, int offset);
+        protected abstract int CalcStringLength(string value);
+        protected abstract void WriteString(byte[] buffer, int offset, string value);
+
         protected static string CleanupColors(string value) {
             return LineWrapper.CleanupColors(value, false, false);
         }
@@ -178,6 +186,84 @@ namespace PluginAlphaIndev
         	}
         	return total - left;
         }
+
+
+        public override void SendPing() {
+            Send(new byte[] { OPCODE_PING });
+        }
+
+        public override void SendSetSpawnpoint(Position pos, Orientation rot) {
+            byte[] spawn = new byte[1 + 4 + 4 + 4];
+            spawn[0] = OPCODE_SPAWN_POSITION;
+            NetUtils.WriteI32(pos.BlockX, spawn, 1);
+            NetUtils.WriteI32(pos.BlockY, spawn, 5);
+            NetUtils.WriteI32(pos.BlockZ, spawn, 9);
+            Send(spawn);
+        }
+
+        public override void SendRemoveEntity(byte id) {
+            byte[] data = new byte[1 + 4];
+            data[0] = OPCODE_REMOVE_ENTITY;
+            WriteI32(id, data, 1);
+            Send(data);
+        }
+
+        public override void SendChat(string message) {
+            message = CleanupColors(message);
+            List<string> lines = LineWrapper.Wordwrap(message, true);
+            for (int i = 0; i < lines.Count; i++)
+            {
+                string line = lines[i].Replace('&', '§');
+                Send(MakeChat(line));
+            }
+        }
+
+        public override void SendMessage(CpeMessageType type, string message) {
+            message = CleanupColors(message);
+            if (type != CpeMessageType.Normal) return;
+            message = message.Replace('&', '§');
+            Send(MakeChat(message));
+        }
+
+        public override void SendKick(string reason, bool sync) {
+            reason = CleanupColors(reason);
+            reason = reason.Replace('&', '§');
+            socket.Send(MakeKick(reason), sync ? SendFlags.Synchronous : SendFlags.None);
+        }
+
+
+        byte[] MakeChat(string text) {
+            int textLen = CalcStringLength(text);
+            byte[] data = new byte[1 + 2 + textLen];
+
+            data[0] = OPCODE_CHAT;
+            WriteString(data, 1 , text);
+            return data;
+        }
+
+        byte[] MakeKick(string reason) {
+            int textLen = CalcStringLength(reason);
+            byte[] data = new byte[1 + 2 + textLen];
+
+            data[0] = OPCODE_KICK;
+            WriteString(data, 1 , reason);
+            return data;
+        }
+
+
+        static byte[] chat_fields = { FIELD_BYTE, FIELD_STRING };
+        protected int HandleChat(byte[] buffer, int offset, int left) {
+            int size = 1 + 2; // opcode + text length
+            if (left < size) return 0;
+            
+            // enough data for name length?
+            size += ReadStringLength(buffer, offset + 1);
+            if (left < size) return 0;
+            string text = ReadString(buffer, offset + 1);
+
+            player.ProcessChat(text, false);
+            return size;
+        }
     }
 
     unsafe class AlphaProtocol : AlphaIndevProtocol
@@ -206,7 +292,7 @@ namespace PluginAlphaIndev
 
                 default:
                     player.Leave("Unhandled opcode \"" + buffer[offset] + "\"!", true);
-                    return -1;
+                    return left;
             }
         }
         
@@ -216,16 +302,16 @@ namespace PluginAlphaIndev
             return ReadU16(buffer, offset);
         }
 
-        string ReadString(byte[] buffer, int offset) {
+        protected override string ReadString(byte[] buffer, int offset) {
             int len = ReadStringLength(buffer, offset);
             return Encoding.UTF8.GetString(buffer, offset + 2, len);
         }
 
-        static int CalcStringLength(string value) {
+        protected override int CalcStringLength(string value) {
             return Encoding.UTF8.GetByteCount(value);
         }
 
-        static void WriteString(byte[] buffer, int offset, string value) {
+        protected override void WriteString(byte[] buffer, int offset, string value) {
             int len = Encoding.UTF8.GetBytes(value, 0, value.Length, buffer, offset + 2);
             WriteU16((ushort)len, buffer, offset);
         }
@@ -244,7 +330,7 @@ namespace PluginAlphaIndev
 
             int version = ReadI32(buffer, offset + 1);
             if (version != PROTOCOL_VERSION) {
-                player.Leave("Unsupported protocol version!"); return -1;
+                player.Leave("Unsupported protocol version!"); return left;
             }
 
             if (left < size + 2)          return 0;
@@ -259,7 +345,12 @@ namespace PluginAlphaIndev
             string pass = ReadString(buffer,  offset + size);
             size += 2 + strLen;
 
-            if (!player.ProcessLogin(name, pass)) return -1;
+            if (!player.ProcessLogin(name, pass)) return left;
+
+            for (byte b = 0; b < Block.CPE_COUNT; b++)
+            {
+                fallback[b] = Block.ConvertClassic(b, Server.VERSION_0030);
+            }
 
             player.CompleteLoginProcess();
             return size;
@@ -281,20 +372,6 @@ namespace PluginAlphaIndev
             // - for no name name verification
             SendHandshake("-");
 
-            return size;
-        }
-        
-        static byte[] chat_fields = { FIELD_BYTE, FIELD_STRING };
-        int HandleChat(byte[] buffer, int offset, int left) {
-            int size = 1 + 2; // opcode + text length
-            if (left < size) return 0;
-            
-            // enough data for name length?
-            size += ReadStringLength(buffer, offset + 1);
-            if (left < size) return 0;
-            string text = ReadString(buffer, offset + 1);
-
-            player.ProcessChat(text, false);
             return size;
         }
 
@@ -414,30 +491,6 @@ namespace PluginAlphaIndev
                 Send(MakeEntityTeleport(id, pos, rot));
             }
         }
-
-        public override void SendRemoveEntity(byte id) {
-            byte[] data = new byte[1 + 4];
-            data[0] = OPCODE_REMOVE_ENTITY;
-            WriteI32(id, data, 1);
-            Send(data);
-        }
-
-        public override void SendChat(string message) {
-            message = CleanupColors(message);
-            List<string> lines = LineWrapper.Wordwrap(message, true);
-            for (int i = 0; i < lines.Count; i++)
-            {
-                string line = lines[i].Replace('&', '§');
-                Send(MakeChat(line));
-            }
-        }
-
-        public override void SendMessage(CpeMessageType type, string message) {
-            message = CleanupColors(message);
-            if (type != CpeMessageType.Normal) return;
-            message = message.Replace('&', '§');
-            Send(MakeChat(message));
-        }
         
         public override void SendBlockchange(ushort x, ushort y, ushort z, BlockID block) {
             byte[] packet = new byte[1 + 4 + 1 + 4 + 1 + 1];
@@ -445,13 +498,6 @@ namespace PluginAlphaIndev
             WriteBlockChange(packet, 0, raw, x, y, z);
             Send(packet);
         }
-
-        public override void SendKick(string reason, bool sync) {
-            reason = CleanupColors(reason);
-            // TODO finish
-        }
-        public override bool SendSetUserType(byte type) { return false; }
-        
         
         public override void SendAddTabEntry(byte id, string name, string nick, string group, byte groupRank) { throw new NotImplementedException(); }
         public override void SendRemoveTabEntry(byte id) { throw new NotImplementedException(); }
@@ -463,10 +509,6 @@ namespace PluginAlphaIndev
             if (sentMOTD) return; // TODO work out how to properly resend map
             sentMOTD = true;
             Send(MakeLogin(motd));
-        }
-
-        public override void SendPing() {
-            Send(new byte[] { OPCODE_PING });
         }
 
         public override void SendSpawnEntity(byte id, string name, string skin, Position pos, Orientation rot) {
@@ -736,10 +778,6 @@ namespace PluginAlphaIndev
         public override string ClientName() {
             return "Alpha 1.1.1";
         }
-
-        public override void SendSetSpawnpoint(Position pos, Orientation rot)
-        {
-        }
         
         public override byte[] MakeBulkBlockchange(BufferedBlockSender buffer) {
             int size = 1 + 4 + 1 + 4 + 1 + 1;
@@ -796,8 +834,6 @@ namespace PluginAlphaIndev
 
     unsafe class IndevProtocol : AlphaIndevProtocol
     {
-        const int OPCODE_SPAWN_POSITION = 0x06;
-
         const int PROTOCOL_VERSION = 9;
 
         // NOTE indev replaces bottom 2 layers with lava
@@ -829,7 +865,7 @@ namespace PluginAlphaIndev
 
                 default:
                     player.Leave("Unhandled opcode \"" + buffer[offset] + "\"!", true);
-                    return -1;
+                    return left;
             }
         }
         
@@ -839,17 +875,17 @@ namespace PluginAlphaIndev
             return ReadU16(buffer, offset) * 2;
         }
 
-        string ReadString(byte[] buffer, int offset) {
+        protected override string ReadString(byte[] buffer, int offset) {
             int len = ReadStringLength(buffer, offset);
             return Encoding.BigEndianUnicode.GetString(buffer, offset + 2, len);
         }
 
-        static int CalcStringLength(string value) {
+        protected override int CalcStringLength(string value) {
             //return Encoding.BigEndianUnicode.GetByteCount(value);
             return value.Length * 2;
         }
 
-        static void WriteString(byte[] buffer, int offset, string value) {
+        protected override void WriteString(byte[] buffer, int offset, string value) {
             // actually trying to send unicode tends to kill the client with
             //  java.lang.ArrayIndexOutOfBoundsException: 9787
 
@@ -877,7 +913,7 @@ namespace PluginAlphaIndev
 
             int version = ReadI32(buffer, offset + 1);
             if (version != PROTOCOL_VERSION) {
-                player.Leave("Unsupported protocol version!"); return -1;
+                player.Leave("Unsupported protocol version!"); return left;
             }
 
             if (left < size + 2)          return 0;
@@ -906,7 +942,7 @@ namespace PluginAlphaIndev
 
             Logger.Log(LogType.SystemActivity, "MOTD 1: " + motd1);
             Logger.Log(LogType.SystemActivity, "MOTd 2:" + motd2);
-            if (!player.ProcessLogin(name, "")) return -1;
+            if (!player.ProcessLogin(name, "")) return left;
 
             for (byte b = 0; b < Block.CPE_COUNT; b++)
             {
@@ -934,20 +970,6 @@ namespace PluginAlphaIndev
             // TODO what even is this string
             SendHandshake("-");
 
-            return size;
-        }
-
-        static byte[] chat_fields = { FIELD_BYTE, FIELD_STRING };
-        int HandleChat(byte[] buffer, int offset, int left) {
-            int size = 1 + 2; // opcode + text length
-            if (left < size) return 0;
-            
-            // enough data for name length?
-            size += ReadStringLength(buffer, offset + 1);
-            if (left < size) return 0;
-            string text = ReadString(buffer, offset + 1);
-
-            player.ProcessChat(text, false);
             return size;
         }
 
@@ -1075,34 +1097,6 @@ namespace PluginAlphaIndev
                 Send(MakeEntityTeleport(id, pos, rot));
             }
         }
-
-        public override void SendRemoveEntity(byte id) {
-            byte[] data = new byte[1 + 4];
-            data[0] = OPCODE_REMOVE_ENTITY;
-            WriteI32(id, data, 1);
-            Send(data);
-        }
-
-        public override void SendChat(string message) {
-            message = CleanupColors(message);
-            List<string> lines = LineWrapper.Wordwrap(message, true);
-            for (int i = 0; i < lines.Count; i++)
-            {
-                string line = lines[i].Replace('&', '§');
-                Send(MakeChat(line));
-            }
-        }
-
-        public override void SendMessage(CpeMessageType type, string message) {
-            message = CleanupColors(message);
-            if (type != CpeMessageType.Normal) return;
-            message = message.Replace('&', '§');
-            Send(MakeChat(message));
-        }
-
-        public override void SendKick(string reason, bool sync) {
-            reason = CleanupColors(reason);
-        }
         
         public override void SendAddTabEntry(byte id, string name, string nick, string group, byte groupRank) { throw new NotImplementedException(); }
         public override void SendRemoveTabEntry(byte id) { throw new NotImplementedException(); }
@@ -1113,10 +1107,6 @@ namespace PluginAlphaIndev
             if (sentMOTD) return; // TODO work out how to properly resend map
             sentMOTD = true;
             Send(MakeLogin(motd));
-        }
-
-        public override void SendPing() {
-            Send(new byte[] { OPCODE_PING });
         }
 
         public override void SendSpawnEntity(byte id, string name, string skin, Position pos, Orientation rot) {
@@ -1206,16 +1196,6 @@ namespace PluginAlphaIndev
             SendSetSpawnpoint(level.SpawnPos, default(Orientation));
         }
 
-        public override void SendSetSpawnpoint(Position pos, Orientation rot)
-        {
-            byte[] spawn = new byte[1 + 4 + 4 + 4];
-            spawn[0] = OPCODE_SPAWN_POSITION;
-            NetUtils.WriteI32(pos.BlockX, spawn, 1);
-            NetUtils.WriteI32(pos.BlockY, spawn, 5);
-            NetUtils.WriteI32(pos.BlockZ, spawn, 9);
-            Send(spawn);
-        }
-
         byte[] CompressData(byte[] data)
         {
             using (MemoryStream dst = new MemoryStream())
@@ -1253,15 +1233,6 @@ namespace PluginAlphaIndev
             //   NetUtils.WriteI32(2, data, PROTOCOL_VERSION);
             WriteString(data, 1 + 14,               Server.Config.Name);
             WriteString(data, 1 + 14 + 2 + nameLen, motd);
-            return data;
-        }
-
-        byte[] MakeChat(string text) {
-            int textLen = CalcStringLength(text);
-            byte[] data = new byte[1 + 2 + textLen];
-
-            data[0] = OPCODE_CHAT;
-            WriteString(data, 1 , text);
             return data;
         }
 
