@@ -45,7 +45,7 @@ namespace PluginAlphaIndev
         {
             if (length < 4) return 0;
 
-            // indev uses big endian unicode, alpha uses utf18
+            // indev uses big endian unicode, alpha uses utf8
             if (buffer[3] == 0) {
                 socket.protocol = new IndevProtocol(socket);
             } else {
@@ -55,6 +55,7 @@ namespace PluginAlphaIndev
             return socket.protocol.ProcessReceived(buffer, length);
         }
     }
+    
     
     abstract class AlphaIndevProtocol : IGameSession, INetProtocol
     {
@@ -217,12 +218,12 @@ namespace PluginAlphaIndev
         }
 
         static BlockID ReadBlock(byte[] buffer, int offset) {
-        	return Block.FromRaw(buffer[offset]); 
+            return Block.FromRaw(buffer[offset]); 
         }
         
 
 #region Classic processing
-        static int[] login_fields = { FIELD_BYTE, FIELD_INT, FIELD_STRING, FIELD_STRING };
+        static byte[] login_fields = { FIELD_BYTE, FIELD_INT, FIELD_STRING, FIELD_STRING };
         int HandleLogin(byte[] buffer, int offset, int left) {
             int size = 1 + 4; // opcode + version;
             int strLen;
@@ -251,7 +252,7 @@ namespace PluginAlphaIndev
             return size;
         }
         
-        static int[] handshake_fields = { FIELD_BYTE,  FIELD_STRING };
+        static byte[] handshake_fields = { FIELD_BYTE, FIELD_STRING };
         int HandleHandshake(byte[] buffer, int offset, int left) {
             int size = 1 + 2; // opcode + name length
             if (left < size) return 0;
@@ -270,7 +271,7 @@ namespace PluginAlphaIndev
             return size;
         }
         
-        static int[] chat_fields = { FIELD_BYTE, FIELD_STRING };
+        static byte[] chat_fields = { FIELD_BYTE, FIELD_STRING };
         int HandleChat(byte[] buffer, int offset, int left) {
             int size = 1 + 2; // opcode + text length
             if (left < size) return 0;
@@ -284,7 +285,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
-        static int[] state_fields = { FIELD_BYTE, FIELD_BYTE };
+        static byte[] state_fields = { FIELD_BYTE, FIELD_BYTE };
         int HandleSelfStateOnly(byte[] buffer, int offset, int left) {
             int size = 1 + 1;
             if (left < size) return 0;
@@ -296,7 +297,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
-        static int[] move_fields = { FIELD_BYTE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE };
+        static byte[] move_fields = { FIELD_BYTE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE };
         int HandleSelfMove(byte[] buffer, int offset, int left) {
             int size = 1 + 8 + 8 + 8 + 8 + 1;
             if (left < size) return 0;
@@ -313,7 +314,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
-        static int[] look_fields = { FIELD_BYTE, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
+        static byte[] look_fields = { FIELD_BYTE, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfLook(byte[] buffer, int offset, int left) {
             int size = 1 + 4 + 4 + 1;
             if (left < size) return 0;
@@ -328,7 +329,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
-        static int[] movelook_fields = { FIELD_BYTE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
+        static byte[] movelook_fields = { FIELD_BYTE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfMoveLook(byte[] buffer, int offset, int left) {
             int size = 1 + 8 + 8 + 8 + 8 + 4 + 4 + 1;
             if (left < size) return 0;
@@ -347,7 +348,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
-        static int[] dig_fields = { FIELD_BYTE, FIELD_BYTE, FIELD_INT, FIELD_BYTE, FIELD_INT, FIELD_BYTE };
+        static byte[] dig_fields = { FIELD_BYTE, FIELD_BYTE, FIELD_INT, FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleBlockDig(byte[] buffer, int offset, int left) {
             int size = 1 + 1 + 4 + 1 + 4 + 1;
             if (left < size) return 0;
@@ -363,7 +364,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
-        static int[] place_fields = { FIELD_BYTE, FIELD_SHORT, FIELD_INT, FIELD_BYTE, FIELD_INT, FIELD_BYTE };
+        static byte[] place_fields = { FIELD_BYTE, FIELD_SHORT, FIELD_INT, FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleBlockPlace(byte[] buffer, int offset, int left) {
             int size = 1 + 2 + 4 + 1 + 4 + 1;
             if (left < size) return 0;
@@ -378,7 +379,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
-        static int[] anim_fields = { FIELD_BYTE, FIELD_INT, FIELD_BYTE };
+        static byte[] anim_fields = { FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleArmAnim(byte[] buffer, int offset, int left) {
             int size = 1 + 4 + 1;
             if (left < size) return 0;
@@ -857,6 +858,7 @@ namespace PluginAlphaIndev
 
 
 #region Classic processing
+        static byte[] login_fields = { FIELD_BYTE, FIELD_INT, FIELD_STRING, FIELD_STR, FIELD_DOUBLE, FIELD_STRING, FIELD_STRING };
         int HandleLogin(byte[] buffer, int offset, int left) {
             int size = 1 + 4; // opcode + version;
             int strLen;
@@ -904,6 +906,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
+        static byte[] handshake_fields = { FIELD_BYTE, FIELD_STRING };
         int HandleHandshake(byte[] buffer, int offset, int left) {
             int size = 1 + 2; // opcode + name length
             if (left < size) return 0;
@@ -923,6 +926,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
+        static byte[] chat_fields = { FIELD_BYTE, FIELD_STRING };
         int HandleChat(byte[] buffer, int offset, int left) {
             int size = 1 + 2; // opcode + text length
             if (left < size) return 0;
@@ -936,6 +940,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
+        static byte[] state_fields = { FIELD_BYTE, FIELD_BYTE };
         int HandleSelfStateOnly(byte[] buffer, int offset, int left) {
             int size = 1 + 1;
             if (left < size) return 0;
@@ -947,6 +952,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
+        static byte[] move_fields = { FIELD_BYTE, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfMove(byte[] buffer, int offset, int left) {
             int size = 1 + 4 + 4 + 4 + 4 + 1;
             if (left < size) return 0;
@@ -966,6 +972,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
+        static byte[] look_fields = { FIELD_BYTE, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfLook(byte[] buffer, int offset, int left) {
             int size = 1 + 4 + 4 + 1;
             if (left < size) return 0;
@@ -980,6 +987,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
+        static byte[] movelook_fields = { FIELD_BYTE, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfMoveLook(byte[] buffer, int offset, int left) {
             int size = 1 + 4 + 4 + 4 + 4 + 4 + 4 + 1;
             if (left < size) return 0;
@@ -1001,6 +1009,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
+        static byte[] dig_fields = { FIELD_BYTE, FIELD_BYTE, FIELD_INT, FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleBlockDig(byte[] buffer, int offset, int left) {
             int size = 1 + 1 + 4 + 1 + 4 + 1;
             if (left < size) return 0;
@@ -1017,6 +1026,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
+        static byte[] place_fields = { FIELD_BYTE, FIELD_SHORT, FIELD_INT, FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleBlockPlace(byte[] buffer, int offset, int left) {
             int size = 1 + 2 + 4 + 1 + 4 + 1;
             if (left < size) return 0;
@@ -1032,6 +1042,7 @@ namespace PluginAlphaIndev
             return size;
         }
 
+        static byte[] anim_fields = { FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleArmAnim(byte[] buffer, int offset, int left) {
             int size = 1 + 4 + 1;
             if (left < size) return 0;
@@ -1144,7 +1155,6 @@ namespace PluginAlphaIndev
         }
 
         public override void SendLevel(Level prev, Level level) {
-
             // TODO what even this
             byte[] C_blks = CompressData(GetBlocks(level));
             byte[] C_meta = CompressData(new byte[level.blocks.Length]);
