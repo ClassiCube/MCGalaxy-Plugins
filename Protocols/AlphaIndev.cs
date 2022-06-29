@@ -56,7 +56,7 @@ namespace PluginAlphaIndev
     }
     
     
-    abstract class AlphaIndevProtocol : IGameSession, INetProtocol
+    unsafe abstract class AlphaIndevProtocol : IGameSession, INetProtocol
     {
         public override bool SendSetUserType(byte type) { return false; }
         public override bool SendSetReach(float reach) { return false; }
@@ -108,17 +108,17 @@ namespace PluginAlphaIndev
             NetUtils.WriteI32(value, array, index);
         }
 
-        protected unsafe static float ReadF32(byte[] array, int offset) {
+        protected static float ReadF32(byte[] array, int offset) {
             int value = ReadI32(array, offset);
             return *(float*)&value;
         }
 
-        protected unsafe static void WriteF32(float value, byte[] buffer, int offset) {
+        protected static void WriteF32(float value, byte[] buffer, int offset) {
             int num = *(int*)&value;
             WriteI32(num, buffer, offset + 0);
         }
 
-        protected unsafe static double ReadF64(byte[] array, int offset) {
+        protected static double ReadF64(byte[] array, int offset) {
             long hi = ReadI32(array, offset + 0) & 0xFFFFFFFFL;
             long lo = ReadI32(array, offset + 4) & 0xFFFFFFFFL;
 
@@ -126,7 +126,7 @@ namespace PluginAlphaIndev
             return *(double*)&value;
         }
 
-        protected unsafe static void WriteF64(double value, byte[] buffer, int offset) {
+        protected static void WriteF64(double value, byte[] buffer, int offset) {
             long num = *(long*)&value;
             WriteI32((int)(num >> 32), buffer, offset + 0);
             WriteI32((int)(num >>  0), buffer, offset + 4);
@@ -180,7 +180,7 @@ namespace PluginAlphaIndev
         }
     }
 
-    class AlphaProtocol : AlphaIndevProtocol
+    unsafe class AlphaProtocol : AlphaIndevProtocol
     {
         const int PROTOCOL_VERSION = 2;
 
@@ -481,7 +481,13 @@ namespace PluginAlphaIndev
             }
         }
 
-        public override void SendLevel(Level prev, Level level) {
+        public override void SendLevel(Level prev, Level level) {         
+            byte* conv = stackalloc byte[Block.SUPPORTED_COUNT];
+            for (int j = 0; j < Block.SUPPORTED_COUNT; j++)
+            {
+                conv[j] = (byte)ConvertBlock((BlockID)j);
+            }
+
             // unload chunks from previous world
             if (prev != null)
             {
@@ -496,7 +502,7 @@ namespace PluginAlphaIndev
                 for (int x = 0; x < level.ChunksX; x++)
                 {
                     Send(MakePreChunk(x, z, true));
-                    Send(MakeChunk(x, z, level));
+                    Send(MakeChunk(x, z, level, conv));
                 }
         }
 
@@ -619,8 +625,9 @@ namespace PluginAlphaIndev
         }
 
 
-        byte[] MakeChunk(int x, int z, Level lvl) {
+        byte[] MakeChunk(int x, int z, Level lvl, byte* conv) {
             MemoryStream tmp = new MemoryStream();
+
             //using (DeflateStream dst = new DeflateStream(tmp, CompressionMode.Compress))
             using (ZLibStream dst = new ZLibStream(tmp))
             {
@@ -638,7 +645,7 @@ namespace PluginAlphaIndev
                             int X = (x * 16) + XX, Y = YY, Z = (z * 16) + ZZ;
                             if (!lvl.IsValidPos(X, Y, Z)) continue;
 
-                            block_data[YY + (ZZ * 128 + (XX * 128 * 16))] = (byte)lvl.GetBlock((ushort)X, (ushort)Y, (ushort)Z);
+                            block_data[YY + (ZZ * 128 + (XX * 128 * 16))] = conv[lvl.FastGetBlock((ushort)X, (ushort)Y, (ushort)Z)];
                         }
 
                 // Make everything insanely bright
@@ -761,7 +768,7 @@ namespace PluginAlphaIndev
             data[offset + 11] = 0; // metadata
         }
 
-        public unsafe override void UpdatePlayerPositions() {
+        public override void UpdatePlayerPositions() {
             Player[] players = PlayerInfo.Online.Items;
             Player dst = player;
             
@@ -780,14 +787,14 @@ namespace PluginAlphaIndev
             }
         }
 
-        public override ushort ConvertBlock(ushort block)
+        /*public override ushort ConvertBlock(ushort block)
         {
         	// TODO temp hack
             return Block.Convert(block);
-        }
+        }*/
     }
 
-    class IndevProtocol : AlphaIndevProtocol
+    unsafe class IndevProtocol : AlphaIndevProtocol
     {
         const int OPCODE_SPAWN_POSITION = 0x06;
 
@@ -1137,13 +1144,19 @@ namespace PluginAlphaIndev
             int i = level.PosToInt(0, 2, 0);
             //for (int j = 0; j < i; j++) blocks[j] = Block.Bedrock;
 
+            byte* conv = stackalloc byte[Block.SUPPORTED_COUNT];
+            for (int j = 0; j < Block.SUPPORTED_COUNT; j++)
+            {
+                conv[j] = (byte)ConvertBlock((BlockID)j);
+            }
+
 
             // TODO TERRIBLY AWFULLY EXTREMELY SLOW
             for (int y = 0; y < level.Height - 2; y++)
                 for (int z = 0; z < level.Length; z++)
                     for (int x = 0; x < level.Width; x++)
                     {
-                        blocks[i++] = (byte)level.FastGetBlock((ushort)x, (ushort)y, (ushort)z);
+                        blocks[i++] = conv[level.FastGetBlock((ushort)x, (ushort)y, (ushort)z)];
                     }
             return blocks;
         }
@@ -1356,7 +1369,7 @@ namespace PluginAlphaIndev
             data[offset + 11] = 0; // metadata
         }
 
-        public unsafe override void UpdatePlayerPositions() {
+        public override void UpdatePlayerPositions() {
             Player[] players = PlayerInfo.Online.Items;
             Player dst = player;
             
