@@ -3,10 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Threading;
 using MCGalaxy;
-using MCGalaxy.Events.PlayerEvents;
-using MCGalaxy.Events.ServerEvents;
 using MCGalaxy.Network;
 using System.Text;
 using BlockID = System.UInt16;
@@ -18,16 +15,18 @@ namespace PluginAlphaIndev
 		public override string name { get { return "AlphaIndev"; } }
 		public override string MCGalaxy_Version { get { return "1.9.4.0"; } }
 		ProtocolConstructor oldCons;
+        const byte OPCODE_HANDSHAKE = AlphaIndevProtocol.OPCODE_HANDSHAKE;
 
-		public override void Load(bool startup) {
-			oldCons = INetSocket.Protocols[Opcode.Handshake];
 
-			INetSocket.Protocols[Opcode.Handshake] = ConstructClassic;
+        public override void Load(bool startup) {
+			oldCons = INetSocket.Protocols[OPCODE_HANDSHAKE];
+
+			INetSocket.Protocols[OPCODE_HANDSHAKE] = ConstructClassic;
 		}
 
 		public override void Unload(bool shutdown) {
 			// restore original protocol constructor
-			INetSocket.Protocols[Opcode.Handshake] = oldCons;
+			INetSocket.Protocols[OPCODE_HANDSHAKE] = oldCons;
 		}
 
 		static INetProtocol ConstructClassic(INetSocket socket) {
@@ -59,6 +58,16 @@ namespace PluginAlphaIndev
     
     abstract class AlphaIndevProtocol : IGameSession, INetProtocol
     {
+        public override bool SendSetUserType(byte type) { return false; }
+        public override bool SendSetReach(float reach) { return false; }
+        public override bool SendHoldThis(BlockID block, bool locked) { return false; }
+        public override bool SendSetEnvColor(byte type, string hex) { return false; }
+        public override void SendChangeModel(byte id, string model) { }
+        public override bool SendSetWeather(byte weather) { return false; }
+        public override bool SendSetTextColor(ColorDesc color) { return false; }
+        public override bool SendDefineBlock(BlockDefinition def) { return false; }
+        public override bool SendUndefineBlock(BlockDefinition def) { return false; }
+
         public const int OPCODE_PING      = 0x00;
         public const int OPCODE_LOGIN     = 0x01;
         public const int OPCODE_HANDSHAKE = 0x02;
@@ -132,6 +141,10 @@ namespace PluginAlphaIndev
         public const byte FIELD_STRING = 5;
         
         protected abstract int ReadStringLength(byte[] buffer, int offset);
+        protected static string CleanupColors(string value) {
+            return LineWrapper.CleanupColors(value, false, false);
+        }
+
         
         static bool CheckFieldSize(int amount, ref int offset, ref int left) {
         	if (left < amount) return false;
@@ -442,14 +455,7 @@ namespace PluginAlphaIndev
         
         public override void SendAddTabEntry(byte id, string name, string nick, string group, byte groupRank) { throw new NotImplementedException(); }
         public override void SendRemoveTabEntry(byte id) { throw new NotImplementedException(); }
-        public override bool SendSetReach(float reach) { return false; }
-        public override bool SendHoldThis(BlockID block, bool locked) { return false; }
-        public override bool SendSetEnvColor(byte type, string hex) { return false; }
-        public override void SendChangeModel(byte id, string model) { }
-        public override bool SendSetWeather(byte weather) { return false; }
-        public override bool SendSetTextColor(ColorDesc color) { return false; }
-        public override bool SendDefineBlock(BlockDefinition def) { return false; }
-        public override bool SendUndefineBlock(BlockDefinition def) { return false; }
+
         
 
         bool sentMOTD;
@@ -718,9 +724,7 @@ namespace PluginAlphaIndev
             }
         }
 
-        string CleanupColors(string value) {
-            return LineWrapper.CleanupColors(value, false, false);
-        }
+        
 
         public override string ClientName() {
             return "Alpha 1.1.1";
@@ -858,7 +862,7 @@ namespace PluginAlphaIndev
 
 
 #region Classic processing
-        static byte[] login_fields = { FIELD_BYTE, FIELD_INT, FIELD_STRING, FIELD_STR, FIELD_DOUBLE, FIELD_STRING, FIELD_STRING };
+        static byte[] login_fields = { FIELD_BYTE, FIELD_INT, FIELD_STRING, FIELD_STRING, FIELD_DOUBLE, FIELD_STRING, FIELD_STRING };
         int HandleLogin(byte[] buffer, int offset, int left) {
             int size = 1 + 4; // opcode + version;
             int strLen;
@@ -1092,19 +1096,9 @@ namespace PluginAlphaIndev
         public override void SendKick(string reason, bool sync) {
             reason = CleanupColors(reason);
         }
-        public override bool SendSetUserType(byte type) { return false; }
-        
         
         public override void SendAddTabEntry(byte id, string name, string nick, string group, byte groupRank) { throw new NotImplementedException(); }
         public override void SendRemoveTabEntry(byte id) { throw new NotImplementedException(); }
-        public override bool SendSetReach(float reach) { return false; }
-        public override bool SendHoldThis(BlockID block, bool locked) { return false; }
-        public override bool SendSetEnvColor(byte type, string hex) { return false; }
-        public override void SendChangeModel(byte id, string model) { }
-        public override bool SendSetWeather(byte weather) { return false; }
-        public override bool SendSetTextColor(ColorDesc color) { return false; }
-        public override bool SendDefineBlock(BlockDefinition def) { return false; }
-        public override bool SendUndefineBlock(BlockDefinition def) { return false; }
 
 
         bool sentMOTD;
@@ -1330,10 +1324,6 @@ namespace PluginAlphaIndev
             data[17] = (byte)(rot.RotY + 128); // TODO fixed yaw kinda
             data[18] = rot.HeadX;
             return data;
-        }
-
-        string CleanupColors(string value) {
-            return LineWrapper.CleanupColors(value, false, false);
         }
 
         public override string ClientName() { return "Indev"; }
