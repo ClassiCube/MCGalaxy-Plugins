@@ -34,6 +34,80 @@ namespace PluginAlphaIndev
 			return new AlphaIndevHandshake(socket);
 		}
 	}
+	
+    // Handshake parsing is tricky since need to support Indev, Alpha, and Beta
+    unsafe class AlphaIndevHandshake : INetProtocol
+    {
+        const byte OPCODE_HANDSHAKE = AlphaIndevProtocol.OPCODE_HANDSHAKE;
+        const byte OPCODE_LOGIN     = AlphaIndevProtocol.OPCODE_LOGIN;
+
+        AlphaIndevParser parser;
+        INetSocket socket;
+        string player;
+
+        public AlphaIndevHandshake(INetSocket s) { socket = s; }   
+        public void Disconnect() { }
+
+        public int ProcessReceived(byte[] buffer, int length) {
+            if (length < 4) return 0;
+
+            switch (buffer[0]) {
+                case OPCODE_LOGIN:     return HandleLogin(buffer, length);
+                case OPCODE_HANDSHAKE: return HandleHandshake(buffer, length);
+
+                default:
+                    Logger.Log(LogType.SystemActivity, "I/A/B player {0} sent unknown opcode {1} in handshake", player, buffer[0]);
+                    socket.Close();
+                    return length;
+            }
+        }
+
+        static readonly byte[] handshake_fields = { AlphaIndevParser.FIELD_BYTE, AlphaIndevParser.FIELD_STRING };
+        protected int HandleHandshake(byte[] buffer, int length) {
+            // handshake packet: u8 opcode, u16 str_len, u8* str_contents
+            // utf8 or unicode is used for strings depending on protocol
+            //   e.g. utf8: 0x02 0x00 0x01 'A'
+            //   e.g. uni:  0x02 0x00 0x01 0x00 'A'
+            parser      = new AlphaIndevParser();
+            parser.utf8 = buffer[3] != 0;
+
+            FieldValue* values = stackalloc FieldValue[20];
+            int size = parser.ParsePacket(buffer, 0, length, handshake_fields, values);
+            if (length < size) return 0;
+
+            player = parser.ReadString(buffer, 1);
+            Logger.Log(LogType.SystemActivity, "I/A/B USER: " + player);
+
+            // - for no name name verification
+            SendHandshake("-");
+            return size;
+        }
+
+        void SendHandshake(string serverID) {
+            int dataLen = 1 + 2 + parser.CalcStringLength(serverID);
+            byte[] data = new byte[dataLen];
+
+            data[0] = OPCODE_HANDSHAKE;
+            parser.WriteString(data, 1, serverID);
+            socket.Send(data, SendFlags.None);
+        }
+
+        static readonly byte[] login_fields = { AlphaIndevParser.FIELD_BYTE, AlphaIndevParser.FIELD_INT };
+        int HandleLogin(byte[] buffer, int length) {
+            FieldValue* values = stackalloc FieldValue[20];
+            int size = parser.ParsePacket(buffer, 0, length, login_fields, values);
+            if (length < size) return 0;
+
+            int version = values[1].I32;
+            if (!parser.utf8 && version == IndevProtocol.PROTOCOL_VERSION) { 
+                socket.protocol = new IndevProtocol(socket, player, parser.utf8);
+            } else {
+                socket.protocol = new AlphaProtocol(socket, player, parser.utf8);
+            }
+
+            return socket.protocol.ProcessReceived(buffer, length);
+        }
+    }
 
     [StructLayout(LayoutKind.Explicit)]
     struct FieldValue
@@ -51,33 +125,136 @@ namespace PluginAlphaIndev
         [FieldOffset(0)]
         public double F64;
     }
-	
-    class AlphaIndevHandshake : INetProtocol
+    
+    unsafe class AlphaIndevParser
     {
-        INetSocket socket;
-        public AlphaIndevHandshake(INetSocket s) { socket = s; }   
-        public void Disconnect() { }
+        public bool utf8;
+        public Encoding CurEncoding { get { return utf8 ? Encoding.UTF8 : Encoding.BigEndianUnicode; } }
 
-        public int ProcessReceived(byte[] buffer, int length)
-        {
-            if (length < 4) return 0;
+        public static ushort ReadU16(byte[] array, int index) {
+            return NetUtils.ReadU16(array, index);
+        }
 
-            // indev uses big endian unicode
-            // alpha uses utf8
-            // beta  uses utf8 or big endian unicode depending on protocol version 
-            if (buffer[3] == 0) {
-                socket.protocol = new IndevProtocol(socket);
-            } else {
-                socket.protocol = new AlphaProtocol(socket, true);
-            }
+        public static int ReadI32(byte[] array, int index) {
+            return NetUtils.ReadI32(array, index);
+        }
 
-            return socket.protocol.ProcessReceived(buffer, length);
+        public static float ReadF32(byte[] array, int offset) {
+            int value = ReadI32(array, offset);
+            return *(float*)&value;
+        }
+
+        public static double ReadF64(byte[] array, int offset) {
+            long hi = ReadI32(array, offset + 0) & 0xFFFFFFFFL;
+            long lo = ReadI32(array, offset + 4) & 0xFFFFFFFFL;
+
+            long value = (hi << 32) | lo;
+            return *(double*)&value;
+        }
+
+        public int ReadStringLength(byte[] buffer, int offset) {
+            int len = ReadU16(buffer, offset);
+            // Just to confuse you, 'len' isn't always a byte count
+            //   utf8 = number of bytes
+            //   uni  = number of characters
+            return utf8 ? len : (len * 2);
+        }
+
+        public string ReadString(byte[] buffer, int offset) {
+            int len = ReadStringLength(buffer, offset);
+            return CurEncoding.GetString(buffer, offset + 2, len);
+        }
+
+
+        static void WriteU16(ushort value, byte[] array, int index) {
+            NetUtils.WriteU16(value, array, index);
+        }
+
+        public int CalcStringLength(string value) { return CurEncoding.GetByteCount(value); }
+        public void WriteString(byte[] buffer, int offset, string value) {
+            int len = CurEncoding.GetBytes(value, 0, value.Length, buffer, offset + 2);
+
+            // Just to confuse you, 'len' isn't always a byte count
+            //   utf8 = number of bytes
+            //   uni  = number of characters
+            if (!utf8) len >>= 1;
+            WriteU16((ushort)len, buffer, offset);
+        }
+        
+        
+        public const byte FIELD_BYTE   = 0;
+        public const byte FIELD_SHORT  = 1;
+        public const byte FIELD_INT    = 2;
+        public const byte FIELD_FLOAT  = 3;
+        public const byte FIELD_DOUBLE = 4;
+        public const byte FIELD_STRING = 5;
+
+        static bool CheckFieldSize(int amount, ref int offset, ref int left) {
+        	if (left < amount) return false;
+        			
+        	offset += amount; 
+        	left   -= amount;
+        	return true;
+        }
+        
+        public int ParsePacket(byte[] buffer, int offset, int left, 
+                               byte[] fields, FieldValue* values) {
+        	int total = left;
+        	
+        	foreach (byte field in fields)
+        	{
+        		if (field == FIELD_BYTE) {
+        			if (!CheckFieldSize(1, ref offset, ref left)) return int.MaxValue;
+                    values->U8 = buffer[offset - 1]; 
+                    values++;
+
+        		} else if (field == FIELD_SHORT) {
+        			if (!CheckFieldSize(2, ref offset, ref left)) return int.MaxValue;
+                    values->U16 = ReadU16(buffer, offset - 2); 
+                    values++;
+
+                } else if (field == FIELD_INT) {
+        			if (!CheckFieldSize(4, ref offset, ref left)) return int.MaxValue;
+                    values->I32 = ReadI32(buffer, offset - 4);
+                    values++;
+
+                } else if (field == FIELD_FLOAT) {
+        			if (!CheckFieldSize(4, ref offset, ref left)) return int.MaxValue;
+                    values->F32 = ReadF32(buffer, offset - 4);
+                    values++;
+
+                } else if (field == FIELD_DOUBLE) {
+        			if (!CheckFieldSize(8, ref offset, ref left)) return int.MaxValue;
+                    values->F64 = ReadF64(buffer, offset - 8);
+                    values++;
+
+                } else if (field == FIELD_STRING) {
+        			if (!CheckFieldSize(2, ref offset, ref left)) return int.MaxValue;
+        			int strLen = ReadStringLength(buffer, offset - 2);
+
+                    values->I32 = offset - 2;
+                    values++;
+                    if (!CheckFieldSize(strLen, ref offset, ref left)) return int.MaxValue;
+                }
+        	}
+        	return total - left;
         }
     }
-    
-    
+
     unsafe abstract class AlphaIndevProtocol : IGameSession, INetProtocol
     {
+        protected AlphaIndevParser parser;
+        public AlphaIndevProtocol(INetSocket s, string name, bool utf8) {
+            socket = s;
+            player = new Player(s, this);
+            parser = new AlphaIndevParser();
+
+            parser.utf8 = utf8;
+            // TEMP HACK
+            player.name = name; player.truename = name;
+        }
+
+
         public override void SendAddTabEntry(byte id, string name, string nick, string group, byte groupRank) { throw new NotImplementedException(); }
         public override void SendRemoveTabEntry(byte id) { throw new NotImplementedException(); }
         public override bool SendSetUserType(byte type) { return false; }
@@ -118,40 +295,19 @@ namespace PluginAlphaIndev
         public const int OPCODE_KICK = 0xFF;
 
         public override bool Supports(string extName, int version) { return false; }
-        
-        
-        protected static ushort ReadU16(byte[] array, int index) {
-            return NetUtils.ReadU16(array, index);
-        }
+
 
         protected static void WriteU16(ushort value, byte[] array, int index) {
             NetUtils.WriteU16(value, array, index);
-        }
-
-        protected static int ReadI32(byte[] array, int index) {
-            return NetUtils.ReadI32(array, index);
         }
 
         protected static void WriteI32(int value, byte[] array, int index) {
             NetUtils.WriteI32(value, array, index);
         }
 
-        protected static float ReadF32(byte[] array, int offset) {
-            int value = ReadI32(array, offset);
-            return *(float*)&value;
-        }
-
         protected static void WriteF32(float value, byte[] buffer, int offset) {
             int num = *(int*)&value;
             WriteI32(num, buffer, offset + 0);
-        }
-
-        protected static double ReadF64(byte[] array, int offset) {
-            long hi = ReadI32(array, offset + 0) & 0xFFFFFFFFL;
-            long lo = ReadI32(array, offset + 4) & 0xFFFFFFFFL;
-
-            long value = (hi << 32) | lo;
-            return *(double*)&value;
         }
 
         protected static void WriteF64(double value, byte[] buffer, int offset) {
@@ -161,72 +317,18 @@ namespace PluginAlphaIndev
         }
         
         
-        public const byte FIELD_BYTE   = 0;
-        public const byte FIELD_SHORT  = 1;
-        public const byte FIELD_INT    = 2;
-        public const byte FIELD_FLOAT  = 3;
-        public const byte FIELD_DOUBLE = 4;
-        public const byte FIELD_STRING = 5;
-        
-        protected abstract int ReadStringLength(byte[] buffer, int offset);
-        protected abstract string ReadString(byte[] buffer, int offset);
+        public const byte FIELD_BYTE   = AlphaIndevParser.FIELD_BYTE;
+        public const byte FIELD_SHORT  = AlphaIndevParser.FIELD_SHORT;
+        public const byte FIELD_INT    = AlphaIndevParser.FIELD_INT;
+        public const byte FIELD_FLOAT  = AlphaIndevParser.FIELD_FLOAT;
+        public const byte FIELD_DOUBLE = AlphaIndevParser.FIELD_DOUBLE;
+        public const byte FIELD_STRING = AlphaIndevParser.FIELD_STRING;
+
         protected abstract int CalcStringLength(string value);
         protected abstract void WriteString(byte[] buffer, int offset, string value);
 
         protected static string CleanupColors(string value) {
             return LineWrapper.CleanupColors(value, false, false);
-        }
-
-        
-        static bool CheckFieldSize(int amount, ref int offset, ref int left) {
-        	if (left < amount) return false;
-        			
-        	offset += amount; 
-        	left   -= amount;
-        	return true;
-        }
-        
-        protected int CheckPacketSize(byte[] buffer, int offset, int left, 
-                                      byte[] fields, FieldValue* values) {
-        	int total = left;
-        	
-        	foreach (byte field in fields)
-        	{
-        		if (field == FIELD_BYTE) {
-        			if (!CheckFieldSize(1, ref offset, ref left)) return int.MaxValue;
-                    values->U8 = buffer[offset - 1]; 
-                    values++;
-
-        		} else if (field == FIELD_SHORT) {
-        			if (!CheckFieldSize(2, ref offset, ref left)) return int.MaxValue;
-                    values->U16 = ReadU16(buffer, offset - 2); 
-                    values++;
-
-                } else if (field == FIELD_INT) {
-        			if (!CheckFieldSize(4, ref offset, ref left)) return int.MaxValue;
-                    values->I32 = ReadI32(buffer, offset - 4);
-                    values++;
-
-                } else if (field == FIELD_FLOAT) {
-        			if (!CheckFieldSize(4, ref offset, ref left)) return int.MaxValue;
-                    values->F32 = ReadF32(buffer, offset - 4);
-                    values++;
-
-                } else if (field == FIELD_DOUBLE) {
-        			if (!CheckFieldSize(8, ref offset, ref left)) return int.MaxValue;
-                    values->F64 = ReadF64(buffer, offset - 8);
-                    values++;
-
-                } else if (field == FIELD_STRING) {
-        			if (!CheckFieldSize(2, ref offset, ref left)) return int.MaxValue;
-        			int strLen = ReadStringLength(buffer, offset - 2);
-
-                    values->I32 = offset - 2;
-                    values++;
-                    if (!CheckFieldSize(strLen, ref offset, ref left)) return int.MaxValue;
-                }
-        	}
-        	return total - left;
         }
 
 
@@ -369,11 +471,11 @@ namespace PluginAlphaIndev
         static readonly byte[] handshake_fields = { FIELD_BYTE, FIELD_STRING };
         protected int HandleHandshake(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, handshake_fields, values);
+            int size = parser.ParsePacket(buffer, offset, left, handshake_fields, values);
             if (left < size) return 0;
 
             // TEMP HACK
-            string name = ReadString(buffer, offset + 1);
+            string name = parser.ReadString(buffer, offset + 1);
             player.name = name; player.truename = name;
             Logger.Log(LogType.SystemActivity, "I/A/B USER: " + name);
 
@@ -385,10 +487,10 @@ namespace PluginAlphaIndev
         static readonly byte[] chat_fields = { FIELD_BYTE, FIELD_STRING };
         protected int HandleChat(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, chat_fields, values);
+            int size = parser.ParsePacket(buffer, offset, left, chat_fields, values);
             if (left < size) return 0;
 
-            string text = ReadString(buffer, offset + 1);
+            string text = parser.ReadString(buffer, offset + 1);
             player.ProcessChat(text, false);
             return size;
         }
@@ -396,7 +498,7 @@ namespace PluginAlphaIndev
         static readonly byte[] state_fields = { FIELD_BYTE, FIELD_BYTE };
         protected int HandleSelfStateOnly(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, state_fields, values);
+            int size = parser.ParsePacket(buffer, offset, left, state_fields, values);
             if (left < size) return 0;
             // bool state
 
@@ -456,14 +558,11 @@ namespace PluginAlphaIndev
 
     unsafe class AlphaProtocol : AlphaIndevProtocol
     {
-        readonly Encoding encoding;
-        const int PROTOCOL_VERSION = 2;
+        public const int ALPHA_111_PROTOCOL_VERSION = 2;
+        public const int  BETA_173_PROTOCOL_VERSION = 14;
+        public bool IsBeta {  get { return !parser.utf8; } }
 
-        public AlphaProtocol(INetSocket s, bool utf8) {
-            socket   = s;
-            player   = new Player(s, this);
-            encoding = utf8 ? Encoding.UTF8 : Encoding.BigEndianUnicode;
-        }
+        public AlphaProtocol(INetSocket s, string name, bool utf8) : base(s, name, utf8) { }
 
         protected override int HandlePacket(byte[] buffer, int offset, int left) {
             //Console.WriteLine("IN: " + buffer[offset]);
@@ -486,22 +585,12 @@ namespace PluginAlphaIndev
             }
         }
 
-        protected override int ReadStringLength(byte[] buffer, int offset) {
-            return ReadU16(buffer, offset);
-        }
-
-        protected override string ReadString(byte[] buffer, int offset) {
-            int len = ReadStringLength(buffer, offset);
-            return encoding.GetString(buffer, offset + 2, len);
-        }
-
         protected override int CalcStringLength(string value) {
-            return encoding.GetByteCount(value);
+            return parser.CalcStringLength(value);
         }
 
         protected override void WriteString(byte[] buffer, int offset, string value) {
-            int len = encoding.GetBytes(value, 0, value.Length, buffer, offset + 2);
-            WriteU16((ushort)len, buffer, offset);
+            parser.WriteString(buffer, offset, value);
         }
 
         static BlockID ReadBlock(byte[] buffer, int offset) {
@@ -513,17 +602,20 @@ namespace PluginAlphaIndev
         static readonly byte[] login_fields = { FIELD_BYTE, FIELD_INT, FIELD_STRING, FIELD_STRING };
         int HandleLogin(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, login_fields, values);
-            int strLen;
+            int size = parser.ParsePacket(buffer, offset, left, login_fields, values);
             if (left < size) return 0;
 
             int version = values[1].I32;
-            if (version != PROTOCOL_VERSION) {
+            if (!IsBeta && version == ALPHA_111_PROTOCOL_VERSION) {
+                // OK
+            } else if (IsBeta && version == BETA_173_PROTOCOL_VERSION) {
+                // OK
+            } else {
                 player.Leave("Unsupported protocol version!"); return left;
             }
 
-            string name = ReadString(buffer, values[2].I32);
-            string pass = ReadString(buffer, values[3].I32);
+            string name = parser.ReadString(buffer, values[2].I32);
+            string pass = parser.ReadString(buffer, values[3].I32);
 
             if (!player.ProcessLogin(name, pass)) return left;
 
@@ -539,7 +631,7 @@ namespace PluginAlphaIndev
         static readonly byte[] move_fields = { FIELD_BYTE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_BYTE };
         int HandleSelfMove(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, move_fields, values);
+            int size = parser.ParsePacket(buffer, offset, left, move_fields, values);
             if (left < size) return 0;
 
             double x = values[1].F64;
@@ -557,7 +649,7 @@ namespace PluginAlphaIndev
         static readonly byte[] look_fields = { FIELD_BYTE, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfLook(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, look_fields, values);
+            int size = parser.ParsePacket(buffer, offset, left, look_fields, values);
             if (left < size) return 0;
 
             float yaw   = values[1].F32 + 180.0f;
@@ -573,7 +665,7 @@ namespace PluginAlphaIndev
         static byte[] movelook_fields = { FIELD_BYTE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfMoveLook(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, movelook_fields, values);
+            int size = parser.ParsePacket(buffer, offset, left, movelook_fields, values);
             if (left < size) return 0;
 
             double x = values[1].F64;
@@ -593,7 +685,7 @@ namespace PluginAlphaIndev
         static readonly byte[] dig_fields = { FIELD_BYTE, FIELD_BYTE, FIELD_INT, FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleBlockDig(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, dig_fields, values);
+            int size = parser.ParsePacket(buffer, offset, left, dig_fields, values);
             if (left < size) return 0;
 
             byte status = values[1].U8;
@@ -610,7 +702,7 @@ namespace PluginAlphaIndev
         static readonly byte[] place_fields = { FIELD_BYTE, FIELD_SHORT, FIELD_INT, FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleBlockPlace(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, place_fields, values);
+            int size = parser.ParsePacket(buffer, offset, left, place_fields, values);
             if (left < size) return 0;
 
             BlockID block = values[1].U16;
@@ -626,7 +718,7 @@ namespace PluginAlphaIndev
         static readonly byte[] anim_fields = { FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleArmAnim(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, anim_fields, values);
+            int size = parser.ParsePacket(buffer, offset, left, anim_fields, values);
             if (left < size) return 0;
 
             // TODO something
@@ -661,15 +753,36 @@ namespace PluginAlphaIndev
         }
 
         protected override byte[] MakeLogin(string motd) {
+            return IsBeta ? MakeBetaLogin(motd) : MakeAlphaLogin(motd);
+        }
+
+        byte[] MakeAlphaLogin(string motd) {
             int nameLen = CalcStringLength(Server.Config.Name);
             int motdLen = CalcStringLength(motd);
             int dataLen = 1 + 4 + (2 + nameLen) + (2 + motdLen);
             byte[] data = new byte[dataLen];
 
             data[0] = OPCODE_LOGIN;
-            NetUtils.WriteI32(2, data, PROTOCOL_VERSION);
+            NetUtils.WriteI32(2, data, ALPHA_111_PROTOCOL_VERSION);
             WriteString(data, 1 + 4,               Server.Config.Name);
             WriteString(data, 1 + 4 + 2 + nameLen, motd);
+            return data;
+        }
+
+        byte[] MakeBetaLogin(string motd) {
+            string name = Server.Config.Name;
+            // indev client disconnects when receiving a server name with > 16 characters
+            //  "java.io.IOException: Received string length longer than maximum allowed (18 > 16)"
+            if (name.Length > 16) name = name.Substring(0, 16);
+
+            int nameLen = CalcStringLength(name);
+            int dataLen = 1 + 4 + (2 + nameLen) + (8 + 1);
+            byte[] data = new byte[dataLen];
+
+            data[0] = OPCODE_LOGIN;
+            NetUtils.WriteI32(Entities.SelfID, data, 1);
+            WriteString(data, 1 + 4, name);
+            // U64 map seed, U8 dimension
             return data;
         }
 
@@ -836,15 +949,11 @@ namespace PluginAlphaIndev
             }
         }
 
-        
 
         public override string ClientName() {
-            return "Alpha 1.1.1";
+            return IsBeta ? "Beta 1.7.3" : "Alpha 1.1.1";
         }
         
-        
-
-
         /*public override ushort ConvertBlock(ushort block)
         {
         	// TODO temp hack
@@ -854,7 +963,7 @@ namespace PluginAlphaIndev
 
     unsafe class IndevProtocol : AlphaIndevProtocol
     {
-        const int PROTOCOL_VERSION = 9;
+        public const int PROTOCOL_VERSION = 9;
 
         // NOTE indev replaces bottom 2 layers with lava
         //  although second layer *can* be replaced via SetBlock,
@@ -863,10 +972,7 @@ namespace PluginAlphaIndev
         const int WORLD_SHIFT_BLOCKS = 2;
         const int WORLD_SHIFT_COORDS = 64;
 
-        public IndevProtocol(INetSocket s) {
-            socket = s;
-            player = new Player(s, this);
-        }
+        public IndevProtocol(INetSocket s, string name, bool utf8) : base(s, name, utf8) { }
 
         protected override int HandlePacket(byte[] buffer, int offset, int left) {
             //Console.WriteLine("IN: " + buffer[offset]);
@@ -887,15 +993,6 @@ namespace PluginAlphaIndev
                     player.Leave("Unhandled opcode \"" + buffer[offset] + "\"!", true);
                     return left;
             }
-        }
-
-        protected override int ReadStringLength(byte[] buffer, int offset) {
-            return ReadU16(buffer, offset) * 2;
-        }
-
-        protected override string ReadString(byte[] buffer, int offset) {
-            int len = ReadStringLength(buffer, offset);
-            return Encoding.BigEndianUnicode.GetString(buffer, offset + 2, len);
         }
 
         protected override int CalcStringLength(string value) {
@@ -926,8 +1023,7 @@ namespace PluginAlphaIndev
         static readonly byte[] login_fields = { FIELD_BYTE, FIELD_INT, FIELD_STRING, FIELD_DOUBLE, FIELD_STRING, FIELD_STRING };
         int HandleLogin(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, login_fields, values);
-            int strLen;
+            int size = parser.ParsePacket(buffer, offset, left, login_fields, values);
             if (left < size) return 0;
 
             int version = values[1].I32;
@@ -935,14 +1031,14 @@ namespace PluginAlphaIndev
                 player.Leave("Unsupported protocol version!"); return left;
             }
 
-            string name = ReadString(buffer,  values[2].I32);
+            string name = parser.ReadString(buffer,  values[2].I32);
 
             // TODO what do these 8 bytes even do? usually 0
             long unknown = values[3].I64;
 
             // TODO I dunno what these two strings are really for
-            string motd1 = ReadString(buffer, values[4].I32); // usually "Loading level..."
-            string motd2 = ReadString(buffer, values[5].I32); // usually "Loading server..."
+            string motd1 = parser.ReadString(buffer, values[4].I32); // usually "Loading level..."
+            string motd2 = parser.ReadString(buffer, values[5].I32); // usually "Loading server..."
 
             Logger.Log(LogType.SystemActivity, "MOTD 1: " + motd1);
             Logger.Log(LogType.SystemActivity, "MOTd 2:" + motd2);
@@ -960,7 +1056,7 @@ namespace PluginAlphaIndev
         static readonly byte[] move_fields = { FIELD_BYTE, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfMove(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, move_fields, values);
+            int size = parser.ParsePacket(buffer, offset, left, move_fields, values);
             if (left < size) return 0;
 
             float x = values[1].F32;
@@ -981,7 +1077,7 @@ namespace PluginAlphaIndev
         static readonly byte[] look_fields = { FIELD_BYTE, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfLook(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, look_fields, values);
+            int size = parser.ParsePacket(buffer, offset, left, look_fields, values);
             if (left < size) return 0;
 
             float yaw   = values[1].F32 + 180.0f;
@@ -997,7 +1093,7 @@ namespace PluginAlphaIndev
         static readonly byte[] movelook_fields = { FIELD_BYTE, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfMoveLook(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, movelook_fields, values);
+            int size = parser.ParsePacket(buffer, offset, left, movelook_fields, values);
             if (left < size) return 0;
 
             float x = values[1].F32;
@@ -1020,7 +1116,7 @@ namespace PluginAlphaIndev
         static readonly byte[] dig_fields = { FIELD_BYTE, FIELD_BYTE, FIELD_INT, FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleBlockDig(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, dig_fields, values);
+            int size = parser.ParsePacket(buffer, offset, left, dig_fields, values);
             if (left < size) return 0;
 
             byte status = values[1].U8;
@@ -1038,7 +1134,7 @@ namespace PluginAlphaIndev
         static readonly byte[] place_fields = { FIELD_BYTE, FIELD_INT, FIELD_BYTE, FIELD_INT, FIELD_BYTE, FIELD_SHORT };
         int HandleBlockPlace(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, place_fields, values);
+            int size = parser.ParsePacket(buffer, offset, left, place_fields, values);
             if (left < size) return 0;
 
             int x    = values[1].I32;
@@ -1055,7 +1151,7 @@ namespace PluginAlphaIndev
         static readonly byte[] anim_fields = { FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleArmAnim(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
-            int size = CheckPacketSize(buffer, offset, left, anim_fields, values);
+            int size = parser.ParsePacket(buffer, offset, left, anim_fields, values);
             if (left < size) return 0;
 
             // TODO something
