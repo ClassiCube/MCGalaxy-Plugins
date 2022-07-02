@@ -168,26 +168,26 @@ namespace PluginAlphaIndev
         	return true;
         }
         
-        int CheckPacketSize(byte[] buffer, int offset, int left, byte[] fields) {
+        protected int CheckPacketSize(byte[] buffer, int offset, int left, byte[] fields) {
         	int total = left;
         	
         	foreach (byte field in fields)
         	{
         		if (field == FIELD_BYTE) {
-        			if (!CheckFieldSize(1, ref offset, ref left)) return 0;
+        			if (!CheckFieldSize(1, ref offset, ref left)) return int.MaxValue;
         		} else if (field == FIELD_SHORT) {
-        			if (!CheckFieldSize(2, ref offset, ref left)) return 0;
+        			if (!CheckFieldSize(2, ref offset, ref left)) return int.MaxValue;
         		} else if (field == FIELD_INT) {
-        			if (!CheckFieldSize(4, ref offset, ref left)) return 0;
+        			if (!CheckFieldSize(4, ref offset, ref left)) return int.MaxValue;
         		} else if (field == FIELD_FLOAT) {
-        			if (!CheckFieldSize(4, ref offset, ref left)) return 0;
+        			if (!CheckFieldSize(4, ref offset, ref left)) return int.MaxValue;
         		} else if (field == FIELD_DOUBLE) {
-        			if (!CheckFieldSize(8, ref offset, ref left)) return 0;
+        			if (!CheckFieldSize(8, ref offset, ref left)) return int.MaxValue;
         		} else if (field == FIELD_STRING) {
-        			if (!CheckFieldSize(2, ref offset, ref left)) return 0;
+        			if (!CheckFieldSize(2, ref offset, ref left)) return int.MaxValue;
         			
         			int strLen = ReadStringLength(buffer, offset - 2);
-        			if (!CheckFieldSize(strLen, ref offset, ref left)) return 0;
+        			if (!CheckFieldSize(strLen, ref offset, ref left)) return int.MaxValue;
         		}
         	}
         	return total - left;
@@ -330,23 +330,34 @@ namespace PluginAlphaIndev
 
 
 #region Packet handlers
+        static byte[] handshake_fields = { FIELD_BYTE, FIELD_STRING };
+        protected int HandleHandshake(byte[] buffer, int offset, int left) {
+            int size = CheckPacketSize(buffer, offset, left, handshake_fields);
+            if (left < size) return 0;
+
+            // TEMP HACK
+            string name = ReadString(buffer, offset + 1);
+            player.name = name; player.truename = name;
+            Logger.Log(LogType.SystemActivity, "I/A/B USER: " + name);
+
+            // - for no name name verification
+            SendHandshake("-");
+            return size;
+        }
+
         static byte[] chat_fields = { FIELD_BYTE, FIELD_STRING };
         protected int HandleChat(byte[] buffer, int offset, int left) {
-            int size = 1 + 2; // opcode + text length
+            int size = CheckPacketSize(buffer, offset, left, chat_fields);
             if (left < size) return 0;
-            
-            // enough data for name length?
-            size += ReadStringLength(buffer, offset + 1);
-            if (left < size) return 0;
-            string text = ReadString(buffer, offset + 1);
 
+            string text = ReadString(buffer, offset + 1);
             player.ProcessChat(text, false);
             return size;
         }
 
         static byte[] state_fields = { FIELD_BYTE, FIELD_BYTE };
         protected int HandleSelfStateOnly(byte[] buffer, int offset, int left) {
-            int size = 1 + 1;
+            int size = CheckPacketSize(buffer, offset, left, state_fields);
             if (left < size) return 0;
             // bool state
 
@@ -462,7 +473,7 @@ namespace PluginAlphaIndev
 #region Classic processing
         static byte[] login_fields = { FIELD_BYTE, FIELD_INT, FIELD_STRING, FIELD_STRING };
         int HandleLogin(byte[] buffer, int offset, int left) {
-            int size = 1 + 4; // opcode + version;
+            int size = CheckPacketSize(buffer, offset, left, login_fields);
             int strLen;
             if (left < size) return 0;
 
@@ -470,18 +481,15 @@ namespace PluginAlphaIndev
             if (version != PROTOCOL_VERSION) {
                 player.Leave("Unsupported protocol version!"); return left;
             }
+            offset += 5;
 
-            if (left < size + 2)          return 0;
-            strLen = ReadStringLength(buffer, offset + size);
-            if (left < size + 2 + strLen) return 0;
-            string name = ReadString(buffer,  offset + size);
-            size += 2 + strLen;
+            strLen = ReadStringLength(buffer, offset);
+            string name = ReadString(buffer,  offset);
+            offset += 2 + strLen;
 
-            if (left < size + 2)          return 0;
-            strLen = ReadStringLength(buffer, offset + size);
-            if (left < size + 2 + strLen) return 0;
-            string pass = ReadString(buffer,  offset + size);
-            size += 2 + strLen;
+            strLen = ReadStringLength(buffer, offset);
+            string pass = ReadString(buffer,  offset);
+            offset += 2 + strLen;
 
             if (!player.ProcessLogin(name, pass)) return left;
 
@@ -493,29 +501,10 @@ namespace PluginAlphaIndev
             player.CompleteLoginProcess();
             return size;
         }
-        
-        static byte[] handshake_fields = { FIELD_BYTE, FIELD_STRING };
-        int HandleHandshake(byte[] buffer, int offset, int left) {
-            int size = 1 + 2; // opcode + name length
-            if (left < size) return 0;
-            
-            // enough data for name length?
-            size += ReadStringLength(buffer, offset + 1);
-            if (left < size) return 0;
-            string name = ReadString(buffer, offset + 1);
 
-            // TEMP HACK
-            player.name = name; player.truename = name;
-            Logger.Log(LogType.SystemActivity, "REA!: " + name);
-            // - for no name name verification
-            SendHandshake("-");
-
-            return size;
-        }
-
-        static byte[] move_fields = { FIELD_BYTE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE };
+        static byte[] move_fields = { FIELD_BYTE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_BYTE };
         int HandleSelfMove(byte[] buffer, int offset, int left) {
-            int size = 1 + 8 + 8 + 8 + 8 + 1;
+            int size = CheckPacketSize(buffer, offset, left, move_fields);
             if (left < size) return 0;
 
             double x = ReadF64(buffer, offset + 1);
@@ -532,7 +521,7 @@ namespace PluginAlphaIndev
 
         static byte[] look_fields = { FIELD_BYTE, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfLook(byte[] buffer, int offset, int left) {
-            int size = 1 + 4 + 4 + 1;
+            int size = CheckPacketSize(buffer, offset, left, look_fields);
             if (left < size) return 0;
 
             float yaw   = ReadF32(buffer, offset + 1) + 180.0f;
@@ -547,7 +536,7 @@ namespace PluginAlphaIndev
 
         static byte[] movelook_fields = { FIELD_BYTE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_DOUBLE, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfMoveLook(byte[] buffer, int offset, int left) {
-            int size = 1 + 8 + 8 + 8 + 8 + 4 + 4 + 1;
+            int size = CheckPacketSize(buffer, offset, left, movelook_fields);
             if (left < size) return 0;
 
             double x = ReadF64(buffer, offset + 1);
@@ -566,7 +555,7 @@ namespace PluginAlphaIndev
 
         static byte[] dig_fields = { FIELD_BYTE, FIELD_BYTE, FIELD_INT, FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleBlockDig(byte[] buffer, int offset, int left) {
-            int size = 1 + 1 + 4 + 1 + 4 + 1;
+            int size = CheckPacketSize(buffer, offset, left, dig_fields);
             if (left < size) return 0;
 
             byte status = buffer[offset + 1];
@@ -582,7 +571,7 @@ namespace PluginAlphaIndev
 
         static byte[] place_fields = { FIELD_BYTE, FIELD_SHORT, FIELD_INT, FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleBlockPlace(byte[] buffer, int offset, int left) {
-            int size = 1 + 2 + 4 + 1 + 4 + 1;
+            int size = CheckPacketSize(buffer, offset, left, place_fields);
             if (left < size) return 0;
 
             BlockID block = ReadU16(buffer, offset + 1);
@@ -597,7 +586,7 @@ namespace PluginAlphaIndev
 
         static byte[] anim_fields = { FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleArmAnim(byte[] buffer, int offset, int left) {
-            int size = 1 + 4 + 1;
+            int size = CheckPacketSize(buffer, offset, left, anim_fields);
             if (left < size) return 0;
 
             // TODO something
@@ -894,9 +883,9 @@ namespace PluginAlphaIndev
 
 
 #region Classic processing
-        static byte[] login_fields = { FIELD_BYTE, FIELD_INT, FIELD_STRING, FIELD_STRING, FIELD_DOUBLE, FIELD_STRING, FIELD_STRING };
+        static byte[] login_fields = { FIELD_BYTE, FIELD_INT, FIELD_STRING, FIELD_DOUBLE, FIELD_STRING, FIELD_STRING };
         int HandleLogin(byte[] buffer, int offset, int left) {
-            int size = 1 + 4; // opcode + version;
+            int size = CheckPacketSize(buffer, offset, left, login_fields);
             int strLen;
             if (left < size) return 0;
 
@@ -904,30 +893,24 @@ namespace PluginAlphaIndev
             if (version != PROTOCOL_VERSION) {
                 player.Leave("Unsupported protocol version!"); return left;
             }
+            offset += 5;
 
-            if (left < size + 2)          return 0;
-            strLen = ReadStringLength(buffer, offset + size);
-            if (left < size + 2 + strLen) return 0;
-            string name = ReadString(buffer,  offset + size);
-            size += 2 + strLen;
+            strLen = ReadStringLength(buffer, offset);
+            string name = ReadString(buffer,  offset);
+            offset += 2 + strLen;
 
             // TODO what do these 8 bytes even do? usually 0
-            if (left < size + 8) return 0;
-            size += 8;
+            offset += 8;
 
             // TODO I dunno what these two strings are really for
 
-            if (left < size + 2) return 0;
-            strLen = ReadStringLength(buffer, offset + size);
-            if (left < size + 2 + strLen) return 0;
-            string motd1 = ReadString(buffer, offset + size); // usually "Loading level..."
-            size += 2 + strLen;
+            strLen = ReadStringLength(buffer, offset);
+            string motd1 = ReadString(buffer, offset); // usually "Loading level..."
+            offset += 2 + strLen;
 
-            if (left < size + 2) return 0;
-            strLen = ReadStringLength(buffer, offset + size);
-            if (left < size + 2 + strLen) return 0;
-            string motd2 = ReadString(buffer, offset + size); // usually "Loading server..."
-            size += 2 + strLen;
+            strLen = ReadStringLength(buffer, offset);
+            string motd2 = ReadString(buffer, offset); // usually "Loading server..."
+            offset += 2 + strLen;
 
             Logger.Log(LogType.SystemActivity, "MOTD 1: " + motd1);
             Logger.Log(LogType.SystemActivity, "MOTd 2:" + motd2);
@@ -942,29 +925,9 @@ namespace PluginAlphaIndev
             return size;
         }
 
-        static byte[] handshake_fields = { FIELD_BYTE, FIELD_STRING };
-        int HandleHandshake(byte[] buffer, int offset, int left) {
-            int size = 1 + 2; // opcode + name length
-            if (left < size) return 0;
-            
-            // enough data for name length?
-            size += ReadStringLength(buffer, offset + 1);
-            if (left < size) return 0;
-            string name = ReadString(buffer, offset + 1);
-
-            // TEMP HACK
-            player.name = name; player.truename = name;
-            Logger.Log(LogType.SystemActivity, "REA!: " + name);
-
-            // TODO what even is this string
-            SendHandshake("-");
-
-            return size;
-        }
-
         static byte[] move_fields = { FIELD_BYTE, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfMove(byte[] buffer, int offset, int left) {
-            int size = 1 + 4 + 4 + 4 + 4 + 1;
+            int size = CheckPacketSize(buffer, offset, left, move_fields);
             if (left < size) return 0;
 
             float x = ReadF32(buffer, offset + 1);
@@ -984,7 +947,7 @@ namespace PluginAlphaIndev
 
         static byte[] look_fields = { FIELD_BYTE, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfLook(byte[] buffer, int offset, int left) {
-            int size = 1 + 4 + 4 + 1;
+            int size = CheckPacketSize(buffer, offset, left, look_fields);
             if (left < size) return 0;
 
             float yaw   = ReadF32(buffer, offset + 1) + 180.0f;
@@ -999,7 +962,7 @@ namespace PluginAlphaIndev
 
         static byte[] movelook_fields = { FIELD_BYTE, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_FLOAT, FIELD_BYTE };
         int HandleSelfMoveLook(byte[] buffer, int offset, int left) {
-            int size = 1 + 4 + 4 + 4 + 4 + 4 + 4 + 1;
+            int size = CheckPacketSize(buffer, offset, left, movelook_fields);
             if (left < size) return 0;
 
             float x = ReadF32(buffer, offset + 1);
@@ -1021,7 +984,7 @@ namespace PluginAlphaIndev
 
         static byte[] dig_fields = { FIELD_BYTE, FIELD_BYTE, FIELD_INT, FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleBlockDig(byte[] buffer, int offset, int left) {
-            int size = 1 + 1 + 4 + 1 + 4 + 1;
+            int size = CheckPacketSize(buffer, offset, left, dig_fields);
             if (left < size) return 0;
 
             byte status = buffer[offset + 1];
@@ -1038,7 +1001,7 @@ namespace PluginAlphaIndev
 
         static byte[] place_fields = { FIELD_BYTE, FIELD_SHORT, FIELD_INT, FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleBlockPlace(byte[] buffer, int offset, int left) {
-            int size = 1 + 2 + 4 + 1 + 4 + 1;
+            int size = CheckPacketSize(buffer, offset, left, place_fields);
             if (left < size) return 0;
 
             BlockID block = ReadU16(buffer, offset + 1);
@@ -1054,7 +1017,7 @@ namespace PluginAlphaIndev
 
         static byte[] anim_fields = { FIELD_BYTE, FIELD_INT, FIELD_BYTE };
         int HandleArmAnim(byte[] buffer, int offset, int left) {
-            int size = 1 + 4 + 1;
+            int size = CheckPacketSize(buffer, offset, left, anim_fields);
             if (left < size) return 0;
 
             // TODO something
