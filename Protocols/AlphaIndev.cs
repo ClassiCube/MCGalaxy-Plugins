@@ -468,22 +468,6 @@ namespace PluginAlphaIndev
 
 
 #region Packet handlers
-        static readonly byte[] handshake_fields = { FIELD_BYTE, FIELD_STRING };
-        protected int HandleHandshake(byte[] buffer, int offset, int left) {
-            FieldValue* values = stackalloc FieldValue[20];
-            int size = parser.ParsePacket(buffer, offset, left, handshake_fields, values);
-            if (left < size) return 0;
-
-            // TEMP HACK
-            string name = parser.ReadString(buffer, offset + 1);
-            player.name = name; player.truename = name;
-            Logger.Log(LogType.SystemActivity, "I/A/B USER: " + name);
-
-            // - for no name name verification
-            SendHandshake("-");
-            return size;
-        }
-
         static readonly byte[] chat_fields = { FIELD_BYTE, FIELD_STRING };
         protected int HandleChat(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
@@ -558,8 +542,10 @@ namespace PluginAlphaIndev
 
     unsafe class AlphaProtocol : AlphaIndevProtocol
     {
-        public const int ALPHA_111_PROTOCOL_VERSION = 2;
-        public const int  BETA_173_PROTOCOL_VERSION = 14;
+        const int ALPHA_111_PROTOCOL_VERSION = 2;
+        const int  BETA_173_PROTOCOL_VERSION = 14;
+
+        const int OPCODE_SLOT_SWITCHED = 0x10;
         public bool IsBeta {  get { return !parser.utf8; } }
 
         public AlphaProtocol(INetSocket s, string name, bool utf8) : base(s, name, utf8) { }
@@ -569,7 +555,6 @@ namespace PluginAlphaIndev
             switch (buffer[offset]) {
                 case OPCODE_PING:      return 1; // Ping
                 case OPCODE_LOGIN:     return HandleLogin(buffer, offset, left);
-                case OPCODE_HANDSHAKE: return HandleHandshake(buffer, offset, left);
                 case OPCODE_CHAT:      return HandleChat(buffer, offset, left);
                 case OPCODE_SELF_STATEONLY: return HandleSelfStateOnly(buffer, offset, left);
                 case OPCODE_SELF_MOVE:      return HandleSelfMove(buffer, offset, left);
@@ -578,6 +563,8 @@ namespace PluginAlphaIndev
                 case OPCODE_BLOCK_DIG:      return HandleBlockDig(buffer, offset, left);
                 case OPCODE_BLOCK_PLACE:    return HandleBlockPlace(buffer, offset, left);
                 case OPCODE_ARM_ANIM:       return HandleArmAnim(buffer, offset, left);
+
+                case OPCODE_SLOT_SWITCHED:  return HandleSlotSwitched(buffer, offset, left);
 
                 default:
                     player.Leave("Unhandled opcode \"" + buffer[offset] + "\"!", true);
@@ -598,7 +585,7 @@ namespace PluginAlphaIndev
         }
         
 
-#region Classic processing
+#region Common processing
         static readonly byte[] login_fields = { FIELD_BYTE, FIELD_INT, FIELD_STRING, FIELD_STRING };
         int HandleLogin(byte[] buffer, int offset, int left) {
             FieldValue* values = stackalloc FieldValue[20];
@@ -607,9 +594,11 @@ namespace PluginAlphaIndev
 
             int version = values[1].I32;
             if (!IsBeta && version == ALPHA_111_PROTOCOL_VERSION) {
-                // OK
+                // okay
             } else if (IsBeta && version == BETA_173_PROTOCOL_VERSION) {
-                // OK
+                // TODO the beta login packet is structured differently from Alpha,
+                //  and this just happens to work by accident
+                // (client sends rest of fields with 0, so they're treated as empty strings or ping packets)
             } else {
                 player.Leave("Unsupported protocol version!"); return left;
             }
@@ -725,7 +714,19 @@ namespace PluginAlphaIndev
             return size;
         }
         #endregion
-        
+
+
+        #region Beta processing
+        static readonly byte[] slotswitch_fields = { FIELD_BYTE, FIELD_SHORT };
+        int HandleSlotSwitched(byte[] buffer, int offset, int left) {
+            FieldValue* values = stackalloc FieldValue[20];
+            int size = parser.ParsePacket(buffer, offset, left, slotswitch_fields, values);
+            if (left < size) return 0;
+
+            // TODO something
+            return size;
+        }
+        #endregion
 
         public override void SendLevel(Level prev, Level level) {         
             byte* conv = stackalloc byte[Block.SUPPORTED_COUNT];
@@ -979,7 +980,6 @@ namespace PluginAlphaIndev
             switch (buffer[offset]) {
                 case OPCODE_PING:      return 1; // Ping
                 case OPCODE_LOGIN:     return HandleLogin(buffer, offset, left);
-                case OPCODE_HANDSHAKE: return HandleHandshake(buffer, offset, left);
                 case OPCODE_CHAT:      return HandleChat(buffer, offset, left);
                 case OPCODE_SELF_STATEONLY: return HandleSelfStateOnly(buffer, offset, left);
                 case OPCODE_SELF_MOVE:      return HandleSelfMove(buffer, offset, left);
