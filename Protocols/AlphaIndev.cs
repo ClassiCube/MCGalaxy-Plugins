@@ -44,11 +44,13 @@ namespace PluginAlphaIndev
         {
             if (length < 4) return 0;
 
-            // indev uses big endian unicode, alpha uses utf8
+            // indev uses big endian unicode
+            // alpha uses utf8
+            // beta  uses utf8 or big endian unicode depending on protocol version 
             if (buffer[3] == 0) {
                 socket.protocol = new IndevProtocol(socket);
             } else {
-                socket.protocol = new AlphaProtocol(socket);
+                socket.protocol = new AlphaProtocol(socket, true);
             }
 
             return socket.protocol.ProcessReceived(buffer, length);
@@ -58,6 +60,8 @@ namespace PluginAlphaIndev
     
     unsafe abstract class AlphaIndevProtocol : IGameSession, INetProtocol
     {
+        public override void SendAddTabEntry(byte id, string name, string nick, string group, byte groupRank) { throw new NotImplementedException(); }
+        public override void SendRemoveTabEntry(byte id) { throw new NotImplementedException(); }
         public override bool SendSetUserType(byte type) { return false; }
         public override bool SendSetReach(float reach) { return false; }
         public override bool SendHoldThis(BlockID block, bool locked) { return false; }
@@ -94,6 +98,8 @@ namespace PluginAlphaIndev
 
 
         public const int OPCODE_KICK = 0xFF;
+
+        public override bool Supports(string extName, int version) { return false; }
         
         
         protected static ushort ReadU16(byte[] array, int index) {
@@ -188,6 +194,7 @@ namespace PluginAlphaIndev
         }
 
 
+#region Packet senders
         public override void SendPing() {
             Send(new byte[] { OPCODE_PING });
         }
@@ -231,6 +238,55 @@ namespace PluginAlphaIndev
             socket.Send(MakeKick(reason), sync ? SendFlags.Synchronous : SendFlags.None);
         }
 
+        protected void SendHandshake(string serverID) {
+            Send(MakeHandshake(serverID));
+        }
+
+        public override void SendBlockchange(ushort x, ushort y, ushort z, BlockID block) {
+            byte[] packet = new byte[1 + 4 + 1 + 4 + 1 + 1];
+            byte raw = (byte)ConvertBlock(block);
+            WriteBlockChange(packet, 0, raw, x, y, z);
+            Send(packet);
+        }
+
+        public override void SendTeleport(byte id, Position pos, Orientation rot) {
+            if (id == Entities.SelfID) {
+                Send(MakeSelfMoveLook(pos, rot));
+            } else {
+                Send(MakeEntityTeleport(id, pos, rot));
+            }
+        }
+
+        bool sentMOTD;
+        public override void SendMotd(string motd) {
+            if (sentMOTD) return; // TODO work out how to properly resend map
+            sentMOTD = true;
+            Send(MakeLogin(motd));
+        }
+
+        public override void SendSpawnEntity(byte id, string name, string skin, Position pos, Orientation rot) {
+            name = CleanupColors(name);
+            name = name.Replace('&', '§');
+            skin = skin.Replace('&', '§');
+
+            if (id == Entities.SelfID) {
+                Send(MakeSelfMoveLook(pos, rot));
+            } else {
+                Send(MakeNamedAdd(id, name, skin, pos, rot));
+            }
+        }
+#endregion
+
+
+#region Packet builders
+        byte[] MakeHandshake(string serverID) {
+            int dataLen = 1 + 2 + CalcStringLength(serverID);
+            byte[] data = new byte[dataLen];
+
+            data[0] = OPCODE_HANDSHAKE;
+            WriteString(data, 1, serverID);
+            return data;
+        }
 
         byte[] MakeChat(string text) {
             int textLen = CalcStringLength(text);
@@ -250,7 +306,30 @@ namespace PluginAlphaIndev
             return data;
         }
 
+        protected abstract byte[] MakeLogin(string motd);
 
+        protected abstract byte[] MakeSelfMoveLook(Position pos, Orientation rot);
+
+        protected abstract byte[] MakeNamedAdd(byte id, string name, string skin, Position pos, Orientation rot);
+
+        protected virtual byte[] MakeEntityTeleport(byte id, Position pos, Orientation rot) {
+            int dataLen = 1 + 4 + (4 + 4 + 4) + (1 + 1);
+            byte[] data = new byte[dataLen];
+            data[0] = OPCODE_TELEPORT;
+
+            WriteI32(id, data, 1);
+            WriteI32(pos.X, data,  5);
+            WriteI32(pos.Y, data,  9);
+            WriteI32(pos.Z, data, 13);
+
+            data[17] = (byte)(rot.RotY + 128); // TODO fixed yaw kinda
+            data[18] = rot.HeadX;
+            return data;
+        }
+#endregion
+
+
+#region Packet handlers
         static byte[] chat_fields = { FIELD_BYTE, FIELD_STRING };
         protected int HandleChat(byte[] buffer, int offset, int left) {
             int size = 1 + 2; // opcode + text length
@@ -264,15 +343,76 @@ namespace PluginAlphaIndev
             player.ProcessChat(text, false);
             return size;
         }
+
+        static byte[] state_fields = { FIELD_BYTE, FIELD_BYTE };
+        protected int HandleSelfStateOnly(byte[] buffer, int offset, int left) {
+            int size = 1 + 1;
+            if (left < size) return 0;
+            // bool state
+
+            Position pos    = player.Pos;
+            Orientation rot = player.Rot;
+            player.ProcessMovement(pos.X, pos.Y, pos.Z, rot.RotY, rot.HeadX, 0);
+            return size;
+        }
+#endregion
+
+
+        public override void UpdatePlayerPositions() {
+            Player[] players = PlayerInfo.Online.Items;
+            Player dst = player;
+            
+            foreach (Player p in players) 
+            {
+                if (dst == p || dst.level != p.level || !dst.CanSeeEntity(p)) continue;
+                
+                Orientation rot = p.Rot;
+                Position pos    = p._tempPos;
+                // TODO TEMP HACK
+                Position delta  = new Position(pos.X - p._lastPos.X, pos.Y - p._lastPos.Y, pos.Z - p._lastPos.Z);
+                bool posChanged = delta.X  != 0 || delta.Y != 0 || delta.Z != 0;
+                bool oriChanged = rot.RotY != p._lastRot.RotY   || rot.HeadX != p._lastRot.HeadX;
+                if (posChanged || oriChanged)
+                    SendTeleport(p.id, pos, rot);
+            }
+        }
+
+        public override byte[] MakeBulkBlockchange(BufferedBlockSender buffer) {
+            int size = 1 + 4 + 1 + 4 + 1 + 1;
+            byte[] data = new byte[size * buffer.count];
+            Level level = buffer.level;
+
+            for (int i = 0; i < buffer.count; i++)
+            {
+                int index = buffer.indices[i];
+                int x = (index % level.Width);
+                int y = (index / level.Width) / level.Length;
+                int z = (index / level.Width) % level.Length;
+
+                WriteBlockChange(data, i * size, (byte)buffer.blocks[i], x, y, z);
+            }
+            return data;
+        }
+
+        protected virtual void WriteBlockChange(byte[] data, int offset, byte block, int x, int y, int z){
+            data[offset + 0] = OPCODE_BLOCK_CHANGE;
+            WriteI32(x, data, offset + 1);
+            data[offset + 5] = (byte)y;
+            WriteI32(z, data, offset + 6);
+            data[offset + 10] = block;
+            data[offset + 11] = 0; // metadata
+        }
     }
 
     unsafe class AlphaProtocol : AlphaIndevProtocol
     {
+        readonly Encoding encoding;
         const int PROTOCOL_VERSION = 2;
 
-        public AlphaProtocol(INetSocket s) {
-            socket = s;
-            player = new Player(s, this);
+        public AlphaProtocol(INetSocket s, bool utf8) {
+            socket   = s;
+            player   = new Player(s, this);
+            encoding = utf8 ? Encoding.UTF8 : Encoding.BigEndianUnicode;
         }
 
         protected override int HandlePacket(byte[] buffer, int offset, int left) {
@@ -295,8 +435,6 @@ namespace PluginAlphaIndev
                     return left;
             }
         }
-        
-        public override bool Supports(string extName, int version) { return false; }
 
         protected override int ReadStringLength(byte[] buffer, int offset) {
             return ReadU16(buffer, offset);
@@ -304,15 +442,15 @@ namespace PluginAlphaIndev
 
         protected override string ReadString(byte[] buffer, int offset) {
             int len = ReadStringLength(buffer, offset);
-            return Encoding.UTF8.GetString(buffer, offset + 2, len);
+            return encoding.GetString(buffer, offset + 2, len);
         }
 
         protected override int CalcStringLength(string value) {
-            return Encoding.UTF8.GetByteCount(value);
+            return encoding.GetByteCount(value);
         }
 
         protected override void WriteString(byte[] buffer, int offset, string value) {
-            int len = Encoding.UTF8.GetBytes(value, 0, value.Length, buffer, offset + 2);
+            int len = encoding.GetBytes(value, 0, value.Length, buffer, offset + 2);
             WriteU16((ushort)len, buffer, offset);
         }
 
@@ -372,18 +510,6 @@ namespace PluginAlphaIndev
             // - for no name name verification
             SendHandshake("-");
 
-            return size;
-        }
-
-        static byte[] state_fields = { FIELD_BYTE, FIELD_BYTE };
-        int HandleSelfStateOnly(byte[] buffer, int offset, int left) {
-            int size = 1 + 1;
-            if (left < size) return 0;
-            // bool state
-
-            Position pos    = player.Pos;
-            Orientation rot = player.Rot;
-            player.ProcessMovement(pos.X, pos.Y, pos.Z, rot.RotY, rot.HeadX, 0);
             return size;
         }
 
@@ -478,50 +604,7 @@ namespace PluginAlphaIndev
             return size;
         }
         #endregion
-
-
-        void SendHandshake(string serverID) {
-            Send(MakeHandshake(serverID));
-        }
-
-        public override void SendTeleport(byte id, Position pos, Orientation rot) {
-            if (id == Entities.SelfID) {
-                Send(MakeSelfMoveLook(pos, rot));
-            } else {
-                Send(MakeEntityTeleport(id, pos, rot));
-            }
-        }
         
-        public override void SendBlockchange(ushort x, ushort y, ushort z, BlockID block) {
-            byte[] packet = new byte[1 + 4 + 1 + 4 + 1 + 1];
-            byte raw = (byte)ConvertBlock(block);
-            WriteBlockChange(packet, 0, raw, x, y, z);
-            Send(packet);
-        }
-        
-        public override void SendAddTabEntry(byte id, string name, string nick, string group, byte groupRank) { throw new NotImplementedException(); }
-        public override void SendRemoveTabEntry(byte id) { throw new NotImplementedException(); }
-
-        
-
-        bool sentMOTD;
-        public override void SendMotd(string motd) {
-            if (sentMOTD) return; // TODO work out how to properly resend map
-            sentMOTD = true;
-            Send(MakeLogin(motd));
-        }
-
-        public override void SendSpawnEntity(byte id, string name, string skin, Position pos, Orientation rot) {
-            name = CleanupColors(name);
-            name = name.Replace('&', '§');
-            skin = skin.Replace('&', '§');
-
-            if (id == Entities.SelfID) {
-                Send(MakeSelfMoveLook(pos, rot));
-            } else {
-                Send(MakeNamedAdd(id, name, skin, pos, rot));
-            }
-        }
 
         public override void SendLevel(Level prev, Level level) {         
             byte* conv = stackalloc byte[Block.SUPPORTED_COUNT];
@@ -548,16 +631,7 @@ namespace PluginAlphaIndev
                 }
         }
 
-        byte[] MakeHandshake(string serverID) {
-            int dataLen = 1 + 2 + CalcStringLength(serverID);
-            byte[] data = new byte[dataLen];
-
-            data[0] = OPCODE_HANDSHAKE;
-            WriteString(data, 1, serverID);
-            return data;
-        }
-
-        byte[] MakeLogin(string motd) {
+        protected override byte[] MakeLogin(string motd) {
             int nameLen = CalcStringLength(Server.Config.Name);
             int motdLen = CalcStringLength(motd);
             int dataLen = 1 + 4 + (2 + nameLen) + (2 + motdLen);
@@ -570,16 +644,7 @@ namespace PluginAlphaIndev
             return data;
         }
 
-        byte[] MakeChat(string text) {
-            int textLen = CalcStringLength(text);
-            byte[] data = new byte[1 + 2 + textLen];
-
-            data[0] = OPCODE_CHAT;
-            WriteString(data, 1 , text);
-            return data;
-        }
-
-        byte[] MakeSelfMoveLook(Position pos, Orientation rot) {
+        protected override byte[] MakeSelfMoveLook(Position pos, Orientation rot) {
             byte[] data = new byte[1 + 8 + 8 + 8 + 8 + 4 + 4 + 1];
             float yaw   = rot.RotY  * 360.0f / 256.0f;
             float pitch = rot.HeadX * 360.0f / 256.0f;
@@ -596,30 +661,10 @@ namespace PluginAlphaIndev
             return data;
         }
 
-        byte[] MakeBlockDig(byte status, int x, int y, int z) {
-            byte[] data = new byte[1 + 1 + 4 + 1 + 4 + 1];
-            data[0] = OPCODE_BLOCK_DIG;
+        protected override byte[] MakeNamedAdd(byte id, string name, string skin, Position pos, Orientation rot) {
+            // TODO fixes Y kinda
+            pos.Y -= 51;
 
-            data[1] = status;
-            WriteI32(x, data, 2);
-            data[6] = (byte)y;
-            WriteI32(z, data, 7);
-            data[11] = 1;
-            return data;
-        }
-
-        byte[] MakeBlockChange(byte block, int x, int y, int z) {
-            byte[] data = new byte[1 + 4 + 1 + 4 + 1 + 1];
-            data[0] = OPCODE_BLOCK_CHANGE;
-            WriteI32(x, data, 1);
-            data[5] = (byte)y;
-            WriteI32(z, data, 6);
-            data[10] = block;
-            data[11] = 0; // metadata
-            return data;
-        }
-
-        byte[] MakeNamedAdd(byte id, string name, string skin, Position pos, Orientation rot) {
             int nameLen = CalcStringLength(name);
             int dataLen = 1 + 4 + (2 + nameLen) + (4 + 4 + 4) + (1 + 1) + 2;
             byte[] data = new byte[dataLen];
@@ -638,21 +683,10 @@ namespace PluginAlphaIndev
             return data;
         }
 
-        byte[] MakeEntityTeleport(byte id, Position pos, Orientation rot) {
-            int dataLen = 1 + 4 + (4 + 4 + 4) + (1 + 1);
-            byte[] data = new byte[dataLen];
-            data[0] = OPCODE_TELEPORT;
+        protected override byte[] MakeEntityTeleport(byte id, Position pos, Orientation rot) {
             // TODO fixes Y kinda
             pos.Y -= 51;
-
-            WriteI32(id, data, 1);
-            WriteI32(pos.X, data,  5);
-            WriteI32(pos.Y, data,  9);
-            WriteI32(pos.Z, data, 13);
-
-            data[17] = (byte)(rot.RotY + 128); // TODO fixed yaw kinda
-            data[18] = rot.HeadX;
-            return data;
+            return base.MakeEntityTeleport(id, pos, rot);
         }
 
         byte[] MakePreChunk(int x, int z, bool load)
@@ -779,51 +813,8 @@ namespace PluginAlphaIndev
             return "Alpha 1.1.1";
         }
         
-        public override byte[] MakeBulkBlockchange(BufferedBlockSender buffer) {
-            int size = 1 + 4 + 1 + 4 + 1 + 1;
-            byte[] data = new byte[size * buffer.count];
-            Level level = buffer.level;
+        
 
-            for (int i = 0; i < buffer.count; i++)
-            {
-                int index = buffer.indices[i];
-                int x = (index % level.Width);
-                int y = (index / level.Width) / level.Length;
-                int z = (index / level.Width) % level.Length;
-
-                WriteBlockChange(data, i * size, (byte)buffer.blocks[i], x, y, z);
-            }
-            return data;
-        }
-
-        void WriteBlockChange(byte[] data, int offset, byte block, int x, int y, int z)
-        {
-            data[offset + 0] = OPCODE_BLOCK_CHANGE;
-            WriteI32(x, data, offset + 1);
-            data[offset + 5] = (byte)y;
-            WriteI32(z, data, offset + 6);
-            data[offset + 10] = block;
-            data[offset + 11] = 0; // metadata
-        }
-
-        public override void UpdatePlayerPositions() {
-            Player[] players = PlayerInfo.Online.Items;
-            Player dst = player;
-            
-            foreach (Player p in players) 
-            {
-                if (dst == p || dst.level != p.level || !dst.CanSeeEntity(p)) continue;
-                
-                Orientation rot = p.Rot;
-                Position pos    = p._tempPos;
-                // TODO TEMP HACK
-                Position delta  = new Position(pos.X - p._lastPos.X, pos.Y - p._lastPos.Y, pos.Z - p._lastPos.Z);
-                bool posChanged = delta.X  != 0 || delta.Y != 0 || delta.Z != 0;
-                bool oriChanged = rot.RotY != p._lastRot.RotY   || rot.HeadX != p._lastRot.HeadX;
-                if (posChanged || oriChanged)
-                    SendTeleport(p.id, pos, rot);
-            }
-        }
 
         /*public override ushort ConvertBlock(ushort block)
         {
@@ -868,8 +859,6 @@ namespace PluginAlphaIndev
                     return left;
             }
         }
-        
-        public override bool Supports(string extName, int version) { return false; }
 
         protected override int ReadStringLength(byte[] buffer, int offset) {
             return ReadU16(buffer, offset) * 2;
@@ -970,18 +959,6 @@ namespace PluginAlphaIndev
             // TODO what even is this string
             SendHandshake("-");
 
-            return size;
-        }
-
-        static byte[] state_fields = { FIELD_BYTE, FIELD_BYTE };
-        int HandleSelfStateOnly(byte[] buffer, int offset, int left) {
-            int size = 1 + 1;
-            if (left < size) return 0;
-            // bool state
-
-            Position pos    = player.Pos;
-            Orientation rot = player.Rot;
-            player.ProcessMovement(pos.X, pos.Y, pos.Z, rot.RotY, rot.HeadX, 0);
             return size;
         }
 
@@ -1086,29 +1063,6 @@ namespace PluginAlphaIndev
         #endregion
 
 
-        void SendHandshake(string serverID) {
-            Send(MakeHandshake(serverID));
-        }
-
-        public override void SendTeleport(byte id, Position pos, Orientation rot) {
-            if (id == Entities.SelfID) {
-                Send(MakeSelfMoveLook(pos, rot));
-            } else {
-                Send(MakeEntityTeleport(id, pos, rot));
-            }
-        }
-        
-        public override void SendAddTabEntry(byte id, string name, string nick, string group, byte groupRank) { throw new NotImplementedException(); }
-        public override void SendRemoveTabEntry(byte id) { throw new NotImplementedException(); }
-
-
-        bool sentMOTD;
-        public override void SendMotd(string motd) {
-            if (sentMOTD) return; // TODO work out how to properly resend map
-            sentMOTD = true;
-            Send(MakeLogin(motd));
-        }
-
         public override void SendSpawnEntity(byte id, string name, string skin, Position pos, Orientation rot) {
             // indev client disconnects when receiving an entity with nametag > 16 characters
             //  "java.io.IOException: Received string length longer than maximum allowed (18 > 16)"
@@ -1116,15 +1070,7 @@ namespace PluginAlphaIndev
             if (name.Length > 16) name = Colors.StripUsed(name);
             if (name.Length > 16) name = name.Substring(0, 16);
 
-            name = CleanupColors(name);
-            name = name.Replace('&', '§');
-            skin = skin.Replace('&', '§');
-
-            if (id == Entities.SelfID) {
-                Send(MakeSelfMoveLook(pos, rot));
-            } else {
-                Send(MakeNamedAdd(id, name, skin, pos, rot));
-            }
+            base.SendSpawnEntity(id, name, skin, pos, rot);
         }
 
         byte[] GetBlocks(Level level)
@@ -1212,16 +1158,7 @@ namespace PluginAlphaIndev
             }
         }
 
-        byte[] MakeHandshake(string serverID) {
-            int dataLen = 1 + 2 + CalcStringLength(serverID);
-            byte[] data = new byte[dataLen];
-
-            data[0] = OPCODE_HANDSHAKE;
-            WriteString(data, 1, serverID);
-            return data;
-        }
-
-        byte[] MakeLogin(string motd) {
+        protected override byte[] MakeLogin(string motd) {
             int nameLen = CalcStringLength(Server.Config.Name);
             int motdLen = CalcStringLength(motd);
             int dataLen = 1 + 14 + (2 + nameLen) + (2 + motdLen);
@@ -1236,7 +1173,7 @@ namespace PluginAlphaIndev
             return data;
         }
 
-        byte[] MakeSelfMoveLook(Position pos, Orientation rot) {
+        protected override byte[] MakeSelfMoveLook(Position pos, Orientation rot) {
             byte[] data = new byte[1 + 4 + 4 + 4 + 4 + 4 + 4 + 1];
             float yaw   = rot.RotY  * 360.0f / 256.0f;
             float pitch = rot.HeadX * 360.0f / 256.0f;
@@ -1256,21 +1193,7 @@ namespace PluginAlphaIndev
             return data;
         }
 
-        byte[] MakeBlockDig(byte status, int x, int y, int z) {
-            byte[] data = new byte[1 + 1 + 4 + 1 + 4 + 1];
-            data[0] = OPCODE_BLOCK_DIG;
-
-            data[1] = status;
-            WriteI32(x, data, 2);
-            data[6] = (byte)y;
-            WriteI32(z, data, 7);
-            data[11] = 1;
-            return data;
-        }
-
-        
-
-        byte[] MakeNamedAdd(byte id, string name, string skin, Position pos, Orientation rot) {
+        protected override byte[] MakeNamedAdd(byte id, string name, string skin, Position pos, Orientation rot) {
             int nameLen = CalcStringLength(name);
             int dataLen = 1 + 4 + (2 + nameLen) + (4 + 4 + 4) + (1 + 1) + 2;
             byte[] data = new byte[dataLen];
@@ -1292,78 +1215,18 @@ namespace PluginAlphaIndev
             return data;
         }
 
-        byte[] MakeEntityTeleport(byte id, Position pos, Orientation rot) {
-            int dataLen = 1 + 4 + (4 + 4 + 4) + (1 + 1);
-            byte[] data = new byte[dataLen];
-            data[0] = OPCODE_TELEPORT;
+        protected override byte[] MakeEntityTeleport(byte id, Position pos, Orientation rot) {
             // TODO fixes Y kinda
             pos.Y -= 19;
             pos.Y += WORLD_SHIFT_COORDS;
-
-            WriteI32(id, data, 1);
-            WriteI32(pos.X, data,  5);
-            WriteI32(pos.Y, data,  9);
-            WriteI32(pos.Z, data, 13);
-
-            data[17] = (byte)(rot.RotY + 128); // TODO fixed yaw kinda
-            data[18] = rot.HeadX;
-            return data;
+            return base.MakeEntityTeleport(id, pos, rot);
         }
 
         public override string ClientName() { return "Indev"; }
 
-        public override byte[] MakeBulkBlockchange(BufferedBlockSender buffer) {
-            int size = 1 + 4 + 1 + 4 + 1 + 1;
-            byte[] data = new byte[size * buffer.count];
-            Level level = buffer.level;
-
-            for (int i = 0; i < buffer.count; i++)
-            {
-                int index = buffer.indices[i];
-                int x = (index % level.Width);
-                int y = (index / level.Width) / level.Length;
-                int z = (index / level.Width) % level.Length;
-
-                WriteBlockChange(data, i * size, (byte)buffer.blocks[i], x, y, z);
-            }
-            return data;
-        }
-
-        void WriteBlockChange(byte[] data, int offset, byte block, int x, int y, int z)
-        {
+        protected override void WriteBlockChange(byte[] data, int offset, byte block, int x, int y, int z) {
             y += WORLD_SHIFT_BLOCKS;
-            data[offset + 0] = OPCODE_BLOCK_CHANGE;
-            WriteI32(x, data, offset + 1);
-            data[offset + 5] = (byte)y;
-            WriteI32(z, data, offset + 6);
-            data[offset + 10] = block;
-            data[offset + 11] = 0; // metadata
-        }
-
-        public override void UpdatePlayerPositions() {
-            Player[] players = PlayerInfo.Online.Items;
-            Player dst = player;
-            
-            foreach (Player p in players) 
-            {
-                if (dst == p || dst.level != p.level || !dst.CanSeeEntity(p)) continue;
-                
-                Orientation rot = p.Rot;
-                Position pos    = p._tempPos;
-                // TODO TEMP HACK
-                Position delta  = new Position(pos.X - p._lastPos.X, pos.Y - p._lastPos.Y, pos.Z - p._lastPos.Z);
-                bool posChanged = delta.X  != 0 || delta.Y != 0 || delta.Z != 0;
-                bool oriChanged = rot.RotY != p._lastRot.RotY   || rot.HeadX != p._lastRot.HeadX;
-                if (posChanged || oriChanged)
-                    SendTeleport(p.id, pos, rot);
-            }
-        }
-
-        public override void SendBlockchange(ushort x, ushort y, ushort z, BlockID block) {
-            byte[] packet = new byte[1 + 4 + 1 + 4 + 1 + 1];
-            byte raw = (byte)ConvertBlock(block);
-            WriteBlockChange(packet, 0, raw, x, y, z);
-            Send(packet);
+            base.WriteBlockChange(data, offset, block, x, y, z);
         }
     }
 }
