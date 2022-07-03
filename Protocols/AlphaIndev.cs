@@ -729,8 +729,8 @@ namespace PluginAlphaIndev
         #endregion
 
         public override void SendLevel(Level prev, Level level) {         
-            byte* conv = stackalloc byte[Block.SUPPORTED_COUNT];
-            for (int j = 0; j < Block.SUPPORTED_COUNT; j++)
+            byte* conv = stackalloc byte[Block.ExtendedCount];
+            for (int j = 0; j < Block.ExtendedCount; j++)
             {
                 conv[j] = (byte)ConvertBlock((BlockID)j);
             }
@@ -1177,8 +1177,8 @@ namespace PluginAlphaIndev
             int i = level.PosToInt(0, 2, 0);
             //for (int j = 0; j < i; j++) blocks[j] = Block.Bedrock;
 
-            byte* conv = stackalloc byte[Block.SUPPORTED_COUNT];
-            for (int j = 0; j < Block.SUPPORTED_COUNT; j++)
+            byte* conv = stackalloc byte[Block.ExtendedCount];
+            for (int j = 0; j < Block.ExtendedCount; j++)
             {
                 conv[j] = (byte)ConvertBlock((BlockID)j);
             }
