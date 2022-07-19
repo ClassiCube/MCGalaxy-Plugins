@@ -42,6 +42,7 @@ Some custom commands and plugins for MCGalaxy.
 | **Marry** | Allows you to show as married to another player in /whois.
 | **NoTp** | Prevents using /tp on certain maps. (you may need to change the source code)
 | **passjoin** | Force players to enter a pre-defined password before they can play and talk. Change the password before compiling! This plugin is MUTUALLY EXCLUSIVE with admin verification.
+| **physicsexample** | Example plugin for custom block physics. Makes block 103 fall up (instantly on physics 1, gradually on higher levels).
 | **Rainbow** | Makes the %r custom colour constantly change in rainbow pattern/ (you must define %r first)
 | **Reward** | Allows using /Reward in Message Blocks, which will give the player money when clicked on.
 | **SchematicImporter** | Imports [Schematic](https://minecraft.fandom.com/wiki/Schematic_file_format) files from /extra/import.
