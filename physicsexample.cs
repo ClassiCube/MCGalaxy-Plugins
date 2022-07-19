@@ -1,13 +1,8 @@
 using System;
-using System.Threading;
-using System.Collections.Generic;
 using MCGalaxy.Blocks.Physics;
-using MCGalaxy.Commands;
 using MCGalaxy.Events.LevelEvents;
-using MCGalaxy.Maths;
 using MCGalaxy.Tasks;
 using BlockID = System.UInt16;
-using Vector3 = MCGalaxy.Maths.Vec3F32;
 
 namespace MCGalaxy {
 	
@@ -33,24 +28,22 @@ namespace MCGalaxy {
 			Level[] levels = LevelInfo.Loaded.Items;
 			foreach (Level lvl in levels) {
                 if (lvl.name == physicsLevelName) {
-                   AddCustomPhysicsTo(lvl); 
+                   lvl.PhysicsHandlers[customPhysicsBlock] = DoBalloon;
                 }
 			}
             
             //Otherwise, we will look for when it loads using an event
-            OnLevelLoadedEvent.Register(OnLevelLoaded, Priority.Low);
+            OnBlockHandlersUpdatedEvent.Register(OnBlockHandlersUpdated, Priority.Low);
 		}
 		public override void Unload(bool shutdown) {
-            OnLevelLoadedEvent.Unregister(OnLevelLoaded);
+            OnBlockHandlersUpdatedEvent.Unregister(OnBlockHandlersUpdated);
 		}
         
-		static void OnLevelLoaded(Level lvl) {
-            if (lvl.name == physicsLevelName) { AddCustomPhysicsTo(lvl); }
-		}
-        static void AddCustomPhysicsTo(Level lvl) {
-            MsgDebugger("Added custom physics to {0}", lvl.name);
+		static void OnBlockHandlersUpdated(Level lvl, BlockID block) {
+            if (lvl.name != physicsLevelName) { return; }
+            if (block != customPhysicsBlock) { return; }
             lvl.PhysicsHandlers[customPhysicsBlock] = DoBalloon;
-        }
+		}
         
         //Like sand, but falls up
         static void DoBalloon(Level lvl, ref PhysInfo C) {
