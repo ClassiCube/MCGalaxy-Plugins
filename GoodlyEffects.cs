@@ -305,7 +305,7 @@ namespace PluginGoodlyEffects
         public static void TryLoad() {
             lock (locker) {
                 if (dependencyCount == 0) {
-                    new PluginGoodlyEffects().Load(false);
+                    new GoodlyEffects().Load(false);
                 }
                 dependencyCount++;
             }
@@ -314,7 +314,7 @@ namespace PluginGoodlyEffects
             lock (locker) {
                 dependencyCount--;
                 if (dependencyCount == 0) {
-                    new PluginGoodlyEffects().Unload(false);
+                    new GoodlyEffects().Unload(false);
                 }
             }
         }
