@@ -13,7 +13,7 @@ using MCGalaxy.Events.ServerEvents;
 using MCGalaxy.Events.LevelEvents;
 using MCGalaxy.Events.PlayerEvents;
 
-namespace PluginGoodlyEffects 
+namespace MCGalaxy 
 {
     public sealed class GoodlyEffects : Plugin 
     {
