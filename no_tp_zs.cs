@@ -2,12 +2,12 @@ using System;
 using MCGalaxy;
 using MCGalaxy.Events.PlayerEvents;
 
-namespace PluginNoTP 
+namespace PluginNoTpZs 
 {
-	public sealed class NoTP : Plugin 
+	public sealed class NoTpZs : Plugin 
 	{
 		public override string creator { get { return "Not UnknownShadow200"; } }
-		public override string name { get { return "NoTp"; } }
+		public override string name { get { return "no_tp_zs"; } }
 		public override string MCGalaxy_Version { get { return "1.9.1.4"; } }
 		
 		public override void Load(bool startup) {

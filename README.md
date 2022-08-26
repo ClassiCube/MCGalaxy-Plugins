@@ -40,13 +40,14 @@ Some custom commands and plugins for MCGalaxy.
 | **LockedReach** | Restricts reach distance of players on a map.
 | **MagicaVoxelImport** | Imports [MagicaVoxel](https://ephtracy.github.io/) files from /extra/import.
 | **Marry** | Allows you to show as married to another player in /whois.
-| **NoTp** | Prevents using /tp on certain maps. (you may need to change the source code)
+| **no_tp_zs** | Prevents using /tp on maps that start with "zs".
 | **passjoin** | Force players to enter a pre-defined password before they can play and talk. Change the password before compiling! This plugin is MUTUALLY EXCLUSIVE with admin verification.
 | **physicsexample** | Example plugin for custom block physics. Makes block 103 fall up (instantly on physics 1, gradually on higher levels).
 | **Rainbow** | Makes the %r custom colour constantly change in rainbow pattern/ (you must define %r first)
 | **Reward** | Allows using /Reward in Message Blocks, which will give the player money when clicked on.
 | **SchematicImporter** | Imports [Schematic](https://minecraft.fandom.com/wiki/Schematic_file_format) files from /extra/import.
 | **TeamChat** | Allows using *=message* as shortcut for */team message*.
+| **tp_control** | Disables teleporting within -hax maps and adds +tp and -tp flags to MOTD.
 | **MicrosoftAuthentication** | Allows users to authenticate using the online-mode protocol, if verify-names fails or no mppass is provided.
 
 
