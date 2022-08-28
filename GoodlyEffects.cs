@@ -298,27 +298,6 @@ namespace MCGalaxy
         static Random rnd;
         public static Dictionary<string, EffectConfig> effectAtEffectName = new Dictionary<string, EffectConfig>();
         
-        static readonly object locker = new object();
-        static int dependencyCount = 0;
-        // TryLoad and TryUnload should *NOT* be called if this plugin is placed in the plugins folder to be loaded automatically.
-        // These methods are only to be used for plugins that have a dependency on GoodlyEffects when GoodlyEffects.dll is placed in root server folder
-        public static void TryLoad() {
-            lock (locker) {
-                if (dependencyCount == 0) {
-                    new GoodlyEffects().Load(false);
-                }
-                dependencyCount++;
-            }
-        }
-        public static void TryUnload() {
-            lock (locker) {
-                dependencyCount--;
-                if (dependencyCount == 0) {
-                    new GoodlyEffects().Unload(false);
-                }
-            }
-        }
-        
         public DateTime startTime = DateTime.UtcNow;
         public override void Load(bool startup) {
             Command.Register(new CmdReloadEffects());
