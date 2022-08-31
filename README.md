@@ -5,14 +5,14 @@ Some custom commands and plugins for MCGalaxy.
 
 #### Commands 
 - Place the .cs file in */extra/commands/source*
-- /compile [command name]
-- /cmdload [commd name]
-- Add the command name (e.g. GBInsert) to text/cmdautoload.txt to make it load on server start.
+- `/compile [command name]`
+- `/cmdload [command name]`
+- Commands automatically load on server start (as of MCGalaxy 1.9.4.2)
 #### Plugins
 - Place the .cs file in */plugins*
-- /pcompile [plugin name]
-- /pload [plugin name]
-- Plugins automatically load on server start.
+- `/pcompile [plugin name]`
+- `/pload [plugin name]`
+- Plugins automatically load on server start
 
 ### Commands list
 | Name | Description |
