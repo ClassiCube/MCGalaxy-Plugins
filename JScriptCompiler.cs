@@ -6,16 +6,39 @@
 // ============================================================
 using System;
 using System.CodeDom.Compiler;
-using MCGalaxy.Events;
-using MCGalaxy.Scripting;
 using MCGalaxy.Modules.Compiling;
 using MCGalaxy;
+
+public sealed class JScriptPlugin : Plugin
+{
+	public override string creator { get { return "Not UnknownShadow200"; } }
+	public override string MCGalaxy_Version { get { return "1.9.4.2"; } }
+	public override string name { get { return "JScriptPlugin"; } }
+
+	ICompiler compiler = new JSriptCompiler();
+	public override void Load(bool startup) {
+		ICompiler.Compilers.Add(compiler);
+	}
+	
+	public override void Unload(bool shutdown) {
+		ICompiler.Compilers.Remove(compiler);
+	}
+}
 
 class JSriptCompiler : ICompiler
 {
 	public override string ShortName { get { return "JS"; } }
 	public override string FullName { get { return "JScript"; } }
 	public override string FileExtension { get { return ".jscript"; } }
+
+	CodeDomProvider compiler;
+	protected override ICompilerErrors DoCompile(string[] srcPaths, string dstPath) {
+		CompilerParameters args = ICodeDomCompiler.PrepareInput(srcPaths, dstPath, "//");
+
+		ICodeDomCompiler.InitCompiler(this, "JScript", ref compiler);
+		return ICodeDomCompiler.Compile(args, srcPaths, compiler);
+	}
+	
 	
 	public override string CommandSkeleton {
 		get {
@@ -96,29 +119,5 @@ class {0} extends Plugin
 \t}}
 }}";
 		}
-	}
-
-	CodeDomProvider compiler;
-	protected override ICompilerErrors DoCompile(string[] srcPaths, string dstPath) {
-		CompilerParameters args = ICodeDomCompiler.PrepareInput(srcPaths, dstPath, "//");
-
-		ICodeDomCompiler.InitCompiler(this, "JScript", ref compiler);
-		return ICodeDomCompiler.Compile(args, srcPaths, compiler);
-	}
-}
-
-public sealed class JScriptPlugin : Plugin
-{
-	public override string creator { get { return "Not UnknownShadow200"; } }
-	public override string MCGalaxy_Version { get { return "1.9.4.0"; } }
-	public override string name { get { return "JScriptPlugin"; } }
-
-	ICompiler compiler = new JSriptCompiler();
-	public override void Load(bool startup) {
-		ICompiler.Compilers.Add(compiler);
-	}
-	
-	public override void Unload(bool shutdown) {
-		ICompiler.Compilers.Remove(compiler);
 	}
 }
