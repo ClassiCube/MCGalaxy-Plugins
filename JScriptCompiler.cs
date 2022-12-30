@@ -11,7 +11,7 @@ using MCGalaxy.Scripting;
 using MCGalaxy.Modules.Compiling;
 using MCGalaxy;
 
-class JSriptCompiler : ICodeDomCompiler
+class JSriptCompiler : ICompiler
 {
 	public override string ShortName { get { return "JS"; } }
 	public override string FullName { get { return "JScript"; } }
@@ -97,12 +97,13 @@ class {0} extends Plugin
 }}";
 		}
 	}
-	
-	protected override void PrepareArgs(CompilerParameters args) {
-	}
-	
-	protected override CodeDomProvider CreateProvider() {
-		return CodeDomProvider.CreateProvider("JScript");
+
+	CodeDomProvider compiler;
+	protected override ICompilerErrors DoCompile(string[] srcPaths, string dstPath) {
+		CompilerParameters args = ICodeDomCompiler.PrepareInput(srcPaths, dstPath, "//");
+
+		ICodeDomCompiler.InitCompiler(this, "JScript", ref compiler);
+		return ICodeDomCompiler.Compile(args, srcPaths, compiler);
 	}
 }
 
