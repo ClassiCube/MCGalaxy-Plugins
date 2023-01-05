@@ -18,7 +18,7 @@ namespace MCGalaxy
     public sealed class GoodlyEffects : Plugin 
     {
         public override string name { get { return "GoodlyEffects"; } }
-        public override string MCGalaxy_Version { get { return "1.9.2.9"; } }
+        public override string MCGalaxy_Version { get { return "1.9.4.4"; } }
         public override string creator { get { return "Goodly"; } }
         const float notAllowedBelowZero = 0;
         public class EffectConfig {
@@ -112,7 +112,7 @@ namespace MCGalaxy
             public static bool CanEditAny(Player p) {
                 if (LevelInfo.IsRealmOwner(p.name, p.level.name)) { return true; }
                 ItemPerms perms = CommandExtraPerms.Find("EffectSpawner", 1);
-                perms = perms == null ? new ItemPerms(LevelPermission.Operator, null, null) : perms;
+                perms = perms == null ? new ItemPerms(LevelPermission.Operator) : perms;
                 if (perms.UsableBy(p.Rank)) { return true; }
                 return false;
             }
