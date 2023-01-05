@@ -18,7 +18,7 @@ namespace MCGalaxy
     public sealed class GoodlyEffects : Plugin 
     {
         public override string name { get { return "GoodlyEffects"; } }
-        public override string MCGalaxy_Version { get { return "1.9.2.9"; } }
+        public override string MCGalaxy_Version { get { return "1.9.4.5"; } }
         public override string creator { get { return "Goodly"; } }
         const float notAllowedBelowZero = 0;
         public class EffectConfig {
@@ -111,10 +111,8 @@ namespace MCGalaxy
             [ConfigFloat] public float spawnChance = 1;
             public static bool CanEditAny(Player p) {
                 if (LevelInfo.IsRealmOwner(p.name, p.level.name)) { return true; }
-                ItemPerms perms = CommandExtraPerms.Find("EffectSpawner", 1);
-                perms = perms == null ? new ItemPerms(LevelPermission.Operator, null, null) : perms;
-                if (perms.UsableBy(p.Rank)) { return true; }
-                return false;
+                ItemPerms perms = CommandExtraPerms.GetOrAdd("Spawner", 1, LevelPermission.Operator);
+                return perms.UsableBy(p.Rank);
             }
             public bool EditableBy(Player p, string attemptedAction = "modify") {
                 if (CanEditAny(p)) { return true; }
@@ -305,9 +303,7 @@ namespace MCGalaxy
             Command.Register(new CmdSpawner());
             
             rnd = new Random();
-            LoadEffects();
-            DefineEffectsAll();
-            
+            ReloadEffects();            
 
             OnPlayerFinishConnectingEvent.Register(OnPlayerFinishConnecting, Priority.Low);
             OnLevelLoadedEvent.Register(OnLevelLoaded, Priority.Low);
@@ -315,16 +311,13 @@ namespace MCGalaxy
             OnLevelDeletedEvent.Register(OnLevelDeleted, Priority.Low);
             OnLevelCopiedEvent.Register(OnLevelCopied, Priority.Low);
             OnLevelRenamedEvent.Register(OnLevelRenamed, Priority.Low);
+            OnConfigUpdatedEvent.Register(OnConfigUpdated, Priority.Low);
             
             SpawnersFile.cache = new ThreadSafeCache();
             if (!Directory.Exists(SpawnersFile.spawnerDirectory)) {
                 Directory.CreateDirectory(SpawnersFile.spawnerDirectory);
             }
-            Level[] levels = LevelInfo.Loaded.Items;
-            foreach (Level level in levels) {
-                SpawnersFile.Load(level);
-            }
-            spawnerAccum = 0;
+            ReloadSpawners();
             ActivateSpawners();
         }
         public override void Unload(bool shutdown) {
@@ -338,11 +331,17 @@ namespace MCGalaxy
             OnLevelDeletedEvent.Unregister(OnLevelDeleted);
             OnLevelCopiedEvent.Unregister(OnLevelCopied);
             OnLevelRenamedEvent.Unregister(OnLevelRenamed);
+            OnConfigUpdatedEvent.Unregister(OnConfigUpdated);
             
             spawnersAtLevel.Clear();
             instance.Cancel(tickSpawners);
         }
         
+        static void OnConfigUpdated() {
+            spawnersAtLevel.Clear(); // TODO: remove this hack, just avoids warning messages to players when reloading
+            ReloadEffects();
+            ReloadSpawners();
+        }
         static void OnPlayerFinishConnecting(Player p) {
             DefineEffectsFor(p);
         }
@@ -362,6 +361,22 @@ namespace MCGalaxy
         }
         static void OnLevelRenamed(string srcMap, string dstMap) {
             SpawnersFile.Rename(srcMap, dstMap);
+        }
+
+
+        public static void ReloadEffects() {
+            effectAtEffectName.Clear();
+            LoadEffects();
+            DefineEffectsAll();
+        }
+
+        public static void ReloadSpawners() {
+            spawnersAtLevel.Clear();
+            Level[] levels = LevelInfo.Loaded.Items;
+            foreach (Level level in levels) {
+                SpawnersFile.Load(level);
+            }
+            spawnerAccum = 0;
         }
         
         static Scheduler instance;
