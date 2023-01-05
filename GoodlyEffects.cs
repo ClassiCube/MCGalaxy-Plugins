@@ -470,16 +470,13 @@ namespace MCGalaxy
     public class CmdReloadEffects : Command2
     {
         public override string name { get { return "ReloadEffects"; } }
-        public override string shortcut { get { return ""; } }
         public override bool MessageBlockRestricted { get { return true; } }
         public override string type { get { return "fun"; } }
         public override bool museumUsable { get { return false; } }
         public override LevelPermission defaultRank { get { return LevelPermission.Admin; } }
         public override void Use(Player p, string message, CommandData data)
         {
-            GoodlyEffects.effectAtEffectName.Clear();
-            GoodlyEffects.LoadEffects();
-            GoodlyEffects.DefineEffectsAll();
+            GoodlyEffects.ReloadEffects();
             p.Message("Reloaded effects!");
         }
         public override void Help(Player p)
@@ -492,7 +489,6 @@ namespace MCGalaxy
     public class CmdEffect : Command2
     {
         public override string name { get { return "Effect"; } }
-        public override string shortcut { get { return ""; } }
         public override bool MessageBlockRestricted { get { return false; } }
         public override string type { get { return "fun"; } }
         public override bool museumUsable { get { return false; } }
