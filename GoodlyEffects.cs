@@ -297,7 +297,6 @@ namespace MCGalaxy
         static Random rnd;
         public static Dictionary<string, EffectConfig> effectAtEffectName = new Dictionary<string, EffectConfig>();
         
-        public DateTime startTime = DateTime.UtcNow;
         public override void Load(bool startup) {
             Command.Register(new CmdReloadEffects());
             Command.Register(new CmdEffect());
