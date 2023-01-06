@@ -509,6 +509,8 @@ namespace MCGalaxy
             if (message == "") { Help(p); return; }
             if (message.CaselessEq("list")) { ListEffects(p); return; }
             
+            if (data.Context != CommandContext.MessageBlock && !LevelInfo.Check(p, p.Rank, p.level, "use /effect in this level")) return;
+            
             string[] words = message.Split(' ');
             if (words.Length < 7) {
                 p.Message("&WYou need to provide effect, x, y, z, originX, originY, and originZ.");
