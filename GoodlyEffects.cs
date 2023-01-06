@@ -431,7 +431,12 @@ namespace MCGalaxy
                 p.Message("&WCould not define custom particles because your client is outdated.");
                 return;
             }
-            p.Socket.LowLatency = true;
+            
+            try {
+                p.Socket.LowLatency = true;
+            } catch (ObjectDisposedException) {
+                // player already disconnected
+            }
             
             foreach(KeyValuePair<string, EffectConfig> entry in effectAtEffectName)
             {
