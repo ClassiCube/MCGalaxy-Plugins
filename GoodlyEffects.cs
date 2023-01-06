@@ -243,6 +243,7 @@ namespace MCGalaxy
             public static void Copy(string srcMap, string dstMap) {
                 string srcPath = SpawnerPath(srcMap);
                 string dstPath = SpawnerPath(dstMap);
+                if (!File.Exists(srcPath)) { return; }
                 File.Copy(srcPath, dstPath);
             }
             
