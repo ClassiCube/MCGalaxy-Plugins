@@ -354,8 +354,10 @@ namespace PluginAlphaIndev
         }
 
         public override void SendChat(string message) {
-            message = CleanupColors(message);
-            List<string> lines = LineWrapper.Wordwrap(message, true);
+            int bufferLen;
+            char[] buffer = LineWrapper.CleanupColors(message, out bufferLen, false, false);
+            
+            List<string> lines = LineWrapper.Wordwrap(buffer, bufferLen, true);
             for (int i = 0; i < lines.Count; i++)
             {
                 string line = lines[i].Replace('&', '§');
