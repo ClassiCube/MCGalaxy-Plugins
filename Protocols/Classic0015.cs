@@ -80,7 +80,11 @@ namespace PluginClassic0015
 			string name = NetUtils.ReadString(buffer, offset + 1);
 			if (!player.ProcessLogin(name, "")) return left;
 
-			UpdateFallbackTable();
+			for (byte b = 0; b <= Block.CPE_MAX_BLOCK; b++)
+			{
+				fallback[b] = Block.ConvertClassic(b, ProtocolVersion);
+			}
+			
 			player.CompleteLoginProcess();
 			return size;
 		}
@@ -143,7 +147,7 @@ namespace PluginClassic0015
 		#endregion
 		
 		public override string ClientName() { return "Classic 0.15"; }
-
+		
 		// TODO modularise and move common code back into Entities.cs
 		public unsafe override void UpdatePlayerPositions()
 		{
