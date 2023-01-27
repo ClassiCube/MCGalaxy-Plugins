@@ -22,9 +22,8 @@ namespace PluginLockedReach
         }
         
         static void SetReach(Player p, float reach) {
-        	if (!p.Supports(CpeExt.ClickDistance)) return;        	
+        	if (!p.Session.SendSetReach(reach)) return;
         	p.ReachDistance = reach;
-        	p.Send(Packet.ClickDistance((short)(reach * 32)));
         }
         
         void HandleGettingMOTD(Player p, ref string motd) {

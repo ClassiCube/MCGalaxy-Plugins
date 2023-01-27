@@ -18,7 +18,6 @@ namespace PluginRainbowColors
         }
         
         public override void Unload(bool shutdown) {
-        	if (task == null) return;
         	Server.MainScheduler.Cancel(task);
         }
         
@@ -31,9 +30,9 @@ namespace PluginRainbowColors
             desc.Code = 'r';
         	Player[] players = PlayerInfo.Online.Items;
             
-        	foreach (Player p in players) {
-        		if (!p.Supports(CpeExt.TextColors)) continue;
-        		p.Send(Packet.SetTextColor(desc));
+        	foreach (Player p in players) 
+			{
+        		p.Session.SendSetTextColor(desc);
         	}
         }
     }

@@ -76,13 +76,12 @@ namespace PluginClassic0015
 			if (left < size)     return 0;
 			if (player.loggedIn) return size;
 
-			ProtocolVersion = Server.VERSION_0016;
 			string name = NetUtils.ReadString(buffer, offset + 1);
 			if (!player.ProcessLogin(name, "")) return left;
 
 			for (byte b = 0; b <= Block.CPE_MAX_BLOCK; b++)
 			{
-				fallback[b] = Block.ConvertClassic(b, ProtocolVersion);
+				fallback[b] = Block.ConvertClassic(b, Server.VERSION_0016);
 			}
 			
 			player.CompleteLoginProcess();
