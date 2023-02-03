@@ -37,7 +37,7 @@ class ReachStat : TopStat
 		for (int i = offset; i < raw.Count && i < offset + maxResults; i++)
 		{
 			TopResult result;
-			result.User  = names[i];
+			result.Name  = names[i];
 			result.Value = reaches[i];
 			results.Add(result);
 		}
