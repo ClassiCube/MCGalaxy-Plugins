@@ -10,17 +10,17 @@ public sealed class TopTeamsPlugin : Plugin
     TopStat teamStat = new TeamStat();
 
     public override void Load(bool startup) {
-        TopStat.Stats.Add(teamStat);
+        TopStat.Register(teamStat);
     }
     
     public override void Unload(bool shutdown) {
-        TopStat.Stats.Remove(teamStat);
+        TopStat.Unregister(teamStat);
     }
 }
 
 class TeamStat : TopStat
 {
-    public TeamStat() : base("Teams", null,null, () => "Largest teams", FormatResult) { }
+    public TeamStat() : base("Teams", "Largest teams", FormatResult) { }
     
     public override string FormatName(Player p, string name) { return name; }
 	

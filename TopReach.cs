@@ -9,17 +9,17 @@ public sealed class TopReachPlugin : Plugin
 	TopStat reachStat = new ReachStat();
 
 	public override void Load(bool startup) {
-		TopStat.Stats.Add(reachStat);
+		TopStat.Register(reachStat);
 	}
 	
 	public override void Unload(bool shutdown) {
-		TopStat.Stats.Remove(reachStat);
+		TopStat.Unregister(reachStat);
 	}
 }
 
 class ReachStat : TopStat
 {
-	public ReachStat() : base("Reach", null,null, () => "Largest custom reach distances", FormatResult) { }
+	public ReachStat() : base("Reach", "Largest custom reach distances", FormatResult) { }
 	
 	public override List<TopResult> GetResults(int maxResults, int offset) {
 		List<string> raw = Server.reach.AllLines();
