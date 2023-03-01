@@ -598,6 +598,7 @@ namespace MCGalaxy
             if (func.CaselessEq("add")) { DoAdd(p, args); return; }
             if (func.CaselessEq("remove")) { DoRemove(p, args); return; }
             if (func.CaselessEq("summon")) { DoSummon(p, args); return; }
+            if (func.CaselessEq("info")) { DoInfo(p, args); return; }
             p.Message("&W\"{0}\" is not a recognized argument.", func);
             p.Message("Please use &T/help spawner&S.");
             return;
@@ -739,6 +740,39 @@ namespace MCGalaxy
             if (matches > 1 || spawner == null) { return; }
             Command.Find("tp").Use(p, "-precise "+(int)(spawner.x*32)+" "+(int)(spawner.y*32)+" "+(int)(spawner.z*32));
         }
+        static void DoInfo(Player p, string message) {
+            if (message == "") { p.Message("&WPlease provide the name of a spawner to get info from."); return; }
+            if (!GoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) {
+                p.Message("There are no spawners in {0}&S to get info from", p.level.ColoredName);
+                return;
+            }
+            int matches;
+            GoodlyEffects.EffectSpawner spawner = Matcher.Find(p, message, out matches,
+                                                                     GoodlyEffects.spawnersAtLevel[p.level],
+                                                                     x => true,
+                                                                     x => x.name,
+                                                                     "effect spawners");
+            if (matches > 1 || spawner == null) { return; }
+            
+            string origin = FormatOrigin(spawner.x, spawner.y, spawner.z, spawner.originX, spawner.originY, spawner.originZ);
+            p.Message("Spawner &f{0}&S has:", spawner.name);
+            p.Message("  Effect: &f{0}", spawner.effectName);
+            p.Message("  Owner: &f{0}", spawner.owner);
+            p.Message("  Position: (&f{0} {1} {2}&S)", spawner.x, spawner.y, spawner.z);
+            p.Message("  Origin: (&f{0}&S)", origin);
+            p.Message("  Spawn interval (10th of a second): &f{0}", spawner.spawnInterval);
+            p.Message("  Spawn interval offset (10th of a second): &f{0}", spawner.spawnTimeOffset);
+            p.Message("  Spawn chance: &f{0}%", spawner.spawnChance * 100); //convert to percentage
+        }
+        static string FormatOrigin(float X, float Y, float Z, float oX, float oY, float oZ) {
+            float rX = oX - X;
+            float rY = oY - Y;
+            float rZ = oZ - Z;
+            string a = (rX == 0) ? "" : rX.ToString();
+            string b = (rY == 0) ? "" : rY.ToString();
+            string c = (rZ == 0) ? "" : rZ.ToString();
+            return String.Format("~{0} ~{1} ~{2}", a, b, c);
+        }
         static void DoSummon(Player p, string message) {
             if (message == "") { p.Message("&WPlease provide the name of a spawner to summon."); return; }
             string[] args = message.SplitSpaces(2);
@@ -808,6 +842,7 @@ namespace MCGalaxy
                 p.Message("&Hyour block position. If <style> is \"precise\",");
                 p.Message("&Hthe spawner is summoned to your exact feet position.");
                 p.Message("&T/Spawner list &H- lists spawners in current level.");
+                p.Message("&T/Spawner info [name] &H- displays info of spawner.");
                 return;
             }
             if (message.CaselessEq("add")) {
