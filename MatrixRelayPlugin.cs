@@ -19,8 +19,8 @@ namespace MatrixRelay
 		public string Username = "";
 		[ConfigString("password", "General", "", true)]
 		public string Password = "";
-		[ConfigBool("use-nicknames", "General", true)]
-		public bool UseNicks = true;
+		[ConfigString("password", "General", "https://matrix.org", false)]
+		public string ServerAddress = "https://matrix.org";
 		
 		[ConfigString("rooms", "General", "", true)]
 		public string Rooms = "";
@@ -87,7 +87,7 @@ namespace MatrixRelay
 
 	public sealed class MatrixBot : RelayBot
 	{
-		string botUserID, token, host;
+		string botUserID, token;
 		public override string RelayName { get { return "Matrix"; } }
 		public override bool Enabled     { get { return Config.Enabled; } }
 		public override string UserID    { get { return botUserID; } }
@@ -101,12 +101,7 @@ namespace MatrixRelay
 		
 		protected override void DoConnect() {
 			token = null;
-			
-			string _user;
-			// matrix users are in form of 'user_localhost:homeserver'
-			Config.Username.Separate(':', out _user, out host);
-			if (string.IsNullOrEmpty(host)) host = "matrix.org";
-			
+
 			LoginMessage msg = new LoginMessage(Config.Username, Config.Password);
 			object value     = MakeRequest(msg);
 			ParseLoginResponse(value);
@@ -193,6 +188,7 @@ namespace MatrixRelay
 		void ParseSyncEvent(string roomID, object value) {
 			JsonObject event_ = value as JsonObject;
 			if (event_ == null) return;
+			string host;
 			
 			if (!event_.TryGetValue("type", out value)) return;
 			if ((string)value != "m.room.message")      return;
@@ -204,7 +200,8 @@ namespace MatrixRelay
 			RelayUser user = new RelayUser();
 			if (!event_.TryGetValue("sender", out value)) return;
 			user.ID   = (string)value;
-			user.Nick = "MATRIX";
+			user.ID.Separate(':', out user.Nick, out host); // TODO nicks
+			user.Nick = user.Nick.Replace("@", "");
 			
 			if (!content.TryGetValue("body", out value)) return;
 			HandleChannelMessage(user, roomID, (string)value);
@@ -278,7 +275,7 @@ namespace MatrixRelay
 		
 		
 		public object MakeRequest(MatrixApiMessage msg) {
-			string url = "https://" + host + "/_matrix/client/v3" + msg.Path;
+			string url = Config.ServerAddress + "/_matrix/client/v3" + msg.Path;
 
 			HttpWebRequest req = HttpUtil.CreateRequest(url);
 			req.Method         = msg.Method;
@@ -334,11 +331,13 @@ namespace MatrixRelay
 	class RoomSendMessage : MatrixApiMessage
 	{
 		string content;
+		static int idCounter;
 		
 		public RoomSendMessage(string roomID, string message) {
-			Path    = "/rooms/" + roomID + "/send/m.room.message/";
-			content = message;
-			Method  = "PUT";
+			int txnID = Interlocked.Increment(ref idCounter);
+			Path      = "/rooms/" + roomID + "/send/m.room.message/" + txnID;
+			content   = message;
+			Method    = "PUT";
 		}
 		
 		public override JsonObject ToJson() {
@@ -384,6 +383,7 @@ namespace MatrixRelay
 				HttpUtil.DisposeErrorResponse(ex);
 				
 				LogError(ex, msg);
+				LogResponse(err);
 			} catch (Exception ex) {
 				LogError(ex, msg);
 			}
