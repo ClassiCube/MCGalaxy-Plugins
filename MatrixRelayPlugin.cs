@@ -2,11 +2,14 @@ using System;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading;
+using MCGalaxy;
 using MCGalaxy.Config;
 using MCGalaxy.Events.ServerEvents;
+using MCGalaxy.Modules.Relay;
 using MCGalaxy.Network;
 
-namespace MCGalaxy.Modules.Relay.Matrix
+namespace MatrixRelay
 {
 	public sealed class MatrixConfig
 	{
@@ -120,11 +123,91 @@ namespace MCGalaxy.Modules.Relay.Matrix
 			token     = (string)obj["access_token"];
 		}
 		
+		bool running;
 		protected override void DoReadLoop() {
-			System.Threading.Thread.Sleep(60 * 1000);
+			running = true;
+			string since = null;
+			
+			while (running)
+			{
+				object value = MakeRequest(new SyncMessage(since));
+				ParseSyncResponse(value, ref since);
+				Thread.Sleep(10 * 1000);
+			}
 		}
 		
 		protected override void DoDisconnect(string reason) {
+			running = false;
+		}
+		
+		
+		void ParseSyncResponse(object value, ref string since) {
+			JsonObject obj = value as JsonObject;
+			if (obj == null) return;
+			
+			obj.TryGetValue("next_batch", out value);
+			if (value != null) since = (string)value;
+			
+			obj.TryGetValue("rooms", out value);
+			if (value != null) ParseSyncRooms(value);
+		}
+		
+		void ParseSyncRooms(object value) {
+			JsonObject groups = value as JsonObject;
+			if (groups == null) return;
+			
+			foreach (var group in groups)
+			{
+				if (group.Key != "join") continue;
+				JsonObject rooms = group.Value as JsonObject;
+				if (rooms == null) continue;
+				
+				foreach (var room in rooms)
+				{
+					ParseSyncRoom(room.Key, room.Value);
+				}
+			}
+		}
+		
+		void ParseSyncRoom(string roomID, object value) {
+			JsonObject props = value as JsonObject;
+			if (props == null) return;
+			
+			foreach (var kvp in props)
+			{
+				if (kvp.Key != "timeline") continue;
+				JsonObject timeline = kvp.Value as JsonObject;
+				if (timeline == null) continue;
+				
+				timeline.TryGetValue("events", out value);
+				JsonArray events = value as JsonArray;
+				if (events == null) continue;
+				
+				foreach (object event_ in events)
+				{
+					ParseSyncEvent(roomID, event_);
+				}
+			}
+		}
+		
+		void ParseSyncEvent(string roomID, object value) {
+			JsonObject event_ = value as JsonObject;
+			if (event_ == null) return;
+			
+			if (!event_.TryGetValue("type", out value)) return;
+			if ((string)value != "m.room.message")      return;
+			
+			if (!event_.TryGetValue("content", out value)) return;
+			JsonObject content = value as JsonObject;
+			if (content == null) return;
+			
+			RelayUser user = new RelayUser();
+			if (!event_.TryGetValue("sender", out value)) return;
+			user.ID   = (string)value;
+			user.Nick = "MATRIX";
+			
+			if (!content.TryGetValue("body", out value)) return;
+			HandleChannelMessage(user, roomID, (string)value);
 		}
 		
 		
@@ -173,8 +256,8 @@ namespace MCGalaxy.Modules.Relay.Matrix
 		
 		protected override void DoSendMessage(string channel, string message) {
 			message = ConvertMessage(message);
-            RoomSendMessage msg = new RoomSendMessage(channel, message);
-            Send(msg);
+			RoomSendMessage msg = new RoomSendMessage(channel, message);
+			Send(msg);
 		}
 		
 		
@@ -196,22 +279,21 @@ namespace MCGalaxy.Modules.Relay.Matrix
 		
 		public object MakeRequest(MatrixApiMessage msg) {
 			string url = "https://" + host + "/_matrix/client/v3" + msg.Path;
-			WebResponse res;
-			
+
 			HttpWebRequest req = HttpUtil.CreateRequest(url);
 			req.Method         = msg.Method;
-			req.ContentType    = "application/json";
+			if (token != null) req.Headers[HttpRequestHeader.Authorization] = "Bearer " + token;
 			
-			if (token != null) {
-				req.Headers[HttpRequestHeader.Authorization] = "Bearer " + token;
+			object body = msg.ToJson();
+			if (body != null) {
+				req.ContentType = "application/json";
+				string data     = Json.SerialiseObject(body);
+				HttpUtil.SetRequestData(req, Encoding.UTF8.GetBytes(data));
 			}
 			
-			string data = Json.SerialiseObject(msg.ToJson());
-			HttpUtil.SetRequestData(req, Encoding.UTF8.GetBytes(data));
-			res = req.GetResponse();
-			
-			string resp = HttpUtil.GetResponseText(res);
-			return new JsonReader(resp).Parse();
+			WebResponse res = req.GetResponse();
+			string response = HttpUtil.GetResponseText(res);
+			return new JsonReader(response).Parse();
 		}
 	}
 	
@@ -266,6 +348,17 @@ namespace MCGalaxy.Modules.Relay.Matrix
 				{ "body", content }
 			};
 		}
+	}
+	
+	class SyncMessage : MatrixApiMessage
+	{
+		public SyncMessage(string since) {
+			Method = "GET";
+			Path   = "/sync";
+			if (since != null) Path += "?since=" + since;
+		}
+		
+		public override JsonObject ToJson() { return null; }
 	}
 	
 	sealed class MatrixMsgSender : AsyncWorker<MatrixApiMessage>
