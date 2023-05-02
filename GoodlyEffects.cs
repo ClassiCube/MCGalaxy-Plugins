@@ -255,13 +255,15 @@ namespace MCGalaxy
             }
             
             internal static void WriteAll(StreamWriter w, List<EffectSpawner> props) {
-                w.WriteLine("[");
                 if (elems == null) elems = ConfigElement.GetAll(typeof(EffectSpawner));
+                JsonConfigWriter ser = new JsonConfigWriter(w, elems);
                 string separator = null;
                 
-                for (int i = 0; i < props.Count; i++) {
+                w.WriteLine("[");
+                for (int i = 0; i < props.Count; i++) 
+                {
                     w.Write(separator);
-                    Json.Serialise(w, elems, props[i]);
+                    ser.WriteObject(props[i]);
                     separator = ",\r\n";
                 }
                 w.WriteLine("]");
