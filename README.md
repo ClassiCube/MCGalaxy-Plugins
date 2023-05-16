@@ -52,14 +52,10 @@ Some custom commands and plugins for MCGalaxy.
 
 
 ## Other plugins available
-https://github.com/Goodlyay/Nas
-
 https://github.com/NotAwesome2/MCGalaxy-CustomModels
 
 https://github.com/ddinan/ClassiCube-Stuff
 
-https://github.com/NotAwesome2/Not-Awesome-Script
-
-https://github.com/NotAwesome2/Commands
-
 https://github.com/NotAwesome2/Plugins
+
+https://github.com/NotAwesome2/Not-Awesome-Script
