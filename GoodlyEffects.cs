@@ -308,12 +308,15 @@ namespace MCGalaxy
             ReloadEffects();            
 
             OnPlayerFinishConnectingEvent.Register(OnPlayerFinishConnecting, Priority.Low);
-            OnLevelLoadedEvent.Register(OnLevelLoaded, Priority.Low);
-            OnLevelUnloadEvent.Register(OnLevelUnload, Priority.Low);
+            OnConfigUpdatedEvent.Register(OnConfigUpdated, Priority.Low);
+            
+            
+            OnLevelAddedEvent.Register(OnLevelAdded, Priority.Low);
+            OnLevelRemovedEvent.Register(OnLevelRemoved, Priority.Low);
             OnLevelDeletedEvent.Register(OnLevelDeleted, Priority.Low);
             OnLevelCopiedEvent.Register(OnLevelCopied, Priority.Low);
             OnLevelRenamedEvent.Register(OnLevelRenamed, Priority.Low);
-            OnConfigUpdatedEvent.Register(OnConfigUpdated, Priority.Low);
+            
             
             SpawnersFile.cache = new ThreadSafeCache();
             if (!Directory.Exists(SpawnersFile.spawnerDirectory)) {
@@ -328,12 +331,13 @@ namespace MCGalaxy
             Command.Unregister(Command.Find("Spawner"));
             
             OnPlayerFinishConnectingEvent.Unregister(OnPlayerFinishConnecting);
-            OnLevelLoadedEvent.Unregister(OnLevelLoaded);
-            OnLevelUnloadEvent.Unregister(OnLevelUnload);
+            OnConfigUpdatedEvent.Unregister(OnConfigUpdated);
+            
+            OnLevelAddedEvent.Unregister(OnLevelAdded);
+            OnLevelRemovedEvent.Unregister(OnLevelRemoved);
             OnLevelDeletedEvent.Unregister(OnLevelDeleted);
             OnLevelCopiedEvent.Unregister(OnLevelCopied);
             OnLevelRenamedEvent.Unregister(OnLevelRenamed);
-            OnConfigUpdatedEvent.Unregister(OnConfigUpdated);
             
             spawnersAtLevel.Clear();
             instance.Cancel(tickSpawners);
@@ -344,15 +348,15 @@ namespace MCGalaxy
             ReloadEffects();
             ReloadSpawners();
         }
+        
         static void OnPlayerFinishConnecting(Player p) {
             DefineEffectsFor(p);
         }
-        static void OnLevelLoaded(Level lvl) {
+        
+        static void OnLevelAdded(Level lvl) {
             SpawnersFile.Load(lvl);
         }
-        static void OnLevelUnload(Level lvl, ref bool cancel) {
-            //if the level is forced to stay loaded, don't remove spawners
-            if (cancel) return;
+        static void OnLevelRemoved(Level lvl) {
             RemoveAllSpawners(lvl, false);
         }
         static void OnLevelDeleted(string map) {
@@ -364,7 +368,6 @@ namespace MCGalaxy
         static void OnLevelRenamed(string srcMap, string dstMap) {
             SpawnersFile.Rename(srcMap, dstMap);
         }
-
 
         public static void ReloadEffects() {
             effectAtEffectName.Clear();
@@ -429,7 +432,7 @@ namespace MCGalaxy
         }
         public static void DefineEffectsFor(Player p) {
             if  (!p.Supports(CpeExt.CustomParticles)) {
-                p.Message("&WCould not define custom particles because your client is outdated.");
+                //p.Message("&WCould not define custom particles because your client is outdated.");
                 return;
             }
             
