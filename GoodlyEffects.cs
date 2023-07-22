@@ -589,7 +589,12 @@ namespace MCGalaxy
                 }; }
         }
         public override CommandPerm[] ExtraPerms {
-            get { return new[] { new CommandPerm(LevelPermission.Operator, "can edit spawners that don't belong to them") }; }
+            get { return new[]
+                {
+                    new CommandPerm(LevelPermission.Operator, "can edit spawners that don't belong to them"),
+                    new CommandPerm(LevelPermission.Operator, "can add more than "+GoodlyEffects.spawnerLimit+" spawners in a map")
+                };
+            }
         }
         public override void Use(Player p, string message, CommandData data)
         {
@@ -600,7 +605,7 @@ namespace MCGalaxy
             if (func.CaselessEq("list")) { DoList(p, args); return; }
             if (func.CaselessEq("tp")) { DoTP(p, args); return; }
             if (!LevelInfo.Check(p, data.Rank, p.level, "modify spawners in this level")) return;
-            if (func.CaselessEq("add")) { DoAdd(p, args); return; }
+            if (func.CaselessEq("add")) { DoAdd(p, args, data); return; }
             if (func.CaselessEq("remove")) { DoRemove(p, args); return; }
             if (func.CaselessEq("summon")) { DoSummon(p, args); return; }
             if (func.CaselessEq("info")) { DoInfo(p, args); return; }
@@ -631,8 +636,8 @@ namespace MCGalaxy
                 p.Message("There are no spawners in {0}&S.", p.level.ColoredName);
             }
         }
-        static void DoAdd(Player p, string message) {
-            if (SpawnerCount(p.level) >= GoodlyEffects.spawnerLimit) {
+        void DoAdd(Player p, string message, CommandData data) {
+            if (SpawnerCount(p.level) >= GoodlyEffects.spawnerLimit && !CheckExtraPerm(p, data, 2)) {
                 p.Message("&WThe limit of {0} spawners per level has been reached.", GoodlyEffects.spawnerLimit);
                 p.Message("You may remove spawners with &T/spawner remove&S.");
                 return;
