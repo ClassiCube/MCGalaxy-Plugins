@@ -45,10 +45,10 @@ namespace PluginRainbowColors
             double f = hue / 60 - Math.Floor(hue / 60);
 
             value *= 255;
-            byte v = (byte)Math.Max(0, Math.Min(value, 255));
-            byte p = (byte)Math.Max(0, Math.Min(value * (1 - saturation), 255));
-            byte q = (byte)Math.Max(0, Math.Min(value * (1 - f * saturation), 255));
-            byte t = (byte)Math.Max(0, Math.Min(value * (1 - (1 - f) * saturation), 255));
+            byte v = (byte)Utils.Clamp((int)value, 0, 255);
+            byte p = (byte)Utils.Clamp((int)(value * (1 - saturation)), 0, 255);
+            byte q = (byte)Utils.Clamp((int)(value * (1 - f * saturation)), 0, 255);
+            byte t = (byte)Utils.Clamp((int)(value * (1 - (1 - f) * saturation)), 0, 255);
 
             if (hi == 0)
             {
