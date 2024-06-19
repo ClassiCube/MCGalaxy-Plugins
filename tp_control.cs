@@ -34,7 +34,7 @@ namespace PluginTpControl {
             //we can't use CanUseHacks(who) because you shouldn't be able to directly TP to an op who is using maphack in a parkour map
             if (who.level.Config.MOTD.Contains("-hax") || who.level.Config.MOTD.Contains("-tp")) {
                 p.Message("&cYou are not allowed to directly teleport to {0}&c because teleporting is disabled in the map they are in.", who.DisplayName);
-                p.Message("Using %b/goto {0} %Sinstead...", who.level.name);
+                p.Message("Using &b/goto {0} &Sinstead...", who.level.name);
                 Command.Find("goto").Use(p, who.level.name);
                 Logger.Log(LogType.CommandUsage, "{0} used /{1} {2}", p.name, "goto", who.level.name);
                 p.lastCMD = cmd + " " + args;

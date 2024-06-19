@@ -1,3 +1,4 @@
+// reference System.dll
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,7 +27,7 @@ namespace PluginSecureSocket
 			ConfigElement.ParseFile(cfg, SETTINGS_FILE, settings);
 			
 			// UGLY HACK I don't know what this file should even contain??? seems you need public and private key
-			Cert = new X509Certificate2(settings.CertPath, settings.CertPath);
+			Cert = new X509Certificate2(settings.CertPath, settings.CertPass);
 			INetSocket.Protocols[0x16] = ConstructSecureWebsocket;
 		}
 		

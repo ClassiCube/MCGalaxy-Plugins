@@ -5,7 +5,7 @@ using MCGalaxy.Events.PlayerEvents;
 
 public class KickNoCC : Plugin 
 {
-	public override string creator { get { return "aleksb385"; } } //made from KickJini.cs
+	public override string creator { get { return ""; } } //made from KickJini.cs
 	public override string MCGalaxy_Version { get { return "1.9.4.3"; } }
 	public override string name { get { return "KickNoCC"; } }
 	
