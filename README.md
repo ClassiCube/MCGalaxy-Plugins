@@ -42,7 +42,7 @@ These commands add new features to the server.
 | **CmdZoneInfo** | Shows some information of a specified zone as well as visually highlighting it in-game.
 
 #### Utilities
-These commands are tools to designed to help staff, improve server quality, and automate tasks.
+These commands are tools designed to help staff, improve server quality, and automate tasks.
 
 | Name | Description |
 | ------------- | -----|
@@ -125,7 +125,7 @@ These plugins add new features to the server.
 | **XP** | Adds an XP leveling system.
 
 #### Utilities
-These plugins are tools to designed to help staff, improve server quality, and automate tasks.
+These plugins are tools designed to help staff, improve server quality, and automate tasks.
 
 | Name | Description |
 | ------------- | -----|
