@@ -8,7 +8,7 @@ namespace Core
     {
         public override string creator { get { return "Venk"; } }
         public override string MCGalaxy_Version { get { return "1.9.4.2"; } }
-        public override string name { get { return "CustomStats"; } }
+        public override string name { get { return "CustomStatsExample"; } }
 
         TopStat stat;
         TopStat stat2;

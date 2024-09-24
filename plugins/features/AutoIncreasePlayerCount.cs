@@ -5,7 +5,7 @@ namespace MCGalaxy
 {
     public class PlayerCount : Plugin
     {
-        public override string name { get { return "PlayerCount"; } }
+        public override string name { get { return "AutoIncreasePlayerCount"; } }
         public override string MCGalaxy_Version { get { return "1.9.4.1"; } }
         public override string creator { get { return "Venk"; } }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using MCGalaxy;
 using MCGalaxy.Commands;
 using MCGalaxy.DB;
@@ -7,7 +7,7 @@ namespace Marry
 {
 	public sealed class MarryPlugin : Plugin 
 	{
-		public override string name { get { return "MarryPlugin"; } }
+		public override string name { get { return "Marriage"; } }
 		public override string MCGalaxy_Version { get { return "1.9.3.1"; } }
 		
 		public const string EXTRA_KEY = "__Marry_Name";
