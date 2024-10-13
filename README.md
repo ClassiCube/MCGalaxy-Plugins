@@ -172,3 +172,5 @@ https://github.com/opapinguin/MCGalaxy-plugins
 
 https://github.com/Siriusmart/ccBancho
 https://github.com/Siriusmart/ccBancho_old
+
+https://github.com/ccatgirl/LuaS
