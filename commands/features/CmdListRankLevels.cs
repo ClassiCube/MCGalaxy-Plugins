@@ -47,7 +47,7 @@ namespace MCGalaxy.Commands.Info
                 return;
             }
 
-            p.Message(string.Join("%S, " + grp.Color, maps));
+            p.Message(grp.Color + string.Join("%S, " + grp.Color, maps));
         }
 
         public override void Help(Player p)
