@@ -72,7 +72,7 @@ namespace MCGalaxy {
                 Random rand = new Random();
                 winner = online[rand.Next(online.Count)];
                 amount = 9 * online.Count;
-               Chat.Message(ChatScope.Global, "&b" + winner.truename + " %7won the lottery for &a"
+               Chat.Message(ChatScope.Global, "&b" + winner.truename + " &7won the lottery for &a"
                                         + amount + " " + Server.Config.Currency + "&7.", null, null, true);
             }
             Lottery.Clear();
@@ -93,23 +93,23 @@ namespace MCGalaxy {
             }
 
             if (p.money < 10) {
-                p.Message("You need &f10 " + Server.Config.Currency + " %Sto enter the lottery."); return;
+                p.Message("You need &f10 " + Server.Config.Currency + " &Sto enter the lottery."); return;
             }
 
             for (int i = 0; i < players.Length; i++) {
                 if (players[i].CaselessEq(p.name)) {
                     p.Message("You are already in the lottery, which has &a"
-                                       + players.Length + " %Splayers in it."); return;
+                                       + players.Length + " &Splayers in it."); return;
                 }
             }
             
             if (players.Length == 0) {
-                Chat.Message(ChatScope.Global, "&b" + p.truename + " %7started the lottery. Type %b/lottery %7to join.", null, null, true);
+                Chat.Message(ChatScope.Global, "&b" + p.truename + " &7started the lottery. Type &b/lottery &7to join.", null, null, true);
                 Server.MainScheduler.QueueRepeat(DoLotteryTick, null, TimeSpan.FromSeconds(30));
             }
             
             else {
-                Chat.Message(ChatScope.Global, "&b" + p.truename + " %7entered the lottery.", null, null, true);
+                Chat.Message(ChatScope.Global, "&b" + p.truename + " &7entered the lottery.", null, null, true);
             }
 
             p.SetMoney(p.money - 10);
@@ -117,10 +117,10 @@ namespace MCGalaxy {
         }
 
         public override void Help(Player p) {
-            p.Message("&T/Lottery %H- Enters lottery for &f10 " + Server.Config.Currency);
-            p.Message("&T/Lottery list %H- Lists players in lottery");
+            p.Message("&T/Lottery &H- Enters lottery for &f10 " + Server.Config.Currency);
+            p.Message("&T/Lottery list &H- Lists players in lottery");
             p.Message("&HThe winner is calculated at the end of each round.");
-            p.Message("&HYou are &cnot refunded %Hif you disconnect.");
+            p.Message("&HYou are &cnot refunded &Hif you disconnect.");
         }
     }
 }

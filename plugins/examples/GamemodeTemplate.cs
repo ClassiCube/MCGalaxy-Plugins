@@ -218,7 +218,7 @@ namespace MCGalaxy.Games
 
         protected override string FormatStatus1(Player p)
         {
-            return RoundInProgress ? "&b" + Alive.Count + " %Splayers left" : "";
+            return RoundInProgress ? "&b" + Alive.Count + " &Splayers left" : "";
         }
 
         // ============================================ PLUGIN =======================================		
@@ -417,7 +417,7 @@ namespace MCGalaxy.Games
                 foreach (Player pl in players) pl.Extras["PVP_CAN_KILL"] = false;
 
                 // Nobody left except winner
-                Map.Message(alive[0].ColoredName + " %Sis the winner!");
+                Map.Message(alive[0].ColoredName + " &Sis the winner!");
 
                 NOGGame.Instance.Map.Config.Deletable = false;
                 NOGGame.Instance.Map.Config.Buildable = false;
@@ -428,7 +428,7 @@ namespace MCGalaxy.Games
             else
             {
                 // Show alive player count
-                Map.Message("&b" + alive.Length + " %Splayers left!");
+                Map.Message("&b" + alive.Length + " &Splayers left!");
             }
             UpdateAllStatus1();
         }
@@ -486,7 +486,7 @@ namespace MCGalaxy.Games
                     if (data.Kills > 0)
                     {
                         data.Tokens += data.Kills * killReward;
-                        pl.Message(data.Kills + " %7kills = %b" + data.Kills + " %f↕");
+                        pl.Message(data.Kills + " &7kills = &b" + data.Kills + " &f↕");
                     }
                 }
 
@@ -603,12 +603,12 @@ namespace MCGalaxy.Games
 
         public override void Help(Player p)
         {
-            p.Message("&T/NOG start %H- Starts a game of NameOfGamemode");
-            p.Message("&T/NOG stop %H- Immediately stops NameOfGamemode");
-            p.Message("&T/NOG end %H- Ends current round of NameOfGamemode");
-            p.Message("&T/NOG add/remove %H- Adds/removes current map from the map list");
-            p.Message("&T/NOG status %H- Outputs current status of NameOfGamemode");
-            p.Message("&T/NOG go %H- Moves you to the current NameOfGamemode map.");
+            p.Message("&T/NOG start &H- Starts a game of NameOfGamemode");
+            p.Message("&T/NOG stop &H- Immediately stops NameOfGamemode");
+            p.Message("&T/NOG end &H- Ends current round of NameOfGamemode");
+            p.Message("&T/NOG add/remove &H- Adds/removes current map from the map list");
+            p.Message("&T/NOG status &H- Outputs current status of NameOfGamemode");
+            p.Message("&T/NOG go &H- Moves you to the current NameOfGamemode map.");
         }
     }
 }

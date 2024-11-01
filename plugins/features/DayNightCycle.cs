@@ -125,7 +125,7 @@ namespace MCGalaxy
             string[] args = message.SplitSpaces();
 
             DayNightCycle.timeOfDay = int.Parse(args[0]);
-            p.Message("&STime set to: %b" + DayNightCycle.timeOfDay + "&S.");
+            p.Message("&STime set to: &b" + DayNightCycle.timeOfDay + "&S.");
         }
 
         public override void Help(Player p)

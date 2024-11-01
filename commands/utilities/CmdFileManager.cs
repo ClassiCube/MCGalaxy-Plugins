@@ -25,7 +25,7 @@ namespace MCGalaxy.Commands
 
             if (!Directory.Exists(args[1]))
             {
-                p.Message("&cDirectory: %b" + args[1] + " %cnot found.");
+                p.Message("&cDirectory: &b" + args[1] + " &cnot found.");
                 return;
             }
 
@@ -52,20 +52,20 @@ namespace MCGalaxy.Commands
 
             if (!File.Exists(args[1]))
             {
-                p.Message("&cFile: %b" + args[1] + " %cnot found.");
+                p.Message("&cFile: &b" + args[1] + " &cnot found.");
                 return;
             }
 
             File.Delete(args[1]);
-            p.Message("&aFile: %b" + args[1] + " %asuccessfully deleted.");
+            p.Message("&aFile: &b" + args[1] + " &asuccessfully deleted.");
         }
 
         public override void Help(Player p)
         {
             p.Message("&T/FileManager list [folder]");
-            p.Message("&HLists all files in a specified folder. E.g, %b/filemanager list ./plugins/");
+            p.Message("&HLists all files in a specified folder. E.g, &b/filemanager list ./plugins/");
             p.Message("&T/FileManager delete [file name]");
-            p.Message("&HDeletes a file in a specified folder. E.g, %b/filemanager delete ./plugins/Useless.dll");
+            p.Message("&HDeletes a file in a specified folder. E.g, &b/filemanager delete ./plugins/Useless.dll");
         }
     }
 }

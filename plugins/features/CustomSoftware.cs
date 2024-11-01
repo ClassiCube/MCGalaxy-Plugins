@@ -47,20 +47,20 @@ namespace MCGalaxy {
                     File.Create(file).Dispose();
                     File.WriteAllText(file, args[0]);
                     Server.SoftwareName = args[0];
-                    p.Message("Set server software name to %b{0}", args[0]);
+                    p.Message("Set server software name to &b{0}", args[0]);
                 }
                 
                 else {
                     File.Create(file).Dispose();
                     File.WriteAllText(file, args[0]);
                     Server.SoftwareName = args[0];
-                    p.Message("Set server software name to %b{0}", args[0]);
+                    p.Message("Set server software name to &b{0}", args[0]);
                 }
             }
         }
 
         public override void Help(Player p) {
-            p.Message("&T/SetSoftwareName [software] - %HSets software name to [software].");
+            p.Message("&T/SetSoftwareName [software] - &HSets software name to [software].");
         }
     }
 }

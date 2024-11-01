@@ -56,7 +56,7 @@ namespace Core
 
         public override void Help(Player p)
         {
-            p.Message("&T/Adventure %H- Toggles adventure mode for a map.");
+            p.Message("&T/Adventure &H- Toggles adventure mode for a map.");
         }
     }
     public sealed class CmdAnnounce : Command2
@@ -122,9 +122,9 @@ namespace Core
 
         public override void Help(Player p)
         {
-            p.Message("&T/Announce [message] %H- Displays a message on your screen.");
-            p.Message("&T/Announce level [message] %H- Displays a message on players' screens in your level.");
-            p.Message("&T/Announce global [message] %H- Displays a message on players' screens globally.");
+            p.Message("&T/Announce [message] &H- Displays a message on your screen.");
+            p.Message("&T/Announce level [message] &H- Displays a message on players' screens in your level.");
+            p.Message("&T/Announce global [message] &H- Displays a message on players' screens globally.");
         }
     }
     public sealed class CmdBoost : Command2
@@ -238,7 +238,7 @@ namespace Core
                 return;
             }
 
-            p.Message(string.Join("%S, " + grp.Color, maps));
+            p.Message(string.Join("&S, " + grp.Color, maps));
         }
 
         public override void Help(Player p)
@@ -297,7 +297,7 @@ namespace Core
             }
 
             BotsFile.Save(p.level);
-            p.Message("&SSuccessfully moved %b" + count + " %Sbots.");
+            p.Message("&SSuccessfully moved &b" + count + " &Sbots.");
         }
 
         #endregion
@@ -323,7 +323,7 @@ namespace Core
 
                 if (!p.level.IsValidPos(x2, y2, z2))
                 {
-                    p.Message("&cMB at %b" + pos.X + " " + pos.Y + " " + pos.Z + " %cwas outside of the map bounds, deleting.");
+                    p.Message("&cMB at &b" + pos.X + " " + pos.Y + " " + pos.Z + " &cwas outside of the map bounds, deleting.");
                     MessageBlock.Delete(p.level.name, pos.X, pos.Y, pos.Z);
                     p.level.UpdateBlock(p, pos.X, pos.Y, pos.Z, Block.Air);
                     continue;
@@ -340,7 +340,7 @@ namespace Core
                 count++;
             }
 
-            p.Message("&SSuccessfully moved %b" + count + " %SMBs.");
+            p.Message("&SSuccessfully moved &b" + count + " &SMBs.");
         }
 
         #endregion
@@ -370,7 +370,7 @@ namespace Core
 
                 if (!p.level.IsValidPos(x2, y2, z2))
                 {
-                    p.Message("&cPortal at %b" + pos.X + " " + pos.Y + " " + pos.Z + " %cwas outside of the map bounds, deleting.");
+                    p.Message("&cPortal at &b" + pos.X + " " + pos.Y + " " + pos.Z + " &cwas outside of the map bounds, deleting.");
                     Portal.Delete(p.level.name, pos.X, pos.Y, pos.Z);
                     p.level.UpdateBlock(p, pos.X, pos.Y, pos.Z, Block.Air);
                     continue;
@@ -387,7 +387,7 @@ namespace Core
                 count++;
             }
 
-            p.Message("&SSuccessfully moved %b" + count + " %Sportals.");
+            p.Message("&SSuccessfully moved &b" + count + " &Sportals.");
         }
 
         #endregion
@@ -533,7 +533,7 @@ namespace Core
             // restrict player model scale, but bots can have unlimited model scale
             if (ModelInfo.GetRawScale(model) > max)
             {
-                dst.Message("%WScale must be {0} or less for {1} model",
+                dst.Message("&WScale must be {0} or less for {1} model",
                             max, ModelInfo.GetRawModel(model));
                 return null;
             }

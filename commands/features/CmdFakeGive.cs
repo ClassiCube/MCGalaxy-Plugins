@@ -20,15 +20,15 @@ namespace MCGalaxy.Commands.Eco {
 
             string sourceName = p == null ? "(console)" : p.ColoredName;
             string targetName = PlayerInfo.GetColoredName(p, target);
-            string reason = args.Length < 3 ? "" : " %S(" + args[2] + "&S)";
+            string reason = args.Length < 3 ? "" : " &S(" + args[2] + "&S)";
 
-            const string format = "{0} %Sgave {1} &f{2} &3{3}{4}";
-            Chat.MessageGlobal(sourceName + " %Sgave " + targetName + " %f" + money +  " &3" + Server.Config.Currency + reason);
+            const string format = "{0} &Sgave {1} &f{2} &3{3}{4}";
+            Chat.MessageGlobal(sourceName + " &Sgave " + targetName + " &f" + money +  " &3" + Server.Config.Currency + reason);
         }
 
         public override void Help(Player p) {
             p.Message("&T/FakeGive [player] [amount] <reason>");
-            p.Message("&HGives [player] [amount] %3" + Server.Config.Currency);
+            p.Message("&HGives [player] [amount] &3" + Server.Config.Currency);
         }
     }
 }

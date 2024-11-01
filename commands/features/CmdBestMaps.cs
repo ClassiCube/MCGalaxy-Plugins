@@ -58,8 +58,8 @@ namespace MCGalaxy.Commands.Info
 
         public override void Help(Player p)
         {
-            p.Message("&T/BestMaps %H- Teleports you to one of the best maps on the server.");
-            p.Message("&T/BestMaps add [map] %H- Adds [map] into the list of best maps.");
+            p.Message("&T/BestMaps &H- Teleports you to one of the best maps on the server.");
+            p.Message("&T/BestMaps add [map] &H- Adds [map] into the list of best maps.");
         }
     }
 }

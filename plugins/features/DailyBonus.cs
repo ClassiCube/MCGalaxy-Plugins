@@ -108,8 +108,8 @@ namespace Core
                 reward += streak - 1; // Add streak increment to reward
             }
 
-            pl.Message("&aYou claimed your daily bonus of &6" + reward + " %a" + Server.Config.Currency + "&a.");
-            if (Config.EnableStreaks) pl.Message("&aYou currently have a streak of %b" + streak + "&a!");
+            pl.Message("&aYou claimed your daily bonus of &6" + reward + " &a" + Server.Config.Currency + "&a.");
+            if (Config.EnableStreaks) pl.Message("&aYou currently have a streak of &b" + streak + "&a!");
             pl.SetMoney(pl.money + reward);
 
             claimed.Update(pl.name, date);
@@ -161,7 +161,7 @@ namespace Core
 
         public override void Help(Player p)
         {
-            p.Message("&T/DailyBonus - %HClaims your daily bonus for today.");
+            p.Message("&T/DailyBonus - &HClaims your daily bonus for today.");
         }
     }
 }

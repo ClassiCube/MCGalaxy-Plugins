@@ -86,7 +86,7 @@ namespace MCGalaxy
 {
     public class PvP : Plugin
     {
-        public override string name { get { return "&aVenk's Survival%S"; } } // To unload /punload Survival
+        public override string name { get { return "&aVenk's Survival&S"; } } // To unload /punload Survival
         public override string MCGalaxy_Version { get { return "1.9.4.1"; } }
         public override string creator { get { return "Venk and Sirvoid"; } }
 
@@ -651,8 +651,8 @@ namespace MCGalaxy
 
                     decimal hunger = Math.Floor((decimal)(pl.Extras.GetInt("HUNGER") / 50));
 
-                    pl.SendCpeMessage(CpeMessageType.BottomRight3, "%a" + held + " %8| %7x" + amount);
-                    pl.SendCpeMessage(CpeMessageType.BottomRight2, "%f╒ %720 %bo %7" + pl.Extras.GetInt("DROWNING") + " %f▀ %7" + hunger);
+                    pl.SendCpeMessage(CpeMessageType.BottomRight3, "&a" + held + " &8| &7x" + amount);
+                    pl.SendCpeMessage(CpeMessageType.BottomRight2, "&f╒ &720 &bo &7" + pl.Extras.GetInt("DROWNING") + " &f▀ &7" + hunger);
 
                     // Health is typically handled in this plugin but we need to show this for support in other plugins
                     pl.SendCpeMessage(CpeMessageType.BottomRight1, GetHealthBar(pl.Extras.GetInt("SURVIVAL_HEALTH")));
@@ -837,7 +837,7 @@ namespace MCGalaxy
 
             bool speeding = dx >= 8 || dz >= 8;
 
-            //p.Message((speeding ? "%a" : "%c")  + speeding + " %edx " + dx + " dz " + dz);
+            //p.Message((speeding ? "&a" : "&c")  + speeding + " &edx " + dx + " dz " + dz);
             return speeding;
         }
 
@@ -2605,7 +2605,7 @@ namespace MCGalaxy
                             Database.UpdateRows("Inventories4", "Slot" + column.ToString() + "=@1", "WHERE Name=@0 AND Level=@2", p.truename, PvP.GetID(block) + "(" + newCount.ToString() + ")", p.level.name);
                         }
 
-                        p.Message("&c-" + ingredientAmount + " %7" + ingredientName);
+                        p.Message("&c-" + ingredientAmount + " &7" + ingredientName);
                         return true;
                     }
 
@@ -2637,7 +2637,7 @@ namespace MCGalaxy
 
             if (recipe[0] == "0 0")
             {
-                p.Message("&SInvalid item. See %b/Recipes %Sfor more information.");
+                p.Message("&SInvalid item. See &b/Recipes &Sfor more information.");
                 return;
             }
 
@@ -2653,7 +2653,7 @@ namespace MCGalaxy
                 if (!CommandParser.GetBlock(p, item, out block)) return;
 
                 PvP.SaveBlock(p, block, amountProduced);
-                p.Message("&a+" + amountProduced + " %7" + Block.GetName(p, block));
+                p.Message("&a+" + amountProduced + " &7" + Block.GetName(p, block));
             }
 
             else
@@ -2664,9 +2664,9 @@ namespace MCGalaxy
 
         public override void Help(Player p)
         {
-            p.Message("&T/Craft [item] <amount> %H- Crafts [amount] of [item].");
+            p.Message("&T/Craft [item] <amount> &H- Crafts [amount] of [item].");
             p.Message("&T<amount> defaults to 1.");
-            p.Message("&HFor a list of recipes, type %b/Recipes%H.");
+            p.Message("&HFor a list of recipes, type &b/Recipes&H.");
         }
     }
 
@@ -2698,10 +2698,10 @@ namespace MCGalaxy
                     for (int i = 1; i < 37; i++)
                     {
                         if (pRows[0][i].ToString().StartsWith("0")) continue; // Don't bother with air
-                        slots.Add("%2[" + i + "%2] " + pRows[0][i].ToString());
+                        slots.Add("&2[" + i + "&2] " + pRows[0][i].ToString());
                     }
 
-                    string inventory = String.Join(" %8| ", slots.ToArray());
+                    string inventory = String.Join(" &8| ", slots.ToArray());
 
                     p.Message(inventory);
                 }
@@ -2767,7 +2767,7 @@ namespace MCGalaxy
             string pvpMap = args[1];
 
             PvP.maplist.Add(pvpMap);
-            p.Message("The map %b" + pvpMap + " %Shas been added to the PvP map list.");
+            p.Message("The map &b" + pvpMap + " &Shas been added to the PvP map list.");
 
             // Add the map to the map list
             using (StreamWriter maplistwriter =
@@ -2803,13 +2803,13 @@ namespace MCGalaxy
             string pvpMap = args[1];
 
             PvP.maplist.Remove(pvpMap);
-            p.Message("The map %b" + pvpMap + " %Shas been removed from the PvP map list.");
+            p.Message("The map &b" + pvpMap + " &Shas been removed from the PvP map list.");
         }
 
         public override void Help(Player p)
         {
-            p.Message("&T/PvP add <map> %H- Adds a map to the PvP map list.");
-            p.Message("&T/PvP del <map> %H- Deletes a map from the PvP map list.");
+            p.Message("&T/PvP add <map> &H- Adds a map to the PvP map list.");
+            p.Message("&T/PvP del <map> &H- Deletes a map from the PvP map list.");
         }
     }
 
@@ -2841,13 +2841,13 @@ namespace MCGalaxy
         void HandleAll(Player p)
         {
             p.Message("&7All items:");
-            p.Message("&7syntax: %3[item]:[# produced] %2[ingredients]:[# required]");
+            p.Message("&7syntax: &3[item]:[# produced] &2[ingredients]:[# required]");
 
             for (int i = 0; i < PvP.recipes.GetLength(0); i++)
             {
                 if (PvP.recipes[i, 0] == null) return;
 
-                p.Message("&7- %b" + PvP.recipes[i, 0] + " %a" + PvP.recipes[i, 1]);
+                p.Message("&7- &b" + PvP.recipes[i, 0] + " &a" + PvP.recipes[i, 1]);
             }
         }
 
@@ -2863,7 +2863,7 @@ namespace MCGalaxy
             List<string[]> pRows = Database.GetRows("Inventories4", "*", "WHERE Name=@0 AND Level=@1", p.truename, p.level.name);
 
             p.Message("&7Craftable items:");
-            p.Message("&7syntax: %3[item]:[# produced] %2[ingredients]:[# required]");
+            p.Message("&7syntax: &3[item]:[# produced] &2[ingredients]:[# required]");
 
             for (int i = 0; i < PvP.recipes.GetLength(0); i++)
             {
@@ -2912,15 +2912,15 @@ namespace MCGalaxy
 
                 if (hasAllIngredients)
                 {
-                    p.Message("&7- %b" + recipe + " %a" + PvP.recipes[i, 1]);
+                    p.Message("&7- &b" + recipe + " &a" + PvP.recipes[i, 1]);
                 }
             }
         }
 
         public override void Help(Player p)
         {
-            p.Message("&T/Recipes %H- Lists all items that you can currently craft.");
-            p.Message("&T/Recipes all %H- Lists all possible items that can be crafted.");
+            p.Message("&T/Recipes &H- Lists all items that you can currently craft.");
+            p.Message("&T/Recipes all &H- Lists all possible items that can be crafted.");
         }
     }
 
@@ -2972,8 +2972,8 @@ namespace MCGalaxy
 
         public override void Help(Player p)
         {
-            p.Message("&T/SafeZone [add] %H- Adds a safe zone to the current PvP map.");
-            //p.Message("&T/SafeZone [del] %H- Removes a safe zone from the current PvP map.");
+            p.Message("&T/SafeZone [add] &H- Adds a safe zone to the current PvP map.");
+            //p.Message("&T/SafeZone [del] &H- Removes a safe zone from the current PvP map.");
         }
     }
 
@@ -3099,10 +3099,10 @@ namespace MCGalaxy
 
         public override void Help(Player p)
         {
-            p.Message("&T/Tool add [id] [speed] [durability] [type] %H- Adds an tool to the current PvP map.");
-            p.Message("&T/Tool del %H- Removes an tool from current PvP map.");
-            p.Message("&T/Tool give [player] [world] [tool] %H- Gives a player an tool.");
-            p.Message("&T/Tool take [player] [world] %H- Takes all tools from a player away.");
+            p.Message("&T/Tool add [id] [speed] [durability] [type] &H- Adds an tool to the current PvP map.");
+            p.Message("&T/Tool del &H- Removes an tool from current PvP map.");
+            p.Message("&T/Tool give [player] [world] [tool] &H- Gives a player an tool.");
+            p.Message("&T/Tool take [player] [world] &H- Takes all tools from a player away.");
         }
     }
 
@@ -3142,7 +3142,7 @@ namespace MCGalaxy
 
             if (args.Length == 2)
             {
-                p.Message("You need to specify the tool that makes mining faster. %T[tool] can be either 0 for none, 1 for axe, 2 for pickaxe, 3 for sword or 4 for shovel.");
+                p.Message("You need to specify the tool that makes mining faster. &T[tool] can be either 0 for none, 1 for axe, 2 for pickaxe, 3 for sword or 4 for shovel.");
                 return;
             }
 
@@ -3168,7 +3168,7 @@ namespace MCGalaxy
 
         public override void Help(Player p)
         {
-            p.Message("&T/Block add [id] [tool] [durability] %H- Adds a block to the current PvP map.");
+            p.Message("&T/Block add [id] [tool] [durability] &H- Adds a block to the current PvP map.");
             p.Message("&H[tool] can be either 0 for none, 1 for axe, 2 for pickaxe, 3 for sword or 4 for shovel.");
         }
     }
@@ -3190,10 +3190,10 @@ namespace MCGalaxy
             if (args[0].Length == 0)
             {
                 p.Message("You need to specify a potion to use.");
-                p.Message("&T/Potion health %b- Sets your health to full.");
-                p.Message("&T/Potion speed %b- Gives you a 3x speed boost for 30 seconds.");
-                p.Message("&T/Potion jump %b- Gives you a 3x jump boost for 30 seconds.");
-                p.Message("&T/Potion invisible %b- Makes you invisible for 10 seconds.");
+                p.Message("&T/Potion health &b- Sets your health to full.");
+                p.Message("&T/Potion speed &b- Gives you a 3x speed boost for 30 seconds.");
+                p.Message("&T/Potion jump &b- Gives you a 3x jump boost for 30 seconds.");
+                p.Message("&T/Potion invisible &b- Makes you invisible for 10 seconds.");
             }
             else
             {
@@ -3210,7 +3210,7 @@ namespace MCGalaxy
                         if (item == "invisible") Database.AddRow("Potions", "Name, Health, Speed, Invisible, Jump, Waterbreathing, Strength, Slowness, Blindness", p.truename, 0, 0, quantity, 0, 0, 0, 0, 0);
                         if (item == "jump") Database.AddRow("Potions", "Name, Health, Speed, Invisible, Jump, Waterbreathing, Strength, Slowness, Blindness", p.truename, 0, 0, 0, quantity, 0, 0, 0, 0);
 
-                        p.Message("You now have: %b" + quantity + " %S" + item + " potions");
+                        p.Message("You now have: &b" + quantity + " &S" + item + " potions");
                         return;
                     }
                     else
@@ -3228,25 +3228,25 @@ namespace MCGalaxy
                         if (item == "health")
                         {
                             Database.UpdateRows("Potions", "Health=@1", "WHERE NAME=@0", p.truename, newH);
-                            p.Message("You now have: %b" + newH + " %S" + item + " potions");
+                            p.Message("You now have: &b" + newH + " &S" + item + " potions");
                         }
 
                         if (item == "speed")
                         {
                             Database.UpdateRows("Potions", "Speed=@1", "WHERE NAME=@0", p.truename, newS);
-                            p.Message("You now have: %b" + newS + " %S" + item + " potions");
+                            p.Message("You now have: &b" + newS + " &S" + item + " potions");
                         }
 
                         if (item == "invisible")
                         {
                             Database.UpdateRows("Potions", "Invisible=@1", "WHERE NAME=@0", p.truename, newI);
-                            p.Message("You now have: %b" + newI + " %S" + item + " potions");
+                            p.Message("You now have: &b" + newI + " &S" + item + " potions");
                         }
 
                         if (item == "jump")
                         {
                             Database.UpdateRows("Potions", "Jump=@1", "WHERE NAME=@0", p.truename, newJ);
-                            p.Message("You now have: %b" + newJ + " %S" + item + " potions");
+                            p.Message("You now have: &b" + newJ + " &S" + item + " potions");
                         }
                         return;
                     }
@@ -3265,7 +3265,7 @@ namespace MCGalaxy
                     int j = int.Parse(rows[0][4]);
 
                     p.Message("&aYour potions:");
-                    p.Message("&7Health %ex{0}%7, Speed %ex{1}%7, Invisible %ex{2}%7, Jump %ex{3}", h, s, i, j);
+                    p.Message("&7Health &ex{0}&7, Speed &ex{1}&7, Invisible &ex{2}&7, Jump &ex{3}", h, s, i, j);
                 }
 
                 if (args[0] == "health")

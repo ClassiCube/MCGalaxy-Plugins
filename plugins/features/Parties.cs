@@ -61,7 +61,7 @@ namespace MCGalaxy {
 	            var random = new Random();
 		        int index = random.Next(team.Members.Count);
 		        
-		        team.Message(p, "&dThe new party owner is %b" + team.Members[index]);
+		        team.Message(p, "&dThe new party owner is &b" + team.Members[index]);
 		        
 				team.Owner = team.Members[index];
 	            Team.SaveList();
@@ -143,7 +143,7 @@ namespace MCGalaxy {
 
         public override void Use(Player p, string message, CommandData data) {
         	p.lastCMD = "Party";
-            string prefix = "&dParties> %S";
+            string prefix = "&dParties> &S";
             string noParty = prefix + "You are not in a party.";
 
             if (message.Length == 0) { Help(p); return; }
@@ -167,7 +167,7 @@ namespace MCGalaxy {
         }
 
         void HandleOwner(Player p, string[] args) {
-            string prefix = "&dParties> %S";
+            string prefix = "&dParties> &S";
             string noParty = prefix + "You are not in a party.";
 
             Team team = Team.GetData(p).Team;
@@ -190,7 +190,7 @@ namespace MCGalaxy {
         }
 
         void HandleKick(Player p, string[] args) {
-            string prefix = "&dParties> %S";
+            string prefix = "&dParties> &S";
             string noParty = prefix + "You are not in a party.";
 
             Team team = Team.GetData(p).Team;
@@ -205,7 +205,7 @@ namespace MCGalaxy {
             }
 
             if (team.Remove(args[1])) {
-                team.Action(p, "kicked " + args[1] + " %Sfrom the party.");
+                team.Action(p, "kicked " + args[1] + " &Sfrom the party.");
                 Player who = PlayerInfo.FindExact(args[1]);
                 if (who != null) {
                     Team.GetData(who).Team = null;
@@ -221,7 +221,7 @@ namespace MCGalaxy {
         }
 
         void HandleCreate(Player p, string[] args, CommandData data) {
-            string prefix = "&dParties> %S";
+            string prefix = "&dParties> &S";
             string noParty = prefix + "You are not in a party.";
             string nothing = "";
 
@@ -234,11 +234,11 @@ namespace MCGalaxy {
 	        Team.Add(team);
 	        Team.SaveList();
 	        
-	        p.Message(prefix + "&SYou created a party. You can invite people to it via %b/party invite [name]%d.");
+	        p.Message(prefix + "&SYou created a party. You can invite people to it via &b/party invite [name]&d.");
         }
 
         void HandleJoin(Player p, string[] args) {
-            string prefix = "&dParties> %S";
+            string prefix = "&dParties> &S";
             string noParty = prefix + "You are not in a party.";
 
           	Team team = Team.GetData(p).Team;
@@ -259,7 +259,7 @@ namespace MCGalaxy {
         }
 
         void HandleInvite(Player p, string[] args) {
-            string prefix = "&dParties> %S";
+            string prefix = "&dParties> &S";
             string noParty = prefix + "You are not in a party.";
 
           	Team team = Team.GetData(p).Team;
@@ -282,13 +282,13 @@ namespace MCGalaxy {
           	Team.GetData(p).NextInvite = now.AddSeconds(5);
 
             team.Action(p, "invited " + who.ColoredName + "&S to join the party.");
-          	who.Message(prefix + p.ColoredName + " %Shas sent you a party request.");
-            who.Message("To join, type %b/party join%S or ignore this message to decline.");
+          	who.Message(prefix + p.ColoredName + " &Shas sent you a party request.");
+            who.Message("To join, type &b/party join&S or ignore this message to decline.");
           	Team.GetData(who).Invite = team.Name;
         }
 
         void HandleLeave(Player p, string[] args) {
-            string prefix = "&dParties> %S";
+            string prefix = "&dParties> &S";
             string noParty = prefix + "You are not in a party.";
 
             Team team = Team.GetData(p).Team;
@@ -308,15 +308,15 @@ namespace MCGalaxy {
         }
 
         void HandleMembers(Player p, string[] args) {
-            string prefix = "&dParties> %S";
+            string prefix = "&dParties> &S";
             string noParty = prefix + "You are not in a party.";
 
             Team team = Team.GetData(p).Team;
             if (args.Length == 1) {
                 if (team == null) { p.Message(noParty); return; }
             }
-            p.Message("&dParty owner: %b" + team.Owner);
-            p.Message("&dMembers: %b" + team.Members.Join());
+            p.Message("&dParty owner: &b" + team.Owner);
+            p.Message("&dMembers: &b" + team.Members.Join());
         }
 
         public override void Help(Player p) {

@@ -76,7 +76,7 @@ namespace Core
 
                         pl.Extras.Remove("DISCORD_VERIFICATION_CODE");
 
-                        pl.Message("&aAccount successfully linked with ID %b" + p.ID + "&a.");
+                        pl.Message("&aAccount successfully linked with ID &b" + p.ID + "&a.");
                     }
                 }
             }
@@ -135,7 +135,7 @@ namespace Core
 
             string code = GetVerificationCode(8);
 
-            p.Message("&SType %b.verify " + code + " %Son Discord to link your account.");
+            p.Message("&SType &b.verify " + code + " &Son Discord to link your account.");
             p.Extras["DISCORD_VERIFICATION_CODE"] = code;
         }
 
@@ -161,8 +161,8 @@ namespace Core
 
         public override void Help(Player p)
         {
-            p.Message("&T/Verify %H- Generates a random code.");
-            p.Message("&HType %b.verify [code] %Hon Discord to verify your account.");
+            p.Message("&T/Verify &H- Generates a random code.");
+            p.Message("&HType &b.verify [code] &Hon Discord to verify your account.");
         }
     }
 }

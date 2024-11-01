@@ -112,7 +112,7 @@ namespace MCGalaxy
 
 		void StartTimer(Player p, bool SpecifiedCode)
 		{
-			if (!SpecifiedCode && p.Extras.GetBoolean("PKR_STARTED_CODE")) { p.Message("&f╒ %c∩αΓ: %7You cannot restart a predefined stopwatch."); return; }
+			if (!SpecifiedCode && p.Extras.GetBoolean("PKR_STARTED_CODE")) { p.Message("&f╒ &c∩αΓ: &7You cannot restart a predefined stopwatch."); return; }
 			StopwatchPlugin.StopwatchData timer = StopwatchPlugin.Get(p);
 			if (timer.active)
 			{
@@ -132,7 +132,7 @@ namespace MCGalaxy
 
 		void StopTimer(Player p, bool SpecifiedCode)
 		{
-			if (!SpecifiedCode && p.Extras.GetBoolean("PKR_STARTED_CODE")) { p.Message("&f╒ %c∩αΓ: %7You cannot stop a predefined stopwatch."); return; }
+			if (!SpecifiedCode && p.Extras.GetBoolean("PKR_STARTED_CODE")) { p.Message("&f╒ &c∩αΓ: &7You cannot stop a predefined stopwatch."); return; }
 			StopwatchPlugin.StopwatchData timer = StopwatchPlugin.Get(p);
 
 			int finishMin = 0;
@@ -188,19 +188,19 @@ namespace MCGalaxy
 					if (pl.level != p.level) break;
 					if (pl == p)
 					{
-						p.Message("&aYou finished with a time of: %b" + finishMin + ":" + finishSec + ":" + finishMS + "%a.");
+						p.Message("&aYou finished with a time of: &b" + finishMin + ":" + finishSec + ":" + finishMS + "&a.");
 					}
 
 					else
 					{
-						pl.Message("%b" + p.truename + " %afinished with a time of %b" + finishMin + ":" + finishSec + ":" + finishMS + "%a.");
+						pl.Message("&b" + p.truename + " &afinished with a time of &b" + finishMin + ":" + finishSec + ":" + finishMS + "&a.");
 					}
 				}
 			}
 
 			else
 			{
-				p.Message("&aYou finished with a time of: %b" + finishMin + ":" + finishSec + ":" + finishMS + "%a.");
+				p.Message("&aYou finished with a time of: &b" + finishMin + ":" + finishSec + ":" + finishMS + "&a.");
 			}
 
 			p.SendCpeMessage(CpeMessageType.BottomRight2, "");
@@ -209,7 +209,7 @@ namespace MCGalaxy
 
 		void ResetTimer(Player p, bool SpecifiedCode)
 		{
-			if (!SpecifiedCode && p.Extras.GetBoolean("PKR_STARTED_CODE")) { p.Message("&f╒ %c∩αΓ: %7You cannot reset a predefined stopwatch."); return; }
+			if (!SpecifiedCode && p.Extras.GetBoolean("PKR_STARTED_CODE")) { p.Message("&f╒ &c∩αΓ: &7You cannot reset a predefined stopwatch."); return; }
 			StopwatchPlugin.StopwatchData timer = StopwatchPlugin.Get(p);
 			if (!timer.active) return;
 			if (timer.runStop) return;
@@ -219,7 +219,7 @@ namespace MCGalaxy
 
 		void LoopStopwatch(Player p, bool SpecifiedCode)
 		{
-			if (!SpecifiedCode) p.Message("&SYou have started the stopwatch! Type %b/Stopwatch stop %Sto finish it.");
+			if (!SpecifiedCode) p.Message("&SYou have started the stopwatch! Type &b/Stopwatch stop &Sto finish it.");
 			else { p.Extras["PKR_STARTED_CODE"] = true; }
 			int min = 0;
 			int sec = 0;
