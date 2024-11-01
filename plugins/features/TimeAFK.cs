@@ -68,11 +68,11 @@ namespace Core {
             List<string[]> rows = Database.GetRows("AFK", "Name, Spent", "WHERE Name=@0", p.truename);
             
 			int curTime = rows.Count == 0 ? 0 : int.Parse(rows[0][1]);
-            p.Message("%STime spent idle: %b" + curTime + " minutes");
+            p.Message("&STime spent idle: &b" + curTime + " minutes");
         }
         
         public override void Help(Player p) {
-            p.Message("%T/TimeAFK - %HShows how long you've idled for.");
+            p.Message("&T/TimeAFK - &HShows how long you've idled for.");
         }
     }
 }

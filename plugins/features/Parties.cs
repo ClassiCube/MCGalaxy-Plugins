@@ -41,7 +41,7 @@ namespace MCGalaxy {
         }
 
         public void Action(Player source, string message) {
-            message = "%dParties> %SλNICK %S" + message;
+            message = "&dParties> &SλNICK &S" + message;
             Chat.MessageFrom(ChatScope.All, source, message, this, (pl, arg) => GetData(pl).Team == arg);
         }
 
@@ -61,7 +61,7 @@ namespace MCGalaxy {
 	            var random = new Random();
 		        int index = random.Next(team.Members.Count);
 		        
-		        team.Message(p, "%dThe new party owner is %b" + team.Members[index]);
+		        team.Message(p, "&dThe new party owner is %b" + team.Members[index]);
 		        
 				team.Owner = team.Members[index];
 	            Team.SaveList();
@@ -143,7 +143,7 @@ namespace MCGalaxy {
 
         public override void Use(Player p, string message, CommandData data) {
         	p.lastCMD = "Party";
-            string prefix = "%dParties> %S";
+            string prefix = "&dParties> %S";
             string noParty = prefix + "You are not in a party.";
 
             if (message.Length == 0) { Help(p); return; }
@@ -167,7 +167,7 @@ namespace MCGalaxy {
         }
 
         void HandleOwner(Player p, string[] args) {
-            string prefix = "%dParties> %S";
+            string prefix = "&dParties> %S";
             string noParty = prefix + "You are not in a party.";
 
             Team team = Team.GetData(p).Team;
@@ -185,12 +185,12 @@ namespace MCGalaxy {
             }
             
             team.Owner = who.name;
-            team.Action(p, "set the party owner to " + who.ColoredName + "%S.");
+            team.Action(p, "set the party owner to " + who.ColoredName + "&S.");
             Team.SaveList();
         }
 
         void HandleKick(Player p, string[] args) {
-            string prefix = "%dParties> %S";
+            string prefix = "&dParties> %S";
             string noParty = prefix + "You are not in a party.";
 
             Team team = Team.GetData(p).Team;
@@ -221,7 +221,7 @@ namespace MCGalaxy {
         }
 
         void HandleCreate(Player p, string[] args, CommandData data) {
-            string prefix = "%dParties> %S";
+            string prefix = "&dParties> %S";
             string noParty = prefix + "You are not in a party.";
             string nothing = "";
 
@@ -234,11 +234,11 @@ namespace MCGalaxy {
 	        Team.Add(team);
 	        Team.SaveList();
 	        
-	        p.Message(prefix + "%SYou created a party. You can invite people to it via %b/party invite [name]%d.");
+	        p.Message(prefix + "&SYou created a party. You can invite people to it via %b/party invite [name]%d.");
         }
 
         void HandleJoin(Player p, string[] args) {
-            string prefix = "%dParties> %S";
+            string prefix = "&dParties> %S";
             string noParty = prefix + "You are not in a party.";
 
           	Team team = Team.GetData(p).Team;
@@ -259,7 +259,7 @@ namespace MCGalaxy {
         }
 
         void HandleInvite(Player p, string[] args) {
-            string prefix = "%dParties> %S";
+            string prefix = "&dParties> %S";
             string noParty = prefix + "You are not in a party.";
 
           	Team team = Team.GetData(p).Team;
@@ -281,14 +281,14 @@ namespace MCGalaxy {
           	
           	Team.GetData(p).NextInvite = now.AddSeconds(5);
 
-            team.Action(p, "invited " + who.ColoredName + "%S to join the party.");
+            team.Action(p, "invited " + who.ColoredName + "&S to join the party.");
           	who.Message(prefix + p.ColoredName + " %Shas sent you a party request.");
             who.Message("To join, type %b/party join%S or ignore this message to decline.");
           	Team.GetData(who).Invite = team.Name;
         }
 
         void HandleLeave(Player p, string[] args) {
-            string prefix = "%dParties> %S";
+            string prefix = "&dParties> %S";
             string noParty = prefix + "You are not in a party.";
 
             Team team = Team.GetData(p).Team;
@@ -308,26 +308,26 @@ namespace MCGalaxy {
         }
 
         void HandleMembers(Player p, string[] args) {
-            string prefix = "%dParties> %S";
+            string prefix = "&dParties> %S";
             string noParty = prefix + "You are not in a party.";
 
             Team team = Team.GetData(p).Team;
             if (args.Length == 1) {
                 if (team == null) { p.Message(noParty); return; }
             }
-            p.Message("%dParty owner: %b" + team.Owner);
-            p.Message("%dMembers: %b" + team.Members.Join());
+            p.Message("&dParty owner: %b" + team.Owner);
+            p.Message("&dMembers: %b" + team.Members.Join());
         }
 
         public override void Help(Player p) {
-            p.Message("%T/Party owner [name] %H- Sets the player who has owner privileges for the party.");
-            p.Message("%T/Party kick [name] %H- Removes that player from the party you are in.");
-            p.Message("%T/Party create %H- Creates a new party.");
-            p.Message("%T/Party join %H- Joins the party you last received an invite to.");
-            p.Message("%T/Party invite [name] %H- Invites that player to join your party.");
-            p.Message("%T/Party leave %H- Leaves the party.");
-            p.Message("%T/Party list %H- Lists the players in your party.");
-            p.Message("%HAnything else is sent as a message to all online members of the party.");
+            p.Message("&T/Party owner [name] &H- Sets the player who has owner privileges for the party.");
+            p.Message("&T/Party kick [name] &H- Removes that player from the party you are in.");
+            p.Message("&T/Party create &H- Creates a new party.");
+            p.Message("&T/Party join &H- Joins the party you last received an invite to.");
+            p.Message("&T/Party invite [name] &H- Invites that player to join your party.");
+            p.Message("&T/Party leave &H- Leaves the party.");
+            p.Message("&T/Party list &H- Lists the players in your party.");
+            p.Message("&HAnything else is sent as a message to all online members of the party.");
         }
     }
 	

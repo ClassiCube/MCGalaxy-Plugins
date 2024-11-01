@@ -62,7 +62,7 @@ namespace MCGalaxy
 
         static void HandlerCustomTriggerEvent(Player p, string message)
         {
-            p.Message("%SIncoming message: %b" + message);
+            p.Message("&SIncoming message: &b" + message);
         }
     }
 

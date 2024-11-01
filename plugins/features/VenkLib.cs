@@ -56,7 +56,7 @@ namespace Core
 
         public override void Help(Player p)
         {
-            p.Message("%T/Adventure %H- Toggles adventure mode for a map.");
+            p.Message("&T/Adventure %H- Toggles adventure mode for a map.");
         }
     }
     public sealed class CmdAnnounce : Command2
@@ -122,9 +122,9 @@ namespace Core
 
         public override void Help(Player p)
         {
-            p.Message("%T/Announce [message] %H- Displays a message on your screen.");
-            p.Message("%T/Announce level [message] %H- Displays a message on players' screens in your level.");
-            p.Message("%T/Announce global [message] %H- Displays a message on players' screens globally.");
+            p.Message("&T/Announce [message] %H- Displays a message on your screen.");
+            p.Message("&T/Announce level [message] %H- Displays a message on players' screens in your level.");
+            p.Message("&T/Announce global [message] %H- Displays a message on players' screens globally.");
         }
     }
     public sealed class CmdBoost : Command2
@@ -187,11 +187,11 @@ namespace Core
 
         public override void Help(Player p)
         {
-            p.Message("%T/Boost [x] [y] [z] [xmode] [ymode] [zmode]");
-            p.Message("%HChanges the player's velocity");
-            p.Message("%Hmode 0 means that current velocity is added to");
-            p.Message("%Hmode 1 means that current velocity is replaced");
-            p.Message("%HThe command will always be executed, even in air MBs");
+            p.Message("&T/Boost [x] [y] [z] [xmode] [ymode] [zmode]");
+            p.Message("&HChanges the player's velocity");
+            p.Message("&Hmode 0 means that current velocity is added to");
+            p.Message("&Hmode 1 means that current velocity is replaced");
+            p.Message("&HThe command will always be executed, even in air MBs");
         }
     }
     public sealed class CmdListLevels : Command2
@@ -243,8 +243,8 @@ namespace Core
 
         public override void Help(Player p)
         {
-            p.Message("%T/ListLevels [rank]");
-            p.Message("%HLists loaded levels and their physics levels.");
+            p.Message("&T/ListLevels [rank]");
+            p.Message("&HLists loaded levels and their physics levels.");
         }
     }
     public sealed class CmdMoveEverything : Command2
@@ -297,7 +297,7 @@ namespace Core
             }
 
             BotsFile.Save(p.level);
-            p.Message("%SSuccessfully moved %b" + count + " %Sbots.");
+            p.Message("&SSuccessfully moved %b" + count + " %Sbots.");
         }
 
         #endregion
@@ -323,7 +323,7 @@ namespace Core
 
                 if (!p.level.IsValidPos(x2, y2, z2))
                 {
-                    p.Message("%cMB at %b" + pos.X + " " + pos.Y + " " + pos.Z + " %cwas outside of the map bounds, deleting.");
+                    p.Message("&cMB at %b" + pos.X + " " + pos.Y + " " + pos.Z + " %cwas outside of the map bounds, deleting.");
                     MessageBlock.Delete(p.level.name, pos.X, pos.Y, pos.Z);
                     p.level.UpdateBlock(p, pos.X, pos.Y, pos.Z, Block.Air);
                     continue;
@@ -340,7 +340,7 @@ namespace Core
                 count++;
             }
 
-            p.Message("%SSuccessfully moved %b" + count + " %SMBs.");
+            p.Message("&SSuccessfully moved %b" + count + " %SMBs.");
         }
 
         #endregion
@@ -370,7 +370,7 @@ namespace Core
 
                 if (!p.level.IsValidPos(x2, y2, z2))
                 {
-                    p.Message("%cPortal at %b" + pos.X + " " + pos.Y + " " + pos.Z + " %cwas outside of the map bounds, deleting.");
+                    p.Message("&cPortal at %b" + pos.X + " " + pos.Y + " " + pos.Z + " %cwas outside of the map bounds, deleting.");
                     Portal.Delete(p.level.name, pos.X, pos.Y, pos.Z);
                     p.level.UpdateBlock(p, pos.X, pos.Y, pos.Z, Block.Air);
                     continue;
@@ -387,7 +387,7 @@ namespace Core
                 count++;
             }
 
-            p.Message("%SSuccessfully moved %b" + count + " %Sportals.");
+            p.Message("&SSuccessfully moved %b" + count + " %Sportals.");
         }
 
         #endregion
@@ -419,9 +419,9 @@ namespace Core
 
         public override void Help(Player p)
         {
-            p.Message("%T/MoveEverything [x y z]");
-            p.Message("%HMoves all bots/MBs/portals in the map you're in by [x y z].");
-            p.Message("%HFor example, 0 1 0 would move everything up by 1 block.");
+            p.Message("&T/MoveEverything [x y z]");
+            p.Message("&HMoves all bots/MBs/portals in the map you're in by [x y z].");
+            p.Message("&HFor example, 0 1 0 would move everything up by 1 block.");
         }
     }
     public sealed class CmdSilentHold : Command2
@@ -461,10 +461,10 @@ namespace Core
 
         public override void Help(Player p)
         {
-            p.Message("%T/SilentHold [block] <locked>");
-            p.Message("%HMakes you hold the given block in your hand");
-            p.Message("%H  <locked> optionally prevents you from changing it");
-            p.Message("%HLiterally the same as /hold but it doesn't send a msg to the player.");
+            p.Message("&T/SilentHold [block] <locked>");
+            p.Message("&HMakes you hold the given block in your hand");
+            p.Message("&H  <locked> optionally prevents you from changing it");
+            p.Message("&HLiterally the same as /hold but it doesn't send a msg to the player.");
         }
     }
     public sealed class CmdSilentModel : EntityPropertyCmd

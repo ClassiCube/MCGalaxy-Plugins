@@ -21,12 +21,12 @@ public sealed class CmdRemoveTable : Command
 
         if (!Database.TableExists(args[0]))
         {
-            p.Message("%STable %b" + args[0] + " %Sdoes not exist.");
+            p.Message("&STable %b" + args[0] + " %Sdoes not exist.");
             return;
         }
 
         Database.DeleteTable(args[0]);
-        p.Message("%aTable %b" + args[0] + " %adeleted successfully.");
+        p.Message("&aTable %b" + args[0] + " %adeleted successfully.");
     }
 
     public override void Help(Player p)

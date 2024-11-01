@@ -218,7 +218,7 @@ namespace MCGalaxy.Games
 
         protected override string FormatStatus1(Player p)
         {
-            return RoundInProgress ? "%b" + Alive.Count + " %Splayers left" : "";
+            return RoundInProgress ? "&b" + Alive.Count + " %Splayers left" : "";
         }
 
         // ============================================ PLUGIN =======================================		
@@ -428,7 +428,7 @@ namespace MCGalaxy.Games
             else
             {
                 // Show alive player count
-                Map.Message("%b" + alive.Length + " %Splayers left!");
+                Map.Message("&b" + alive.Length + " %Splayers left!");
             }
             UpdateAllStatus1();
         }
@@ -472,7 +472,7 @@ namespace MCGalaxy.Games
                 {
                     if (uniqueIPs.Contains(pl.ip))
                     {
-                        pl.Message("%7You have been detected as playing with an alt. As such, you have not earned any tokens this round.");
+                        pl.Message("&7You have been detected as playing with an alt. As such, you have not earned any tokens this round.");
                         continue;
                     }
 
@@ -492,7 +492,7 @@ namespace MCGalaxy.Games
 
                 if (pl == winner)
                 {
-                    winner.Message("%dCongratulations, you won this round of NameOfGamemode!");
+                    winner.Message("&dCongratulations, you won this round of NameOfGamemode!");
                     data.Tokens += winReward;
                 }
 
@@ -588,11 +588,11 @@ namespace MCGalaxy.Games
         {
             if (message.CaselessEq("h2p"))
             {
-                p.Message("%H2-16 players will spawn. You will have 10 seconds grace");
-                p.Message("%Hperiod in which you cannot be killed. After these");
-                p.Message("%H10 seconds it's anyone's game. Click on chests to gain");
-                p.Message("%Hloot and click on people to attack them.");
-                p.Message("%HLast person standing wins the game.");
+                p.Message("&H2-16 players will spawn. You will have 10 seconds grace");
+                p.Message("&Hperiod in which you cannot be killed. After these");
+                p.Message("&H10 seconds it's anyone's game. Click on chests to gain");
+                p.Message("&Hloot and click on people to attack them.");
+                p.Message("&HLast person standing wins the game.");
             }
 
             else
@@ -603,12 +603,12 @@ namespace MCGalaxy.Games
 
         public override void Help(Player p)
         {
-            p.Message("%T/NOG start %H- Starts a game of NameOfGamemode");
-            p.Message("%T/NOG stop %H- Immediately stops NameOfGamemode");
-            p.Message("%T/NOG end %H- Ends current round of NameOfGamemode");
-            p.Message("%T/NOG add/remove %H- Adds/removes current map from the map list");
-            p.Message("%T/NOG status %H- Outputs current status of NameOfGamemode");
-            p.Message("%T/NOG go %H- Moves you to the current NameOfGamemode map.");
+            p.Message("&T/NOG start %H- Starts a game of NameOfGamemode");
+            p.Message("&T/NOG stop %H- Immediately stops NameOfGamemode");
+            p.Message("&T/NOG end %H- Ends current round of NameOfGamemode");
+            p.Message("&T/NOG add/remove %H- Adds/removes current map from the map list");
+            p.Message("&T/NOG status %H- Outputs current status of NameOfGamemode");
+            p.Message("&T/NOG go %H- Moves you to the current NameOfGamemode map.");
         }
     }
 }

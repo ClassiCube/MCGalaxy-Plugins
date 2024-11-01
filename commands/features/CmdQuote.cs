@@ -32,7 +32,7 @@ namespace MCGalaxy.Commands.Info
                     {
                         File.AppendAllText(path, args[1] + Environment.NewLine);
 
-                        foreach (Player pl in players) pl.Message("%b" + p.truename + " %Squoted \"" + args[1] + "\"");
+                        foreach (Player pl in players) pl.Message("&b" + p.truename + " &Squoted \"" + args[1] + "\"");
                         return;
                     }
                 }
@@ -41,14 +41,14 @@ namespace MCGalaxy.Commands.Info
             string[] allLines = File.ReadAllLines(path);
             Random rnd1 = new Random();
             string quote = allLines[rnd1.Next(allLines.Length)];
-            foreach (Player pl in players) pl.Message("%d[Quote] " + quote);
+            foreach (Player pl in players) pl.Message("&d[Quote] " + quote);
         }
 
         public override void Help(Player p)
         {
-            p.Message("%T/Quote %H- Selects a random quote from the quotes list.");
-            p.Message("%T/Quote add [args] %H- Adds [args] into the quote list.");
-            //p.Message("%T/Quotes %H- Shows all quotes.");
+            p.Message("&T/Quote &H- Selects a random quote from the quotes list.");
+            p.Message("&T/Quote add [args] &H- Adds [args] into the quote list.");
+            //p.Message("&T/Quotes &H- Shows all quotes.");
         }
     }
 }

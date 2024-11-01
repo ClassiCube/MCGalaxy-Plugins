@@ -125,12 +125,12 @@ namespace MCGalaxy
             string[] args = message.SplitSpaces();
 
             DayNightCycle.timeOfDay = int.Parse(args[0]);
-            p.Message("%STime set to: %b" + DayNightCycle.timeOfDay + "%S.");
+            p.Message("&STime set to: %b" + DayNightCycle.timeOfDay + "&S.");
         }
 
         public override void Help(Player p)
         {
-            p.Message("%T/SetTime [tick] - %HSets the day-night cycle time to [tick].");
+            p.Message("&T/SetTime [tick] - &HSets the day-night cycle time to [tick].");
         }
     }
 }

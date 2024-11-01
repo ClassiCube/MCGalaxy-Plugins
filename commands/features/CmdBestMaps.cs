@@ -22,7 +22,7 @@ namespace MCGalaxy.Commands.Info
 
                 if (maps.Length == 0)
                 {
-                    p.Message("There are no maps in the BestMaps list. Add some via %b/BestMaps add [name]%S.");
+                    p.Message("There are no maps in the BestMaps list. Add some via &b/BestMaps add [name]&S.");
                     return;
                 }
 
@@ -47,7 +47,7 @@ namespace MCGalaxy.Commands.Info
                 }
 
                 File.AppendAllText(path, map + Environment.NewLine); // Add new map into the list
-                p.Message("Added %b" + map + " %Sinto the BestMaps list.");
+                p.Message("Added &b" + map + " &Sinto the BestMaps list.");
             }
 
             else
@@ -58,8 +58,8 @@ namespace MCGalaxy.Commands.Info
 
         public override void Help(Player p)
         {
-            p.Message("%T/BestMaps %H- Teleports you to one of the best maps on the server.");
-            p.Message("%T/BestMaps add [map] %H- Adds [map] into the list of best maps.");
+            p.Message("&T/BestMaps %H- Teleports you to one of the best maps on the server.");
+            p.Message("&T/BestMaps add [map] %H- Adds [map] into the list of best maps.");
         }
     }
 }

@@ -43,8 +43,8 @@ namespace MCGalaxy.Commands
 
         public override void Help(Player p)
         {
-            p.Message("%T/FixTP [source] [dest]");
-            p.Message("%HReplaces any maps using [source] texture pack with [dest] texture pack");
+            p.Message("&T/FixTP [source] [dest]");
+            p.Message("&HReplaces any maps using [source] texture pack with [dest] texture pack");
         }
     }
 }

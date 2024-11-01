@@ -119,7 +119,7 @@ namespace MCGalaxy
 
                     Player pl = PlayerInfo.FindExact(args[1]); // Find person receiving XP
                     int curLevel = 0;
-                    if (pl != null && curLevel != newLevel) pl.Message("You are now level %b" + newLevel);
+                    if (pl != null && curLevel != newLevel) pl.Message("You are now level &b" + newLevel);
                     Database.AddRow("Levels", "Name, XP, Level", args[1], args[2], newLevel);
                     return;
                 }
@@ -130,7 +130,7 @@ namespace MCGalaxy
 
                     Player pl = PlayerInfo.FindExact(args[1]); // Find person receiving XP
                     int curLevel = GetInt(rows[0][2]);
-                    if (pl != null && curLevel != newLevel) pl.Message("You are now level %b" + newLevel);
+                    if (pl != null && curLevel != newLevel) pl.Message("You are now level &b" + newLevel);
 
                     Database.UpdateRows("Levels", "XP=@1", "WHERE NAME=@0", args[1], curXP + number); // Give XP
                     Database.UpdateRows("Levels", "Level=@1", "WHERE NAME=@0", args[1], newLevel); // Give level
@@ -147,31 +147,31 @@ namespace MCGalaxy
 
                 if (message.Length == 0 || args[0] == p.name)
                 {
-                    p.Message("%eYour Information:");
+                    p.Message("&eYour Information:");
                 }
                 else
                 {
                     if (PlayerInfo.FindMatchesPreferOnline(p, args[0]) == null) return;
-                    p.Message("%b" + args[0] + "%e's Information:");
+                    p.Message("&b" + args[0] + "&e's Information:");
                 }
 
                 if (userLevel == 100)
                 {
-                    p.Message("%5Level: %6" + userLevel + " (%bmax level)");
+                    p.Message("&5Level: &6" + userLevel + " (&bmax level)");
                 }
 
                 else
                 {
-                    p.Message("%5Level: %6" + userLevel + " (%b" + curXP + "xp/" + nextLevel(userLevel) + "xp%6)");
+                    p.Message("&5Level: &6" + userLevel + " (&b" + curXP + "xp/" + nextLevel(userLevel) + "xp&6)");
                 }
             }
         }
 
         public override void Help(Player p)
         {
-            p.Message("%T/XP - %HShows your level and current XP needed to level up.");
-            p.Message("%T/XP [player] - %HShows [player]'s level and current XP needed to level up.");
-            p.Message("%T/XP [secret code] [player] [xp] - %HGives [player] XP.");
+            p.Message("&T/XP - &HShows your level and current XP needed to level up.");
+            p.Message("&T/XP [player] - &HShows [player]'s level and current XP needed to level up.");
+            p.Message("&T/XP [secret code] [player] [xp] - &HGives [player] XP.");
         }
     }
 }

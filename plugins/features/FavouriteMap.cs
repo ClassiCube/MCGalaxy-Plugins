@@ -41,7 +41,7 @@ namespace MCGalaxy {
 			List<string[]> mRows = Database.GetRows("FavouriteMaps", "Name, Map", "WHERE Name=@0", who);
 			if (mRows.Count == 0) return;
 			string FavouriteMap = mRows[0][1];
-			//string gold = Awards.HasAllAwards(who) ? "&6" : "%S";
+			//string gold = Awards.HasAllAwards(who) ? "&6" : "&S";
 			p.Message("  Favourite map is %b{0}", FavouriteMap);
 		}
                         
@@ -64,20 +64,20 @@ namespace MCGalaxy {
 	                    
 	            if (mRows.Count == 0) {
 	            	Database.AddRow("FavouriteMaps", "Name, Map", p.truename, map);
-		            p.Message("%SYou set your favourite map to %b" + map + "%S.");
+		            p.Message("&SYou set your favourite map to %b" + map + "&S.");
 	                return;
 	            }
 	                    
 	            else {
         			Database.UpdateRows("FavouriteMaps", "Map=@1", "WHERE NAME=@0", p.truename, map);
-        			p.Message("%SYou changed your favourite map to %b" + map + "%S.");
+        			p.Message("&SYou changed your favourite map to %b" + map + "&S.");
         			return;
         		}
         	}
         }
 
         public override void Help(Player p) {
-        	p.Message("%T/FavouriteMap [map] %H- Sets your favourite map to [map].");
+        	p.Message("&T/FavouriteMap [map] %H- Sets your favourite map to [map].");
         }
     }
 }

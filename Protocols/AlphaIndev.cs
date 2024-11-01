@@ -936,7 +936,7 @@ namespace PluginAlphaIndev
                 }
                 dst.Write(buffer, offset, count);
             }
-            // NOTE: don't call WriteByte because it's imlicitly Write(new byte[] {value}, 0, 1});
+            // NOTE: don't call WriteByte because it's implicitly Write(new byte[] {value}, 0, 1});
 
             void WriteHeader() {
                 byte[] header = new byte[] { 0x78, 0x9C };

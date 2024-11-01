@@ -672,27 +672,27 @@ namespace MCGalaxy
 
         public static string GetHealthBar(int health)
         {
-            if (health == 20) return "%f♥♥♥♥♥♥♥♥♥♥";
-            if (health == 19) return "%f♥♥♥♥♥♥♥♥♥╫";
-            if (health == 18) return "%f♥♥♥♥♥♥♥♥♥%0♥";
-            if (health == 17) return "%f♥♥♥♥♥♥♥♥╫%0♥";
-            if (health == 16) return "%f♥♥♥♥♥♥♥♥%0♥♥";
-            if (health == 15) return "%f♥♥♥♥♥♥♥╫%0♥♥";
-            if (health == 14) return "%f♥♥♥♥♥♥♥%0♥♥♥";
-            if (health == 13) return "%f♥♥♥♥♥♥╫%0♥♥♥";
-            if (health == 12) return "%f♥♥♥♥♥♥%0♥♥♥♥";
-            if (health == 11) return "%f♥♥♥♥♥╫%0♥♥♥♥";
-            if (health == 10) return "%f♥♥♥♥♥%0♥♥♥♥♥";
-            if (health == 9) return "%f♥♥♥♥╫%0♥♥♥♥♥";
-            if (health == 8) return "%f♥♥♥♥%0♥♥♥♥♥♥";
-            if (health == 7) return "%f♥♥♥╫%0♥♥♥♥♥♥";
-            if (health == 6) return "%f♥♥♥%0♥♥♥♥♥♥♥";
-            if (health == 5) return "%f♥♥╫%0♥♥♥♥♥♥♥";
-            if (health == 4) return "%f♥♥%0♥♥♥♥♥♥♥♥";
-            if (health == 3) return "%f♥╫%0♥♥♥♥♥♥♥♥";
-            if (health == 2) return "%f♥%0♥♥♥♥♥♥♥♥♥";
-            if (health == 1) return "%f╫%0♥♥♥♥♥♥♥♥♥";
-            if (health == 0) return "%0♥♥♥♥♥♥♥♥♥♥";
+            if (health == 20) return "&f♥♥♥♥♥♥♥♥♥♥";
+            if (health == 19) return "&f♥♥♥♥♥♥♥♥♥╫";
+            if (health == 18) return "&f♥♥♥♥♥♥♥♥♥&0♥";
+            if (health == 17) return "&f♥♥♥♥♥♥♥♥╫&0♥";
+            if (health == 16) return "&f♥♥♥♥♥♥♥♥&0♥♥";
+            if (health == 15) return "&f♥♥♥♥♥♥♥╫&0♥♥";
+            if (health == 14) return "&f♥♥♥♥♥♥♥&0♥♥♥";
+            if (health == 13) return "&f♥♥♥♥♥♥╫&0♥♥♥";
+            if (health == 12) return "&f♥♥♥♥♥♥&0♥♥♥♥";
+            if (health == 11) return "&f♥♥♥♥♥╫&0♥♥♥♥";
+            if (health == 10) return "&f♥♥♥♥♥&0♥♥♥♥♥";
+            if (health == 9) return "&f♥♥♥♥╫&0♥♥♥♥♥";
+            if (health == 8) return "&f♥♥♥♥&0♥♥♥♥♥♥";
+            if (health == 7) return "&f♥♥♥╫&0♥♥♥♥♥♥";
+            if (health == 6) return "&f♥♥♥&0♥♥♥♥♥♥♥";
+            if (health == 5) return "&f♥♥╫&0♥♥♥♥♥♥♥";
+            if (health == 4) return "&f♥♥&0♥♥♥♥♥♥♥♥";
+            if (health == 3) return "&f♥╫&0♥♥♥♥♥♥♥♥";
+            if (health == 2) return "&f♥&0♥♥♥♥♥♥♥♥♥";
+            if (health == 1) return "&f╫&0♥♥♥♥♥♥♥♥♥";
+            if (health == 0) return "&0♥♥♥♥♥♥♥♥♥♥";
             return "";
         }
 
@@ -1151,7 +1151,7 @@ namespace MCGalaxy
 
             if (p.invincible || p.Game.Referee)
             {
-                p.Message("%f╒ &c∩αΓ: &7You cannot modify blocks as a spectator.");
+                p.Message("&f╒ &c∩αΓ: &7You cannot modify blocks as a spectator.");
                 p.RevertBlock(x, y, z);
                 cancel = true;
                 return;
@@ -1163,7 +1163,7 @@ namespace MCGalaxy
 
                 if (pRows.Count == 0)
                 {
-                    p.Message("%SYou do not have any of this block.");
+                    p.Message("&SYou do not have any of this block.");
                     p.RevertBlock(x, y, z);
                     cancel = true;
                     return;
@@ -1182,7 +1182,7 @@ namespace MCGalaxy
 
                     if (column == 0)
                     {
-                        p.Message("%SYou do not have any of this block.");
+                        p.Message("&SYou do not have any of this block.");
                         p.RevertBlock(x, y, z);
                         cancel = true;
                         return;
@@ -1335,7 +1335,7 @@ namespace MCGalaxy
                 {
                     if (p.Extras.GetInt("GOLDEN_APPLES") == 0)
                     {
-                        p.Message("%7You have no golden apples remaining.");
+                        p.Message("&7You have no golden apples remaining.");
                         return;
                     }
 
@@ -1358,7 +1358,7 @@ namespace MCGalaxy
                 {
                     if (p.Extras.GetInt("FOOD") == 0)
                     {
-                        p.Message("%7You have no food remaining.");
+                        p.Message("&7You have no food remaining.");
                         return;
                     }
 
@@ -1386,7 +1386,7 @@ namespace MCGalaxy
 
                 if (p.invincible || p.Game.Referee)
                 {
-                    p.Message("%f╒ &c∩αΓ: &7You cannot modify blocks as a spectator.");
+                    p.Message("&f╒ &c∩αΓ: &7You cannot modify blocks as a spectator.");
                     return;
                 }
 
@@ -2605,7 +2605,7 @@ namespace MCGalaxy
                             Database.UpdateRows("Inventories4", "Slot" + column.ToString() + "=@1", "WHERE Name=@0 AND Level=@2", p.truename, PvP.GetID(block) + "(" + newCount.ToString() + ")", p.level.name);
                         }
 
-                        p.Message("%c-" + ingredientAmount + " %7" + ingredientName);
+                        p.Message("&c-" + ingredientAmount + " %7" + ingredientName);
                         return true;
                     }
 
@@ -2637,7 +2637,7 @@ namespace MCGalaxy
 
             if (recipe[0] == "0 0")
             {
-                p.Message("%SInvalid item. See %b/Recipes %Sfor more information.");
+                p.Message("&SInvalid item. See %b/Recipes %Sfor more information.");
                 return;
             }
 
@@ -2653,20 +2653,20 @@ namespace MCGalaxy
                 if (!CommandParser.GetBlock(p, item, out block)) return;
 
                 PvP.SaveBlock(p, block, amountProduced);
-                p.Message("%a+" + amountProduced + " %7" + Block.GetName(p, block));
+                p.Message("&a+" + amountProduced + " %7" + Block.GetName(p, block));
             }
 
             else
             {
-                p.Message("%SYou do not have the materials required to craft this item.");
+                p.Message("&SYou do not have the materials required to craft this item.");
             }
         }
 
         public override void Help(Player p)
         {
-            p.Message("%T/Craft [item] <amount> %H- Crafts [amount] of [item].");
-            p.Message("%T<amount> defaults to 1.");
-            p.Message("%HFor a list of recipes, type %b/Recipes%H.");
+            p.Message("&T/Craft [item] <amount> %H- Crafts [amount] of [item].");
+            p.Message("&T<amount> defaults to 1.");
+            p.Message("&HFor a list of recipes, type %b/Recipes%H.");
         }
     }
 
@@ -2762,7 +2762,7 @@ namespace MCGalaxy
                 return;
             }
 
-            if (!HasExtraPerm(p, data.Rank, 1)) { p.Message("%cNo permission."); return; };
+            if (!HasExtraPerm(p, data.Rank, 1)) { p.Message("&cNo permission."); return; };
 
             string pvpMap = args[1];
 
@@ -2808,8 +2808,8 @@ namespace MCGalaxy
 
         public override void Help(Player p)
         {
-            p.Message("%T/PvP add <map> %H- Adds a map to the PvP map list.");
-            p.Message("%T/PvP del <map> %H- Deletes a map from the PvP map list.");
+            p.Message("&T/PvP add <map> %H- Adds a map to the PvP map list.");
+            p.Message("&T/PvP del <map> %H- Deletes a map from the PvP map list.");
         }
     }
 
@@ -2840,14 +2840,14 @@ namespace MCGalaxy
 
         void HandleAll(Player p)
         {
-            p.Message("%7All items:");
-            p.Message("%7syntax: %3[item]:[# produced] %2[ingredients]:[# required]");
+            p.Message("&7All items:");
+            p.Message("&7syntax: %3[item]:[# produced] %2[ingredients]:[# required]");
 
             for (int i = 0; i < PvP.recipes.GetLength(0); i++)
             {
                 if (PvP.recipes[i, 0] == null) return;
 
-                p.Message("%7- %b" + PvP.recipes[i, 0] + " %a" + PvP.recipes[i, 1]);
+                p.Message("&7- %b" + PvP.recipes[i, 0] + " %a" + PvP.recipes[i, 1]);
             }
         }
 
@@ -2862,8 +2862,8 @@ namespace MCGalaxy
             // Check what materials the player has
             List<string[]> pRows = Database.GetRows("Inventories4", "*", "WHERE Name=@0 AND Level=@1", p.truename, p.level.name);
 
-            p.Message("%7Craftable items:");
-            p.Message("%7syntax: %3[item]:[# produced] %2[ingredients]:[# required]");
+            p.Message("&7Craftable items:");
+            p.Message("&7syntax: %3[item]:[# produced] %2[ingredients]:[# required]");
 
             for (int i = 0; i < PvP.recipes.GetLength(0); i++)
             {
@@ -2912,15 +2912,15 @@ namespace MCGalaxy
 
                 if (hasAllIngredients)
                 {
-                    p.Message("%7- %b" + recipe + " %a" + PvP.recipes[i, 1]);
+                    p.Message("&7- %b" + recipe + " %a" + PvP.recipes[i, 1]);
                 }
             }
         }
 
         public override void Help(Player p)
         {
-            p.Message("%T/Recipes %H- Lists all items that you can currently craft.");
-            p.Message("%T/Recipes all %H- Lists all possible items that can be crafted.");
+            p.Message("&T/Recipes %H- Lists all items that you can currently craft.");
+            p.Message("&T/Recipes all %H- Lists all possible items that can be crafted.");
         }
     }
 
@@ -2972,8 +2972,8 @@ namespace MCGalaxy
 
         public override void Help(Player p)
         {
-            p.Message("%T/SafeZone [add] %H- Adds a safe zone to the current PvP map.");
-            //p.Message("%T/SafeZone [del] %H- Removes a safe zone from the current PvP map.");
+            p.Message("&T/SafeZone [add] %H- Adds a safe zone to the current PvP map.");
+            //p.Message("&T/SafeZone [del] %H- Removes a safe zone from the current PvP map.");
         }
     }
 
@@ -3034,7 +3034,7 @@ namespace MCGalaxy
 
             if (args.Length == 4)
             {
-                p.Message("%H[type] can be either 0 for none, 1 for axe, 2 for pickaxe, 3 for sword or 4 for shovel.");
+                p.Message("&H[type] can be either 0 for none, 1 for axe, 2 for pickaxe, 3 for sword or 4 for shovel.");
                 return;
             }
 
@@ -3099,10 +3099,10 @@ namespace MCGalaxy
 
         public override void Help(Player p)
         {
-            p.Message("%T/Tool add [id] [speed] [durability] [type] %H- Adds an tool to the current PvP map.");
-            p.Message("%T/Tool del %H- Removes an tool from current PvP map.");
-            p.Message("%T/Tool give [player] [world] [tool] %H- Gives a player an tool.");
-            p.Message("%T/Tool take [player] [world] %H- Takes all tools from a player away.");
+            p.Message("&T/Tool add [id] [speed] [durability] [type] %H- Adds an tool to the current PvP map.");
+            p.Message("&T/Tool del %H- Removes an tool from current PvP map.");
+            p.Message("&T/Tool give [player] [world] [tool] %H- Gives a player an tool.");
+            p.Message("&T/Tool take [player] [world] %H- Takes all tools from a player away.");
         }
     }
 
@@ -3168,8 +3168,8 @@ namespace MCGalaxy
 
         public override void Help(Player p)
         {
-            p.Message("%T/Block add [id] [tool] [durability] %H- Adds a block to the current PvP map.");
-            p.Message("%H[tool] can be either 0 for none, 1 for axe, 2 for pickaxe, 3 for sword or 4 for shovel.");
+            p.Message("&T/Block add [id] [tool] [durability] %H- Adds a block to the current PvP map.");
+            p.Message("&H[tool] can be either 0 for none, 1 for axe, 2 for pickaxe, 3 for sword or 4 for shovel.");
         }
     }
 
@@ -3190,10 +3190,10 @@ namespace MCGalaxy
             if (args[0].Length == 0)
             {
                 p.Message("You need to specify a potion to use.");
-                p.Message("%T/Potion health %b- Sets your health to full.");
-                p.Message("%T/Potion speed %b- Gives you a 3x speed boost for 30 seconds.");
-                p.Message("%T/Potion jump %b- Gives you a 3x jump boost for 30 seconds.");
-                p.Message("%T/Potion invisible %b- Makes you invisible for 10 seconds.");
+                p.Message("&T/Potion health %b- Sets your health to full.");
+                p.Message("&T/Potion speed %b- Gives you a 3x speed boost for 30 seconds.");
+                p.Message("&T/Potion jump %b- Gives you a 3x jump boost for 30 seconds.");
+                p.Message("&T/Potion invisible %b- Makes you invisible for 10 seconds.");
             }
             else
             {
@@ -3256,7 +3256,7 @@ namespace MCGalaxy
                 {
                     if (pRows.Count == 0)
                     {
-                        p.Message("%SYou do not have any potions.");
+                        p.Message("&SYou do not have any potions.");
                         return;
                     }
                     int h = int.Parse(rows[0][1]);
@@ -3264,15 +3264,15 @@ namespace MCGalaxy
                     int i = int.Parse(rows[0][3]);
                     int j = int.Parse(rows[0][4]);
 
-                    p.Message("%aYour potions:");
-                    p.Message("%7Health %ex{0}%7, Speed %ex{1}%7, Invisible %ex{2}%7, Jump %ex{3}", h, s, i, j);
+                    p.Message("&aYour potions:");
+                    p.Message("&7Health %ex{0}%7, Speed %ex{1}%7, Invisible %ex{2}%7, Jump %ex{3}", h, s, i, j);
                 }
 
                 if (args[0] == "health")
                 {
                     if (pRows.Count == 0)
                     {
-                        p.Message("%SYou do not have any potions.");
+                        p.Message("&SYou do not have any potions.");
                         return;
                     }
 
@@ -3295,7 +3295,7 @@ namespace MCGalaxy
                 {
                     if (pRows.Count == 0)
                     {
-                        p.Message("%SYou do not have any potions.");
+                        p.Message("&SYou do not have any potions.");
                         return;
                     }
                     int s = int.Parse(rows[0][2]);
@@ -3317,7 +3317,7 @@ namespace MCGalaxy
                 {
                     if (pRows.Count == 0)
                     {
-                        p.Message("%SYou do not have any potions.");
+                        p.Message("&SYou do not have any potions.");
                         return;
                     }
                     int i = int.Parse(rows[0][3]);
@@ -3334,7 +3334,7 @@ namespace MCGalaxy
                     Entities.GlobalDespawn(p, true); // Remove from tab list
                     Server.hidden.Add(p.truename);
                     p.Extras["POTION_INV_TIMER"] = DateTime.UtcNow;
-                    p.Message("%aYou are now invisible.");
+                    p.Message("&aYou are now invisible.");
                     p.Message("You have " + (i - 1) + " invisible potions remaining.");
                     Server.MainScheduler.QueueRepeat(PvP.CheckInvisible, null, TimeSpan.FromSeconds(1));
                 }
@@ -3343,7 +3343,7 @@ namespace MCGalaxy
                 {
                     if (pRows.Count == 0)
                     {
-                        p.Message("%SYou do not have any potions.");
+                        p.Message("&SYou do not have any potions.");
                         return;
                     }
                     int j = int.Parse(rows[0][4]);
@@ -3437,7 +3437,7 @@ namespace MCGalaxy
             // Restrict player model scale, but bots can have unlimited model scale
             if (ModelInfo.GetRawScale(model) > max)
             {
-                dst.Message("%WScale must be {0} or less for {1} model",
+                dst.Message("&WScale must be {0} or less for {1} model",
                     max, ModelInfo.GetRawModel(model));
                 return null;
             }
@@ -3490,7 +3490,7 @@ namespace MCGalaxy
 
         public override void Help(Player p)
         {
-            p.Message("%T/DropBlock - %HDrops a block at your feet.");
+            p.Message("&T/DropBlock - &HDrops a block at your feet.");
         }
     }
 

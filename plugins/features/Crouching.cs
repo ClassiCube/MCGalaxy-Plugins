@@ -103,7 +103,7 @@ namespace MCGalaxy
 
         public override void Help(Player p)
         {
-            p.Message("%T/Crouch %H- Toggles crouching.");
+            p.Message("&T/Crouch &H- Toggles crouching.");
         }
     }
 }

@@ -56,7 +56,7 @@ namespace Core {
             obj.TryGetValue("region",   out region);
             obj.TryGetValue("country", out country);           
             
-            p.Message("%2" + p.truename + " comes from " + country + "!");
+            p.Message("&2" + p.truename + " comes from " + country + "!");
         }
     }
 }

@@ -26,7 +26,7 @@ namespace Core {
         }
 
         public override void Help(Player p) {
-            p.Message("%T/Something %S- Does something.");
+            p.Message("&T/Something &S- Does something.");
         }
     }
 }

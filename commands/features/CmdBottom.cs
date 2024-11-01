@@ -23,7 +23,7 @@ namespace MCGalaxy.Commands.Info
             TopStat stat = FindTopStat(args[1]);
             if (stat == null)
             {
-                p.Message("%WUnrecognised type \"{0}\".", args[1]); return;
+                p.Message("&WUnrecognised type \"{0}\".", args[1]); return;
             }
 
             if (args.Length > 2)
@@ -43,7 +43,7 @@ namespace MCGalaxy.Commands.Info
             {
                 string name = PlayerInfo.GetColoredName(p, stats[i][0]);
                 string value = stat.Formatter(stats[i][1]);
-                p.Message("{0}) {1} %S- {2}", offset + (i + 1), name, value);
+                p.Message("{0}) {1} &S- {2}", offset + (i + 1), name, value);
             }
         }
 
@@ -58,8 +58,8 @@ namespace MCGalaxy.Commands.Info
 
         public override void Help(Player p)
         {
-            p.Message("%T/Bottom [max results] [stat] <offset>");
-            p.Message("%HPrints a list of players who have the " +
+            p.Message("&T/Bottom [max results] [stat] <offset>");
+            p.Message("&HPrints a list of players who have the " +
                            "least of a particular stat. Available stats:");
             p.Message("&f" + TopStat.Stats.Join(stat => stat.Identifier));
         }

@@ -75,8 +75,8 @@ namespace MCGalaxy {
         }
 		
         static void DoKick(Player p) {
-            p.Kick("%cProxy IPs are not allowed here.");
-            Server.s.Log("&cWARNING: %S" + p.truename + " tried connecting from a proxy IP");	
+            p.Kick("&cProxy IPs are not allowed here.");
+            Server.s.Log("&cWARNING: &S" + p.truename + " tried connecting from a proxy IP");	
         }
     }
 }

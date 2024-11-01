@@ -60,7 +60,7 @@ public class CmdMoveEverything : Command2
         }
 
         BotsFile.Save(p.level);
-        p.Message("%SSuccessfully moved %b" + count + " %Sbots.");
+        p.Message("&SSuccessfully moved %b" + count + " %Sbots.");
     }
 
     #endregion
@@ -86,7 +86,7 @@ public class CmdMoveEverything : Command2
 
             if (!p.level.IsValidPos(x2, y2, z2))
             {
-                p.Message("%cMB at %b" + pos.X + " " + pos.Y + " " + pos.Z + " %cwas outside of the map bounds, deleting.");
+                p.Message("&cMB at %b" + pos.X + " " + pos.Y + " " + pos.Z + " %cwas outside of the map bounds, deleting.");
                 MessageBlock.Delete(p.level.name, pos.X, pos.Y, pos.Z);
                 p.level.UpdateBlock(p, pos.X, pos.Y, pos.Z, Block.Air);
                 continue;
@@ -103,7 +103,7 @@ public class CmdMoveEverything : Command2
             count++;
         }
 
-        p.Message("%SSuccessfully moved %b" + count + " %SMBs.");
+        p.Message("&SSuccessfully moved %b" + count + " %SMBs.");
     }
 
     #endregion
@@ -133,7 +133,7 @@ public class CmdMoveEverything : Command2
 
             if (!p.level.IsValidPos(x2, y2, z2))
             {
-                p.Message("%cPortal at %b" + pos.X + " " + pos.Y + " " + pos.Z + " %cwas outside of the map bounds, deleting.");
+                p.Message("&cPortal at %b" + pos.X + " " + pos.Y + " " + pos.Z + " %cwas outside of the map bounds, deleting.");
                 Portal.Delete(p.level.name, pos.X, pos.Y, pos.Z);
                 p.level.UpdateBlock(p, pos.X, pos.Y, pos.Z, Block.Air);
                 continue;
@@ -150,7 +150,7 @@ public class CmdMoveEverything : Command2
             count++;
         }
 
-        p.Message("%SSuccessfully moved %b" + count + " %Sportals.");
+        p.Message("&SSuccessfully moved %b" + count + " %Sportals.");
     }
 
     #endregion
@@ -182,8 +182,8 @@ public class CmdMoveEverything : Command2
 
     public override void Help(Player p)
     {
-        p.Message("%T/MoveEverything [x y z]");
-        p.Message("%HMoves all bots/MBs/portals in the map you're in by [x y z].");
-        p.Message("%HFor example, 0 1 0 would move everything up by 1 block.");
+        p.Message("&T/MoveEverything [x y z]");
+        p.Message("&HMoves all bots/MBs/portals in the map you're in by [x y z].");
+        p.Message("&HFor example, 0 1 0 would move everything up by 1 block.");
     }
 }

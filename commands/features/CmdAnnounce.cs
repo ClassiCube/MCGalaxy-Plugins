@@ -48,9 +48,9 @@ namespace MCGalaxy.Commands.CPE {
         }
  
         public override void Help(Player p) {
-            p.Message("%T/Announce [message] %H- Displays a message on your screen.");
-            p.Message("%T/Announce level [message] %H- Displays a message on players' screens in your level.");
-            p.Message("%T/Announce global [message] %H- Displays a message on players' screens globally.");
+            p.Message("&T/Announce [message] &H- Displays a message on your screen.");
+            p.Message("&T/Announce level [message] &H- Displays a message on players' screens in your level.");
+            p.Message("&T/Announce global [message] &H- Displays a message on players' screens globally.");
         }
     }
 }

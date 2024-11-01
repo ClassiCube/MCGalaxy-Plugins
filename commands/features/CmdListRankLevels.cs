@@ -47,13 +47,13 @@ namespace MCGalaxy.Commands.Info
                 return;
             }
 
-            p.Message(grp.Color + string.Join("%S, " + grp.Color, maps));
+            p.Message(grp.Color + string.Join("&S, " + grp.Color, maps));
         }
 
         public override void Help(Player p)
         {
-            p.Message("%T/ListRankLevels [rank]");
-            p.Message("%HShows a list of levels with perbuild/pervisit matching [rank].");
+            p.Message("&T/ListRankLevels [rank]");
+            p.Message("&HShows a list of levels with perbuild/pervisit matching [rank].");
         }
     }
 }

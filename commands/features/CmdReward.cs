@@ -19,8 +19,8 @@ namespace MCGalaxy {
 		}
 
 		public override void Help(Player p) {
-			p.Message("%T/Reward [secret code] [amount]");
-			p.Message("%HGives you rewards after completing a task.");
+			p.Message("&T/Reward [secret code] [amount]");
+			p.Message("&HGives you rewards after completing a task.");
 		}
 	}
 }

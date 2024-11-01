@@ -60,7 +60,7 @@ namespace MCGalaxy {
         }
 
         public override void Help(Player p) {
-            p.Message("%T/SetSoftwareName [software] - %HSets software name to [software].");
+            p.Message("&T/SetSoftwareName [software] - %HSets software name to [software].");
         }
     }
 }

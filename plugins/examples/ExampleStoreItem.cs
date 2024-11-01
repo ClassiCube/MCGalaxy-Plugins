@@ -54,7 +54,7 @@ namespace MCGalaxy
 
             // This is where you would add your own features upon purchase
             // For example purposes, I will just send a message to the player whenever they purchase the item
-            p.Message("%SYou just wasted %b" + Price + " %Son an example item.");
+            p.Message("&SYou just wasted &b" + Price + " &Son an example item.");
 
             // OPTIONAL: Execute a command on purchase
             // UseCommand(p, "CommandName", "optional arguments");
@@ -64,7 +64,7 @@ namespace MCGalaxy
 
         protected override void OnStoreCommand(Player p)
         {
-            p.Message("%T/Buy {0} [description]", Name);
+            p.Message("&T/Buy {0} [description]", Name);
             OutputItemInfo(p);
             p.Message("[long description]");
         }

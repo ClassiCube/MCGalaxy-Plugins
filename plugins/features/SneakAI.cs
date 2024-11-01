@@ -71,7 +71,7 @@ namespace MCGalaxy {
 
         void MoveTowards(PlayerBot bot, Player p) {
             string msg = bot.DeathMessage;
-            if (msg == null) msg = "@p %Swas &ccaught.";
+            if (msg == null) msg = "@p &Swas &ccaught.";
             p.HandleDeath(Block.Cobblestone, msg);
         }
 
@@ -97,9 +97,9 @@ namespace MCGalaxy {
             }
         }
         static string[] help = new string[] {
-            "%T/BotAI add [name] sneak <radius>",
-            "%HCauses the bot to kil the closest player in the search radius.",
-            "%H  <radius> defaults to 10 blocks.",
+            "&T/BotAI add [name] sneak <radius>",
+            "&HCauses the bot to kil the closest player in the search radius.",
+            "&H  <radius> defaults to 10 blocks.",
         };
     }
 }

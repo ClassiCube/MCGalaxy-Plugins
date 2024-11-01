@@ -56,7 +56,7 @@ namespace Core
             conv.SaveAsLvl("./levels/" + args[1] + ".lvl");
             //File.SetAttributes(dest, FileAttributes.Normal);
 
-            p.Message("Finished importing level %b" + args[1] + "%S.");
+            p.Message("Finished importing level &b" + args[1] + "&S.");
         }
 
 
@@ -1052,7 +1052,7 @@ namespace Core
 
         public override void Help(Player p)
         {
-            p.Message("%T/ImportSchematic [url] [level name] %S- Imports a .schematic file using the Puissant Royale blocks.");
+            p.Message("&T/ImportSchematic [url] [level name] &S- Imports a .schematic file using the Puissant Royale blocks.");
         }
     }
 }

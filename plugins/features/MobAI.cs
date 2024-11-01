@@ -313,8 +313,8 @@ namespace MCGalaxy
 
         public override string[] Help { get { return help; } }
         static string[] help = new string[] {
-            "%T/BotAI add [name] drop",
-            "%HCauses the bot to fall.",
+            "&T/BotAI add [name] drop",
+            "&HCauses the bot to fall.",
         };
     }
 
@@ -642,8 +642,8 @@ namespace MCGalaxy
 
         public override string[] Help { get { return help; } }
         static string[] help = new string[] {
-            "%T/BotAI add [name] hostile",
-            "%HCauses the bot behave as a hostile mob.",
+            "&T/BotAI add [name] hostile",
+            "&HCauses the bot behave as a hostile mob.",
         };
     }
 
@@ -867,8 +867,8 @@ namespace MCGalaxy
 
         public override string[] Help { get { return help; } }
         static string[] help = new string[] {
-            "%T/BotAI add [name] roam",
-            "%HCauses the bot behave freely.",
+            "&T/BotAI add [name] roam",
+            "&HCauses the bot behave freely.",
         };
     }
 
@@ -910,7 +910,7 @@ namespace MCGalaxy
             DirUtils.GetYawPitch(dir, out rot.RotY, out rot.HeadX);
 
             dx = Math.Abs(dx); dy = Math.Abs(dy); dz = Math.Abs(dz);
-            //if (InRange(p, bot, dist)) p.Message("%cInfect");
+            //if (InRange(p, bot, dist)) p.Message("&cInfect");
 
             bot.Rot = rot;
 
@@ -971,8 +971,8 @@ namespace MCGalaxy
 
         public override string[] Help { get { return help; } }
         static string[] help = new string[] {
-            "%T/BotAI add [name] run",
-            "%HCauses the bot to try and spleef you.",
+            "&T/BotAI add [name] run",
+            "&HCauses the bot to try and spleef you.",
         };
     }
 
@@ -1022,7 +1022,7 @@ namespace MCGalaxy
 
             if (meta.tickDelay == meta.randomTick)
             {
-                p.Message("%dUpdate target");
+                p.Message("&dUpdate target");
                 bot.TargetPos = p.Pos;
                 meta.tickDelay = 0;
             }
@@ -1038,7 +1038,7 @@ namespace MCGalaxy
 
             bot.Rot = rot;
 
-            if (InRange(p, bot, dist)) p.Message("%cInfect");
+            if (InRange(p, bot, dist)) p.Message("&cInfect");
 
             return dx <= 8 && dy <= 16 && dz <= 8;
         }
@@ -1096,8 +1096,8 @@ namespace MCGalaxy
 
         public override string[] Help { get { return help; } }
         static string[] help = new string[] {
-            "%T/BotAI add [name] smart",
-            "%HCauses the bot behave as a smart mob.",
+            "&T/BotAI add [name] smart",
+            "&HCauses the bot behave as a smart mob.",
         };
     }
 
@@ -1359,8 +1359,8 @@ namespace MCGalaxy
 
         public override string[] Help { get { return help; } }
         static string[] help = new string[] {
-            "%T/BotAI add [name] smarthunt",
-            "%HCauses the bot to use 2D A* pathfinding when hunting players.",
+            "&T/BotAI add [name] smarthunt",
+            "&HCauses the bot to use 2D A* pathfinding when hunting players.",
         };
     }
 
@@ -1404,7 +1404,7 @@ namespace MCGalaxy
             MobAI.SetDirectionalSpeeds(bot);
 
             dx = Math.Abs(dx); dy = Math.Abs(dy); dz = Math.Abs(dz);
-            //if (InRange(p, bot, dist)) p.Message("%cInfect");
+            //if (InRange(p, bot, dist)) p.Message("&cInfect");
 
             bot.Rot = rot;
 
@@ -1514,8 +1514,8 @@ namespace MCGalaxy
 
         public override string[] Help { get { return help; } }
         static string[] help = new string[] {
-            "%T/BotAI add [name] spleef",
-            "%HCauses the bot to try and spleef you.",
+            "&T/BotAI add [name] spleef",
+            "&HCauses the bot to try and spleef you.",
         };
     }
 
@@ -1559,7 +1559,7 @@ namespace MCGalaxy
             MobAI.SetDirectionalSpeeds(bot);
 
             dx = Math.Abs(dx); dy = Math.Abs(dy); dz = Math.Abs(dz);
-            //if (InRange(p, bot, dist)) p.Message("%cInfect");
+            //if (InRange(p, bot, dist)) p.Message("&cInfect");
 
             bot.Rot = rot;
 
@@ -1635,8 +1635,8 @@ namespace MCGalaxy
 
         public override string[] Help { get { return help; } }
         static string[] help = new string[] {
-            "%T/BotAI add [name] spleef",
-            "%HCauses the bot to try and spleef you.",
+            "&T/BotAI add [name] spleef",
+            "&HCauses the bot to try and spleef you.",
         };
     }
 

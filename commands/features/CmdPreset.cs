@@ -26,8 +26,8 @@ namespace MCGalaxy.Commands.Eco {
         }
 
         public override void Help(Player p) {
-            p.Message("%T/Preset [preset] %H- Adds an env preset to your map.");
-            p.Message("%eUsable in message blocks.");
+            p.Message("&T/Preset [preset] &H- Adds an env preset to your map.");
+            p.Message("&eUsable in message blocks.");
         }
     }
 }

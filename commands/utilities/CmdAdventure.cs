@@ -12,7 +12,7 @@ namespace Core {
         }
 		
 		public override void Help(Player p) {
-            p.Message("%T/Adventure %H- Toggles adventure mode for a map.");
+            p.Message("&T/Adventure &H- Toggles adventure mode for a map.");
 		}
 	}
 }

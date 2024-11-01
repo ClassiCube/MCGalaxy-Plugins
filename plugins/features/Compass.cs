@@ -34,31 +34,31 @@ namespace MCGalaxy
                 // Store yaw in extras values so we can retrieve it above
                 p.Extras["COMPASS_VALUE"] = yaw;
 
-                p.SendCpeMessage(CpeMessageType.Status1, "%SFacing:");
+                p.SendCpeMessage(CpeMessageType.Status1, "&SFacing:");
 
                 if (yaw >= 337 || yaw < 22)
-                    p.SendCpeMessage(CpeMessageType.Status2, "%bNorth");
+                    p.SendCpeMessage(CpeMessageType.Status2, "&bNorth");
 
                 if (yaw >= 22 && yaw < 67)
-                    p.SendCpeMessage(CpeMessageType.Status2, "%bNortheast");
+                    p.SendCpeMessage(CpeMessageType.Status2, "&bNortheast");
 
                 if (yaw >= 67 && yaw < 112)
-                    p.SendCpeMessage(CpeMessageType.Status2, "%bEast");
+                    p.SendCpeMessage(CpeMessageType.Status2, "&bEast");
 
                 if (yaw >= 112 && yaw < 157)
-                    p.SendCpeMessage(CpeMessageType.Status2, "%bSoutheast");
+                    p.SendCpeMessage(CpeMessageType.Status2, "&bSoutheast");
 
                 if (yaw >= 157 && yaw < 202)
-                    p.SendCpeMessage(CpeMessageType.Status2, "%bSouth");
+                    p.SendCpeMessage(CpeMessageType.Status2, "&bSouth");
 
                 if (yaw >= 202 && yaw < 247)
-                    p.SendCpeMessage(CpeMessageType.Status2, "%bSouthwest");
+                    p.SendCpeMessage(CpeMessageType.Status2, "&bSouthwest");
 
                 if (yaw >= 247 && yaw < 292)
-                    p.SendCpeMessage(CpeMessageType.Status2, "%bWest");
+                    p.SendCpeMessage(CpeMessageType.Status2, "&bWest");
 
                 if (yaw >= 292 && yaw < 337)
-                    p.SendCpeMessage(CpeMessageType.Status2, "%bNorthwest");
+                    p.SendCpeMessage(CpeMessageType.Status2, "&bNorthwest");
             }
         }
 
