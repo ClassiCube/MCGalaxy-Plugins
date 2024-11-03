@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using MCGalaxy;
+using MCGalaxy.Maths;
 using MCGalaxy.Network;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -266,7 +267,10 @@ namespace PluginAlphaIndev
         public override bool SendSetTextColor(ColorDesc color) { return false; }
         public override bool SendDefineBlock(BlockDefinition def) { return false; }
         public override bool SendUndefineBlock(BlockDefinition def) { return false; }
-
+        public override bool SendAddSelection(byte id, string label, Vec3U16 p1, Vec3U16 p2, ColorDesc color) { return false; }
+        public override bool SendRemoveSelection(byte id) { return false; }
+        public override bool SendCinematicGui(CinematicGui gui) { return false; }
+        
         public const int OPCODE_PING      = 0x00;
         public const int OPCODE_LOGIN     = 0x01;
         public const int OPCODE_HANDSHAKE = 0x02;
