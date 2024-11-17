@@ -43,7 +43,7 @@ namespace MCGalaxy
 
         public override string Name { get { return "Example"; } } // The name of the store item under /store
 
-        protected override void OnPurchase(Player p, string input)
+        public override void OnPurchase(Player p, string input)
         {
             string[] args = input.SplitSpaces();
 
