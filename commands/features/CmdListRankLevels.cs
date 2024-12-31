@@ -35,19 +35,19 @@ namespace MCGalaxy.Commands.Info
                         levels.Add(map);
                     }
                 }
-
-                maps = levels.ToArray();
             }
 
             else Help(p);
 
-            if (maps.Length == 0)
+            if (levels.Count == 0)
             {
-                p.Message("There are no levels with this permission.");
+                p.Message("There are no levels with permission level: " + grp.ColoredName + ".");
                 return;
             }
 
-            p.Message(grp.Color + string.Join("&S, " + grp.Color, maps));
+            p.Message("Levels with permission level: " + grp.ColoredName);
+            string modifier = args.Length == 2 ? args[1] : "";
+            Paginator.Output(p, levels, (lvlname) => grp.Color + lvlname, "/ListRankLevels " + grp.ColoredName, "levels", modifier);
         }
 
         public override void Help(Player p)
