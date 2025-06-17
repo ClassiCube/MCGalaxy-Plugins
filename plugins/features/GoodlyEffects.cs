@@ -154,11 +154,11 @@ namespace MCGalaxy {
             }
             
             public Vec3F32 position {
-                get => new Vec3F32(x, y, z);
+                get { return new Vec3F32(x, y, z); }
                 set { x = value.X; y = value.Y; z = value.Z; }
             }
             public Vec3F32 origin {
-                get => new Vec3F32(originX, originY, originZ);
+                get { return new Vec3F32(originX, originY, originZ); }
                 set { originX = value.X; originY = value.Y; originZ = value.Z; }
             }
             public Vec3F32 positionPreserveRelativeOrigin {
