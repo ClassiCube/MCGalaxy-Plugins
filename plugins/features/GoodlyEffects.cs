@@ -18,7 +18,7 @@ namespace MCGalaxy
     public sealed class GoodlyEffects : Plugin 
     {
         public override string name { get { return "GoodlyEffects"; } }
-        public override string MCGalaxy_Version { get { return "1.9.4.5"; } }
+        public override string MCGalaxy_Version { get { return "1.9.5.2"; } }
         public override string creator { get { return "Goodly"; } }
         const float notAllowedBelowZero = 0;
         public class EffectConfig {
@@ -87,7 +87,9 @@ namespace MCGalaxy
             
             public void Save(string effectName) {
                 if (cfg == null) cfg = ConfigElement.GetAll(typeof(EffectConfig));
-                ConfigElement.SerialiseSimple(cfg, "effects/"+effectName+".properties", this);
+                using (StreamWriter w = FileIO.CreateGuarded("effects/" + effectName + ".properties")) {
+                    ConfigElement.SerialiseElements(cfg, w, this);
+                }
             }
         }
         public const int spawnerLimit = 32;
