@@ -1,4 +1,8 @@
+//reference System.Core.dll
+//pluginref _extralevelprops.dll
+
 using System;
+using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
 using System.IO;
@@ -12,11 +16,11 @@ using MCGalaxy.Util;
 using MCGalaxy.Events.ServerEvents;
 using MCGalaxy.Events.LevelEvents;
 using MCGalaxy.Events.PlayerEvents;
+using ExtraLevelProps;
 
-namespace MCGalaxy 
-{
-    public sealed class GoodlyEffects : Plugin 
-    {
+namespace MCGalaxy {
+    
+    public sealed class GoodlyEffects : Plugin {
         public override string name { get { return "GoodlyEffects"; } }
         public override string MCGalaxy_Version { get { return "1.9.5.2"; } }
         public override string creator { get { return "Goodly"; } }
@@ -96,6 +100,24 @@ namespace MCGalaxy
         public static int spawnerAccum;
         public static Dictionary<Level, List<EffectSpawner>> spawnersAtLevel = new Dictionary<Level, List<EffectSpawner>>();
         public class EffectSpawner {
+            
+            public EffectSpawner Clone(string newName) {
+                EffectSpawner clone = new EffectSpawner();
+                clone.name = newName;
+                clone.effectName = effectName;
+                clone.owner = owner;
+                clone.x = x;
+                clone.y = y;
+                clone.z = z;
+                clone.originX = originX;
+                clone.originY = originY;
+                clone.originZ = originZ;
+                clone.spawnInterval = spawnInterval;
+                clone.spawnTimeOffset = spawnTimeOffset;
+                clone.spawnChance = spawnChance;
+                return clone;
+            }
+            
             [ConfigString] public string name;
             [ConfigString] public string effectName;
             [ConfigString] public string owner;
@@ -111,6 +133,7 @@ namespace MCGalaxy
             [ConfigInt] public int spawnTimeOffset = 0;
             //the percentage chance it has to actually spawn a particle when it's told to
             [ConfigFloat] public float spawnChance = 1;
+            
             public static bool CanEditAny(Player p) {
                 if (LevelInfo.IsRealmOwner(p.name, p.level.name)) { return true; }
                 ItemPerms perms = CommandExtraPerms.GetOrAdd("Spawner", 1, LevelPermission.Operator);
@@ -122,6 +145,30 @@ namespace MCGalaxy
                 
                 p.Message("&WYou are not allowed to {0} spawners that you did not create.", attemptedAction);
                 return false;
+            }
+            
+            public void EditEffect(Player p, string newName) {
+                if (GetEffect(p, newName) == null) { return; } //ensure new name is a valid effect
+                this.effectName = newName;
+                p.Message("Spawner &f{0}&S's effect was changed to &f{1}&S.", name, newName);
+            }
+            
+            public Vec3F32 position {
+                get => new Vec3F32(x, y, z);
+                set { x = value.X; y = value.Y; z = value.Z; }
+            }
+            public Vec3F32 origin {
+                get => new Vec3F32(originX, originY, originZ);
+                set { originX = value.X; originY = value.Y; originZ = value.Z; }
+            }
+            public Vec3F32 positionPreserveRelativeOrigin {
+                set {
+                    Vec3F32 diff = position - origin; //preserve origin
+                    
+                    position = value;
+                    
+                    origin = position - diff; //preserve origin
+                }
             }
         }
         public static void AddSpawner(EffectSpawner spawner, Level lvl, bool save) {
@@ -300,8 +347,17 @@ namespace MCGalaxy
         
         static Random rnd;
         public static Dictionary<string, EffectConfig> effectAtEffectName = new Dictionary<string, EffectConfig>();
-        
+
+        public const string NoSpawnersProp = "nospawners";
+        static readonly string[] NoSpawnersDesc = new string[] {
+            "[true/false]",
+            "If true, /spawner may not be used.",
+        };
+
         public override void Load(bool startup) {
+
+            ExtraLevelProps.ExtraLevelProps.Register(name, NoSpawnersProp, LevelPermission.Guest, NoSpawnersDesc, ExtraLevelProps.ExtraLevelProps.OnPropChangingBool);
+
             Command.Register(new CmdReloadEffects());
             Command.Register(new CmdEffect());
             Command.Register(new CmdSpawner());
@@ -328,6 +384,9 @@ namespace MCGalaxy
             ActivateSpawners();
         }
         public override void Unload(bool shutdown) {
+
+            ExtraLevelProps.ExtraLevelProps.Unregister(NoSpawnersProp);
+
             Command.Unregister(Command.Find("ReloadEffects"));
             Command.Unregister(Command.Find("Effect"));
             Command.Unregister(Command.Find("Spawner"));
@@ -477,10 +536,18 @@ namespace MCGalaxy
             p.Send(Packet.SpawnEffect(effect.ID, x, y-effect.offset, z, originX, originY-effect.offset, originZ));
         }
         
+        public static EffectConfig GetEffect(Player p, string effectName) {
+            GoodlyEffects.EffectConfig effect;
+            if (!GoodlyEffects.effectAtEffectName.TryGetValue(effectName, out effect)) {
+                p.Message("&WUnknown effect \"{0}\".", effectName);
+                p.Message("Use &T/effect list &Sto list all effects.");
+                return null;
+            }
+            return effect;
+        }
     }
     
-    public class CmdReloadEffects : Command2
-    {
+    public class CmdReloadEffects : Command2 {
         public override string name { get { return "ReloadEffects"; } }
         public override bool MessageBlockRestricted { get { return true; } }
         public override string type { get { return "fun"; } }
@@ -498,8 +565,7 @@ namespace MCGalaxy
         }
     }
     
-    public class CmdEffect : Command2
-    {
+    public class CmdEffect : Command2 {
         public override string name { get { return "Effect"; } }
         public override bool MessageBlockRestricted { get { return false; } }
         public override string type { get { return "fun"; } }
@@ -556,26 +622,27 @@ namespace MCGalaxy
             }
         }
         public void ListEffects(Player p) {
+            
+            List<string> names = new List<string>();
+            foreach(var entry in GoodlyEffects.effectAtEffectName) { names.Add("&H"+entry.Key); }
+            names.Sort((name1, name2) => string.Compare(name1, name2));
+            
             p.Message("Currently available effects:");
-            foreach(KeyValuePair<string, GoodlyEffects.EffectConfig> entry in GoodlyEffects.effectAtEffectName)
-            {
-                p.Message("&H{0}", entry.Key);
-            }
+            p.MessageLines(names);
             p.Message("Scroll up to see more effects.");
         }
-        public override void Help(Player p)
-        {
+        public override void Help(Player p) {
             p.Message("&T/Effect [effect] [x y z] [originX originY originZ] <show to all players>");
             p.Message("&HSpawns an effect");
             p.Message("&HOrigin is relative and determines the particle's direction.");
             p.Message("&HE.G. origin of 0 -1 0 will make the particles move up.");
+            p.Message("&H&WTake note: &Horigin is backwards to what you'd expect.");
             p.Message("&H[show to all players] is optional true or false.");
             p.Message("&T/Effect list &H- Lists currently available effects.");
         }
     }
     
-    public class CmdSpawner : Command2
-    {
+    public class CmdSpawner : Command2 {
         public override string name { get { return "Spawner"; } }
         //public override string shortcut { get { return "effectspawner"; } }
         public override bool MessageBlockRestricted { get { return true; } }
@@ -598,8 +665,13 @@ namespace MCGalaxy
                 };
             }
         }
-        public override void Use(Player p, string message, CommandData data)
-        {
+        
+        public override void Use(Player p, string message, CommandData data) {
+            if (p.level.GetExtraPropBool(GoodlyEffects.NoSpawnersProp)) {
+                p.Message("Spawners are disabled in this level.");
+                return;
+            }
+
             if (message == "") { Help(p); return; }
             string[] split = message.SplitSpaces(2);
             string func = split[0];
@@ -608,13 +680,15 @@ namespace MCGalaxy
             if (func.CaselessEq("tp")) { DoTP(p, args); return; }
             if (!LevelInfo.Check(p, data.Rank, p.level, "modify spawners in this level")) return;
             if (func.CaselessEq("add")) { DoAdd(p, args, data); return; }
+            if (func.CaselessEq("edit")) { DoEdit(p, args); return; }
             if (func.CaselessEq("remove")) { DoRemove(p, args); return; }
-            if (func.CaselessEq("summon")) { DoSummon(p, args); return; }
             if (func.CaselessEq("info")) { DoInfo(p, args); return; }
+            if (func.CaselessEq("copy")) { DoCopy(p, args); return; }
             p.Message("&W\"{0}\" is not a recognized argument.", func);
             p.Message("Please use &T/help spawner&S.");
             return;
         }
+        
         static void DoList(Player p, string message) {
             if (message.CaselessEq("all")) {
                 p.Message("&fADMIN DEBUG LIST");
@@ -644,67 +718,175 @@ namespace MCGalaxy
                 p.Message("You may remove spawners with &T/spawner remove&S.");
                 return;
             }
-            string[] words = message.Split(' ');
-            if (words.Length < 8) {
-                p.Message("&WTo add a spawner you need to provide spawner name, effect, x, y, z, originX, originY, and originZ.");
+            string[] words = message.SplitSpaces();
+            if (words.Length < 2) {
+                p.Message("&WTo add a spawner you need to provide a spawner name and effect.");
+                p.Message("Use &T/effect list &Sto list all effects.");
                 return;
             }
             string spawnerName = words[0];
             if (SpawnerNameExists(p, spawnerName)) { return; }
+            
             string effectName = words[1];
-            GoodlyEffects.EffectConfig effect;
-            if (!GoodlyEffects.effectAtEffectName.TryGetValue(effectName, out effect)) {
-                p.Message("&WUnknown effect \"{0}\".", effectName);
-                return;
+            if (GoodlyEffects.GetEffect(p, effectName) == null) {
+                return; //ensure the effect name is valid
             }
             
-            float x = 0, y = 0, z = 0;
-            float originX = 0, originY = 0, originZ = 0;
-            int spawnInterval = 0;
-            int spawnTimeOffset = 0;
-            float spawnChance = 1f;
-            if (!GetCoord(p, words[2], p.Pos.BlockX,            "x", out x)) { return; };
-            if (!GetCoord(p, words[3], p.Pos.FeetBlockCoords.Y, "y", out y)) { return; };
-            if (!GetCoord(p, words[4], p.Pos.BlockZ,            "z", out z)) { return; };
-            if (!GetCoord(p, words[5], p.Pos.BlockX,            "originX", out originX)) { return; };
-            if (!GetCoord(p, words[6], p.Pos.FeetBlockCoords.Y, "originY", out originY)) { return; };
-            if (!GetCoord(p, words[7], p.Pos.BlockZ,            "originZ", out originZ)) { return; };
-            if (words.Length > 8) {
-                if (!CommandParser.GetInt(p, words[8], "spawn interval", ref spawnInterval, 0, 600)) { return; }
-            }
-            if (words.Length > 9) {
-                if (!CommandParser.GetInt(p, words[9], "spawn time offset", ref spawnTimeOffset, 0, 599)) { return; }
-            }
-            if (words.Length > 10) {
-                if (!CommandParser.GetReal(p, words[10], "spawn chance", ref spawnChance, 0.01f, 100)) { return; }
-                //convert percentage to 0-1
-                spawnChance /= 100f;
-            }
-            
-            //default to center of block
-            x += 0.5f;
-            y += 0.5f;
-            z += 0.5f;
-            originX += 0.5f;
-            originY += 0.5f;
-            originZ += 0.5f;
+            Vec3F32 position = NonPreciseCoords(p);
+            Vec3F32 origin = position;
+            origin.Y -= 1; //go up
             
             GoodlyEffects.EffectSpawner spawner = new GoodlyEffects.EffectSpawner();
             spawner.name = spawnerName;
             spawner.effectName = effectName;
             spawner.owner = p.name;
-            spawner.x = x;
-            spawner.y = y;
-            spawner.z = z;
-            spawner.originX = originX;
-            spawner.originY = originY;
-            spawner.originZ = originZ;
-            spawner.spawnInterval = spawnInterval;
-            spawner.spawnTimeOffset = spawnTimeOffset;
-            spawner.spawnChance = spawnChance;
+            
+            spawner.position = position;
+            spawner.origin = origin;
+            
+            spawner.spawnInterval = 0;
+            spawner.spawnTimeOffset = 0;
+            spawner.spawnChance = 1;
             
             GoodlyEffects.AddSpawner(spawner, p.level, true);
-            p.Message("Successfully added a spawner named {0}.", spawner.name);
+            p.Message("Successfully added spawner &f{0}&S.", spawner.name);
+            p.Message("Use &b/spawner edit {0} &Sto change direction and more.", spawner.name);
+        }
+        static void DoEdit(Player p, string message) {
+            const int MAX_INTERVAL = 600;
+            
+            if (message.Length == 0) {
+                p.Message("&WPlease provide the name of a spawner to edit.");
+                p.Message("&7Use &a/spawners &7to list all spawners.");
+                return;
+            }
+            
+            string[] args = message.SplitSpaces(3);
+            
+            GoodlyEffects.EffectSpawner spawner = GetSpawner(p, args[0]);
+            if (spawner == null) { return; }
+            
+            if (args.Length < 2) {
+                DoInfo(p, spawner.name);
+                p.Message("&HUse &T/spawner edit {0} [property]&H to learn how to change that property.", spawner.name);
+                return;
+            }
+            
+            if (!spawner.EditableBy(p, "summon")) { return; }
+            
+            string prop = args[1].ToLower();
+            string value = args.Length < 3 ? "" : args[2];
+            string[] values = value.SplitSpaces();
+            
+            switch (prop) {
+                case "name":
+                    if (value == "") {
+                        p.Message("&HProvide a name for the spawner.");
+                        return;
+                    }
+                    if (SpawnerNameExists(p, value)) { return; }
+                    p.Message("Set &f{0}&S's name to &f{1}&S.", spawner.name, value);
+                    spawner.name = value;
+                    break;
+                case "effect":
+                    if (value == "") {
+                        p.Message("&HProvide an effect for the spawner to spawn.");
+                        p.Message("&HUse &T/effects &Hto view available effects.");
+                        p.Message("&HExample: &T/spawner edit {0} effect steam", spawner.name);
+                        return;
+                    }
+                    spawner.EditEffect(p, value);
+                    break;
+                case "owner":
+                    p.Message("&WThe owner of a spawner cannot be edited.");
+                    break;
+                case "pos":
+                case "position":
+                    if (value == "") {
+                        p.Message("&HProvide x y z coordinates for spawner position.");
+                        p.Message("&HUse ~ for a coord to move the spawner relative to its current position.");
+                        p.Message("&HOr type &bhere&H or &bhereprecise&H to move the spawner to your position.");
+                        p.Message("&HExample: &T/spawner edit {0} pos ~ ~1 ~", spawner.name);
+                        return;
+                    }
+                    
+                    
+                    //Modify via temporary variable because "ref" does not work for setters
+                    Vec3F32 pos = spawner.position;
+                         if (value.CaselessEq("here")) { pos = NonPreciseCoords(p); }
+                    else if (value.CaselessEq("hereprecise")) { pos = PreciseCoords(p); }
+                    else {
+                        if (!GetCoords(p, values, 0, ref pos)) { return; }
+                    }
+                    spawner.positionPreserveRelativeOrigin = pos;
+                    
+                    
+                    p.Message("Moved &f{0}&S to &f{1} {2} {3}&S.", spawner.name, spawner.x, spawner.y, spawner.z);
+                    
+                    break;
+                case "dir":
+                case "direction":
+                    if (value == "") {
+                        p.Message("&HProvide x y z difference for spawner direction.");
+                        p.Message("&HOr type &bhere&H or &bhereprecise&H to make the direction towards yourself.");
+                        p.Message("&HExample ( up ): &T/spawner edit {0} dir 0 1 0", spawner.name);
+                        return;
+                    }
+                    
+                    Vec3F32 dir = new Vec3F32(0,0,0);
+                    
+                         if (value.CaselessEq("here"))        { dir = NonPreciseCoords(p) - spawner.position; }
+                    else if (value.CaselessEq("hereprecise")) { dir = PreciseCoords(p)    - spawner.position; }
+                    else {
+                        if (!GetCoords(p, values, 0, ref dir, "direction")) { return; }
+                    }
+                    
+                    dir = dir - spawner.position;
+                    
+                    spawner.origin = new Vec3F32(-dir.X, -dir.Y, -dir.Z);
+                    
+                    string origin = FormatOrigin(spawner.x, spawner.y, spawner.z, spawner.originX, spawner.originY, spawner.originZ);
+                    p.Message("Set &f{0}&S's direction to &f{1}&S.", spawner.name, origin);
+                    
+                    break;
+                case "interval":
+                    if (value == "") {
+                        p.Message("&HProvide a number between 0 and {0} for spawner interval.", MAX_INTERVAL);
+                        p.Message("&HInterval is how many ticks to wait between spawning.");
+                        p.Message("&H0 is the fastest and spawns once every 10th of a second.");
+                        return;
+                    }
+                    if (!CommandParser.GetInt(p, value, "interval", ref spawner.spawnInterval, 0, MAX_INTERVAL)) { return; }
+                    p.Message("Set &f{0}&S's interval to &f{1}&S.", spawner.name, spawner.spawnInterval);
+                    break;
+                case "intervaloffset":
+                    if (value == "") {
+                        p.Message("&HProvide a number between 0 and {0} for spawner interval offset.", MAX_INTERVAL-1);
+                        p.Message("&HInterval offset changes when an effect is spawned relative to other spawners.");
+                        p.Message("&HThis value will make no difference when interval is 0.");
+                        return;
+                    }
+                    if (!CommandParser.GetInt(p, value, "interval", ref spawner.spawnTimeOffset, 0, MAX_INTERVAL-1)) { return; }
+                    p.Message("Set &f{0}&S's intervaloffset to &f{1}&S.", spawner.name, spawner.spawnTimeOffset);
+                    break;
+                case "chance":
+                    if (value == "") {
+                        p.Message("&HProvide a number between 0.0 and 100.0 for spawner chance.");
+                        p.Message("&HThis controls how likely an effect is to spawn, allowing irregularly appearing effects.");
+                        return;
+                    }
+                    float spawnChance = 100;
+                    if (!CommandParser.GetReal(p, value, "chance", ref spawnChance, 0.01f, 100)) { return; }
+                    spawnChance /= 100f; //convert percentage to 0-1
+                    spawner.spawnChance = spawnChance;
+                    p.Message("Set &f{0}&S's chance to &f{1}%&S.", spawner.name, spawner.spawnChance * 100);
+                    break;
+                default:
+                    p.Message("&WThere is no spawner property \"{0}\"", prop);
+                    EditHelp(p, spawner);
+                    break;
+            }
+            GoodlyEffects.SpawnersFile.Save(p.level);
         }
         static void DoRemove(Player p, string message) {
             if (message.CaselessEq("all")) {
@@ -721,17 +903,13 @@ namespace MCGalaxy
                 p.Message("There are no spawners in {0}&S.", p.level.ColoredName);
                 return;
             }
-            int matches;
-            GoodlyEffects.EffectSpawner spawner = Matcher.Find(p, message, out matches,
-                                                                     GoodlyEffects.spawnersAtLevel[p.level],
-                                                                     x => true,
-                                                                     x => x.name,
-                                                                     "effect spawners");
-            if (matches > 1 || spawner == null) { return; }
-            if (spawner.EditableBy(p, "remove")) {
-                p.Message("Removed spawner {0}.", spawner.name);
-                GoodlyEffects.RemoveSpawner(spawner, p.level, true);
-            }
+            
+            GoodlyEffects.EffectSpawner spawner = GetSpawner(p, message);
+            if (spawner == null) { return; }
+            if (!spawner.EditableBy(p, "remove")) { return; }
+            
+            p.Message("Removed spawner {0}.", spawner.name);
+            GoodlyEffects.RemoveSpawner(spawner, p.level, true);
         }
         static void DoTP(Player p, string message) {
             if (!Hacks.CanUseHacks(p)) {
@@ -743,13 +921,10 @@ namespace MCGalaxy
                 p.Message("There are no spawners in {0}&S to teleport to.", p.level.ColoredName);
                 return;
             }
-            int matches;
-            GoodlyEffects.EffectSpawner spawner = Matcher.Find(p, message, out matches,
-                                                                     GoodlyEffects.spawnersAtLevel[p.level],
-                                                                     x => true,
-                                                                     x => x.name,
-                                                                     "effect spawners");
-            if (matches > 1 || spawner == null) { return; }
+            
+            GoodlyEffects.EffectSpawner spawner = GetSpawner(p, message);
+            if (spawner == null) { return; }
+            
             Command.Find("tp").Use(p, "-precise "+(int)(spawner.x*32)+" "+(int)(spawner.y*32)+" "+(int)(spawner.z*32));
         }
         static void DoInfo(Player p, string message) {
@@ -758,147 +933,76 @@ namespace MCGalaxy
                 p.Message("There are no spawners in {0}&S to get info from", p.level.ColoredName);
                 return;
             }
-            int matches;
-            GoodlyEffects.EffectSpawner spawner = Matcher.Find(p, message, out matches,
-                                                                     GoodlyEffects.spawnersAtLevel[p.level],
-                                                                     x => true,
-                                                                     x => x.name,
-                                                                     "effect spawners");
-            if (matches > 1 || spawner == null) { return; }
+            
+            GoodlyEffects.EffectSpawner spawner = GetSpawner(p, message);
+            if (spawner == null) { return; }
             
             string origin = FormatOrigin(spawner.x, spawner.y, spawner.z, spawner.originX, spawner.originY, spawner.originZ);
             p.Message("Spawner &f{0}&S has:", spawner.name);
+            p.Message("  Name: &f{0}", spawner.name);
             p.Message("  Effect: &f{0}", spawner.effectName);
             p.Message("  Owner: &f{0}", spawner.owner);
-            p.Message("  Position: (&f{0} {1} {2}&S)", spawner.x, spawner.y, spawner.z);
-            p.Message("  Origin: (&f{0}&S)", origin);
-            p.Message("  Spawn interval (10th of a second): &f{0}", spawner.spawnInterval);
-            p.Message("  Spawn interval offset (10th of a second): &f{0}", spawner.spawnTimeOffset);
-            p.Message("  Spawn chance: &f{0}%", spawner.spawnChance * 100); //convert to percentage
+            p.Message("  Position (pos): (&f{0} {1} {2}&S)", spawner.x, spawner.y, spawner.z);
+            p.Message("  Direction (dir): (&f{0}&S)", origin);
+            p.Message("  Interval: &f{0}", spawner.spawnInterval);
+            p.Message("  IntervalOffset: &f{0}", spawner.spawnTimeOffset);
+            p.Message("  Chance: &f{0}%", spawner.spawnChance * 100); //convert to percentage
+        }
+        static void DoCopy(Player p, string message) {
+            string[] args = message.SplitSpaces();
+            if (args.Length != 2) {
+                p.Message("&WPlease provide the name of a spawner to copy and the copy name.");
+                p.Message("&7Use &a/spawners &7to list all spawners.");
+                return;
+            }
+            string spawnerName = args[0];
+            string cloneName = args[1];
+            
+            GoodlyEffects.EffectSpawner spawner = GetSpawner(p, spawnerName);
+            if (spawner == null) { return; }
+            
+            if (SpawnerNameExists(p, cloneName)) { return; }
+            
+            GoodlyEffects.EffectSpawner clone = spawner.Clone(cloneName);
+            clone.positionPreserveRelativeOrigin = NonPreciseCoords(p);
+            GoodlyEffects.AddSpawner(clone, p.level, true);
+            p.Message("Successfully cloned spawner &f{0}&S from &f{1}&S.", clone.name, spawner.name);
+            p.Message("Use &b/spawner edit {0} &Sto change direction and more.", clone.name);
         }
         static string FormatOrigin(float X, float Y, float Z, float oX, float oY, float oZ) {
             float rX = oX - X;
             float rY = oY - Y;
             float rZ = oZ - Z;
-            string a = (rX == 0) ? "" : rX.ToString();
-            string b = (rY == 0) ? "" : rY.ToString();
-            string c = (rZ == 0) ? "" : rZ.ToString();
-            return String.Format("~{0} ~{1} ~{2}", a, b, c);
-        }
-        static void DoSummon(Player p, string message) {
-            if (message == "") { p.Message("&WPlease provide the name of a spawner to summon."); return; }
-            string[] args = message.SplitSpaces(2);
-            string spawnerName = args[0];
-            bool precise = (args.Length > 1) ? args[1].CaselessEq("precise") : false;
-            p.Message("precise is {0}", precise);
-                
-            if (!GoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) {
-                p.Message("There are no spawners in {0}&S.", p.level.ColoredName);
-                return;
-            }
-            int matches;
-            GoodlyEffects.EffectSpawner spawner = Matcher.Find(p, spawnerName, out matches,
-                                                                     GoodlyEffects.spawnersAtLevel[p.level],
-                                                                     x => true,
-                                                                     x => x.name,
-                                                                     "effect spawners");
-            if (matches > 1 || spawner == null) { return; }
-            if (spawner.EditableBy(p, "summon")) {
-                float diffX = spawner.x - spawner.originX;
-                float diffY = spawner.y - spawner.originY;
-                float diffZ = spawner.z - spawner.originZ;
-                
-                if (precise) {
-                    spawner.x = (float)(p.Pos.X) / 32f;
-                    spawner.y = (float)(p.Pos.Y - Entities.CharacterHeight) / 32f;
-                    spawner.z = (float)(p.Pos.Z) / 32f;
-                } else {
-                    spawner.x = p.Pos.BlockX;
-                    spawner.y = p.Pos.FeetBlockCoords.Y;
-                    spawner.z = p.Pos.BlockZ;
-                    //center in block
-                    spawner.x += 0.5f;
-                    spawner.y += 0.5f;
-                    spawner.z += 0.5f;
-                }
-                
-                spawner.originX = spawner.x - diffX;
-                spawner.originY = spawner.y - diffY;
-                spawner.originZ = spawner.z - diffZ;
-                if (precise) {
-                    p.Message("Summoned spawner {0} to your precise feet position.", spawner.name);
-                } else {
-                    p.Message("Summoned spawner {0} to your block position.", spawner.name);
-                }
-                GoodlyEffects.SpawnersFile.Save(p.level);
-            }
+            string a = (-rX).ToString();
+            string b = (-rY).ToString();
+            string c = (-rZ).ToString();
+            return String.Format("{0} {1} {2}", a, b, c);
         }
         
-        public override void Help(Player p)
-        {
-            p.Message("&HSpawner help page 1:");
-            p.Message("&T/Spawner add");
-            p.Message("&T[name] [effect] [x y z] [originX originY originZ]");
-            p.Message("&T<interval> <time offset> <spawn % chance = 100>");
+        
+        public override void Help(Player p) {
+            p.Message("&T/Spawner add [name] [effect]");
             p.Message("&HAdds an effect spawner to the world.");
-            p.Message("&HPlease use &T/help spawner add &Hfor details on adding.");
-            p.Message("&HTo read help page 2, type &T/help spawner 2");
+            p.Message("&T/Spawner edit [name] <prop> &H- edit/move a spawner.");
+            EditHelp(p);
+            p.Message("&HWhen editing spawner position or direction,");
+            p.Message("&Hyou can use \"here\" or \"hereprecise\" for your position.");
+            p.Message("&T/Spawner remove [name] &H- removes a spawner.");
+            p.Message("&HIf [name] is \"all\", all spawners are removed.");
+            p.Message("&T/Spawner tp [name] &H- teleports you to a spawner.");
+            p.Message("&T/Spawner list &H- lists spawners in current level.");
+            p.Message("&T/Spawner copy [name] [newName] &H- clones a spawner.");
         }
-        public override void Help(Player p, string message) {
-            if (message.CaselessEq("2")) {
-                p.Message("&HSpawner help page 2:");
-                p.Message("&T/Spawner remove [name] &H- removes a spawner.");
-                p.Message("&HIf [name] is \"all\", all spawners are removed.");
-                p.Message("&T/Spawner tp [name] &H- teleports you to a spawner.");
-                p.Message("&T/Spawner summon [name] <style> &H- summons a spawner to");
-                p.Message("&Hyour block position. If <style> is \"precise\",");
-                p.Message("&Hthe spawner is summoned to your exact feet position.");
-                p.Message("&T/Spawner list &H- lists spawners in current level.");
-                p.Message("&T/Spawner info [name] &H- displays info of spawner.");
-                return;
-            }
-            if (message.CaselessEq("add")) {
-                p.Message("&fRequired arguments for adding a spawner:");
-                p.Message("&T[name] &His used to identify the spawner.");
-                p.Message("&T[effect] &H- the effect this spawner creates.");
-                p.Message("&HUse &T/effect list &Hto view available effects.");
-                p.Message("&T[x y z] &H- the coords the effect spawns around.");
-                p.Message("&T[origin] &H- the coords the effect moves away from.");
-                p.Message("&HTIP: use ~ for coords relative to you.");
-                p.Message("&HE.G. &T~ ~0.5 ~");
-                p.Message("&Hwould make coords at the top of the block you're standing in.");
-                p.Message("&HUse &T/help spawner options &Hfor optional arguments");
-                return;
-            }
-            if (message.CaselessEq("options")) {
-                p.Message("&fOptional arguments for adding a spawner:");
-                p.Message("&T<interval> &H- how long to wait between spawns.");
-                p.Message("&HAn interval of 10 would spawn once per second.");
-                p.Message("&T<time offset> &Hoffsets when the effect spawns.");
-                p.Message("&HAn offset of 5 means half a second.");
-                p.Message("&T<spawn % chance> &H- chance the effect spawns.");
-                p.Message("&HThe default is 100, which means it always spawns.");
-                return;
-            }
-            p.Message("There is no help page named \"{0}\".", message);
+        static void EditHelp(Player p, GoodlyEffects.EffectSpawner spawner = null) {
+            string name = (spawner == null) ? "[spawner]" : spawner.name;
+            p.Message("&T/Spawner info {0} &H- show editable properties.", name);
         }
-        //stolen from CommandParser.cs. Modified to work with float instead of int
-        static bool GetCoord(Player p, string arg, float cur, string axis, out float value) {
-            bool relative = arg[0] == '~';
-            if (relative) arg = arg.Substring(1);
-            value = 0;
-            // ~ should work as ~0
-            if (relative && arg.Length == 0) { value += cur; return true; }
-            
-            if (!CommandParser.GetReal(p, arg, axis, ref value)) return false;
-            if (relative) value += cur;
-            return true;
-        }
+
         static bool SpawnerNameExists(Player p, string name) {
             if (!GoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) { return false; }
             foreach (GoodlyEffects.EffectSpawner spawner in GoodlyEffects.spawnersAtLevel[p.level]) {
                 if (name.CaselessEq(spawner.name)) {
-                    p.Message("A spawner named \"{0}\" already exists.", spawner.name);
+                    p.Message("&WA spawner named \"{0}\" already exists.", spawner.name);
                     return true;
                 }
             }
@@ -908,5 +1012,41 @@ namespace MCGalaxy
             if (!GoodlyEffects.spawnersAtLevel.ContainsKey(lvl)) { return 0; }
             return GoodlyEffects.spawnersAtLevel[lvl].Count;
         }
+        
+        static GoodlyEffects.EffectSpawner GetSpawner(Player p, string message) {
+            if (!GoodlyEffects.spawnersAtLevel.ContainsKey(p.level)) {
+                p.Message("There are no spawners in {0}&S.", p.level.ColoredName);
+                return null;
+            }
+            
+            int matches;
+            GoodlyEffects.EffectSpawner spawner = Matcher.Find(p, message, out matches,
+                                                                     GoodlyEffects.spawnersAtLevel[p.level],
+                                                                     x => true,
+                                                                     x => x.name,
+                                                                     "effect spawners");
+            if (matches > 1 || spawner == null) { p.Message("Use &T/spawners &Sto list all spawners."); return null; }
+            return spawner;
+        }
+        
+        static bool GetCoords(Player p, string[] args, int argsOffset, ref Vec3F32 P, string name = "position") {
+            if (args.Length < 3 + argsOffset) { p.Message("&WNot enough arguments for {0}", name); return false; }
+            return
+                CommandParser.GetCoordFloat(p, args[argsOffset + 0], "X coordinate", ref P.X) &&
+                CommandParser.GetCoordFloat(p, args[argsOffset + 1], "Y coordinate", ref P.Y) &&
+                CommandParser.GetCoordFloat(p, args[argsOffset + 2], "Z coordinate", ref P.Z);
+        }
+        static Vec3F32 NonPreciseCoords(Player p) {
+            Vec3F32 position = new Vec3F32(p.Pos.BlockX, p.Pos.FeetBlockCoords.Y, p.Pos.BlockZ);
+            //default to center of block
+            position.X += 0.5f;
+            position.Y += 0.5f;
+            position.Z += 0.5f;
+            return position;
+        }
+        static Vec3F32 PreciseCoords(Player p) {
+            return new Vec3F32((float)(p.Pos.X) / 32f, (float)(p.Pos.Y - Entities.CharacterHeight) / 32f, (float)(p.Pos.Z) / 32f);
+        }
     }
+
 }

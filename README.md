@@ -95,7 +95,7 @@ These plugins add new features to the server.
 | **DiscordVerify** | Allow players to link their Discord accounts to their in-game accounts.
 | **FavouriteMap** | Allows players to set their favourite map which is shown in /whois.
 | **FootballInstruction** | Adds a bot AI instruction which allows kicking a bot around like a football.
-| **GoodlyEffects** | Adds support for CustomParticles CPE. Documentation can be found [here](documentation/GoodlyEffects.md).
+| **GoodlyEffects** | Adds support for CustomParticles CPE. Documentation can be found [here](documentation/GoodlyEffects.md). This plugin requires [_extralevelprops](https://github.com/NotAwesome2/Plugins?tab=readme-ov-file#_extralevelpropscs) plugin to be loaded first.
 | **HighFiveConsent** | Replaces the default /high5 behaviour and requires the recipient of a high five to give consent before broadcasting to the rest of the server.
 | **HoldBlocks** | Shows the block players are holding in their player's model for other players to see.
 | **JScriptCompiler** | Compiles a plugin written in Microsoft JScript (NOT JavaScript).
