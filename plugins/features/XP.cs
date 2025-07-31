@@ -4,6 +4,7 @@
 /* 
     A secret code is generated upon plugin load. You can view the code by opening plugins/XP/secretcode.txt, or by typing '/xp code' in game.
     If you wish to update the secret code in the text file, please do not make new lines. You can type '/server reload' to update the changes without unloading the plugin.	
+
 	- To reward XP from an external plugin/command, use 'Command.Find("XP").Use(p, "secretcode " + [player] + " [xp amount]");'. 
     - For the above, 'secretcode' must be replaced with the secret code.
     - To make it easier/harder to level up, modify the "0.02" value accordingly.
@@ -12,8 +13,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+
 using MCGalaxy;
 using MCGalaxy.Commands;
+using MCGalaxy.DB;
 using MCGalaxy.Events.ServerEvents;
 using MCGalaxy.SQL;
 
@@ -21,7 +24,7 @@ namespace MCGalaxy
 {
     public class XP : Plugin
     {
-        public override string creator { get { return "Venk"; } }
+        public override string creator { get { return "RainZhang"; } }
         public override string MCGalaxy_Version { get { return "1.9.3.0"; } }
         public override string name { get { return "XP"; } }
 
@@ -30,6 +33,8 @@ namespace MCGalaxy
         public const string PATH                = "plugins/XP/";
         public const string PATH_SECRET_CODE    = PATH + "secretcode.txt";
         public static string SECRET_CODE        = "notset";
+
+        private TopStat levelStat, xpStat;
         #endregion
 
         public override void Load(bool startup)
@@ -41,6 +46,11 @@ namespace MCGalaxy
 
             Command.Register(new CmdXP());
             InitDB();
+
+            xpStat = new DBTopStat("XP", "Most XP", "Levels", "XP", TopStat.FormatInteger);
+            levelStat = new DBTopStat("Levels", "Highest level", "Levels", "Level", TopStat.FormatInteger);
+            TopStat.Register(xpStat);
+            TopStat.Register(levelStat);
         }
 
         public override void Unload(bool shutdown)
@@ -48,6 +58,9 @@ namespace MCGalaxy
             OnConfigUpdatedEvent.Unregister(HandleConfigUpdated);
 
             Command.Unregister(Command.Find("XP"));
+            
+            TopStat.Unregister(xpStat);
+            TopStat.Unregister(levelStat);
         }
 
         ColumnDesc[] createXP = new ColumnDesc[] {
@@ -59,7 +72,7 @@ namespace MCGalaxy
 
         void InitDB()
         {
-            Database.CreateTable("XP", createXP);
+            Database.CreateTable("Levels", createXP);
         }
 
         private void HandleConfigUpdated()
@@ -104,7 +117,7 @@ namespace MCGalaxy
     public sealed class CmdXP : Command2
     {
         public override string name { get { return "XP"; } }
-        public override string type { get { return "economy"; } }
+        public override string type { get { return CommandTypes.Economy; } }
         public override CommandPerm[] ExtraPerms
         {
             get
@@ -160,7 +173,7 @@ namespace MCGalaxy
 
         public static void UpdateXP(string player, int number, Player actor = null)
         {
-            List<string[]> rows = Database.GetRows("XP", "Name, XP, Level", "WHERE Name=@0", player);
+            List<string[]> rows = Database.GetRows("Levels", "Name, XP, Level", "WHERE Name=@0", player);
 
             const string MANUAL_GIVE_MSG = "{actor} &Sgave you &b{number} &SXP.";
             const string MANUAL_TAKE_MSG = "{actor} &Stook &b{number}&S XP from you.";
@@ -180,23 +193,24 @@ namespace MCGalaxy
                 int newLevel = checkLevelUp(curXP, number);
 
                 Player pl = PlayerInfo.FindExact(player); // Find person receiving XP
-                if (actor != null)
-                {
-                    string message = 0 > number ? MANUAL_TAKE_MSG : MANUAL_GIVE_MSG;
-                    pl.Message(
-                        message
-                        .Replace("{actor}", pl.FormatNick(actor))
-                        .Replace("{number}", Math.Abs(number).ToString())
-                        );
-                }
                 int curLevel = 0;
+
+                Database.AddRow("Levels", "Name, XP, Level", player, number, newLevel);
                 if (pl != null && curLevel != newLevel)
                 {
+                    if (actor != null)
+                    {
+                        string message = 0 > number ? MANUAL_TAKE_MSG : MANUAL_GIVE_MSG;
+                        pl.Message(
+                            message
+                            .Replace("{actor}", pl.FormatNick(actor))
+                            .Replace("{number}", Math.Abs(number).ToString())
+                            );
+                    }
+
                     pl.SetPrefix();
                     pl.Message("You are now level &b" + newLevel);
                 }
-
-                Database.AddRow("XP", "Name, XP, Level", player, number, newLevel);
                 return;
             }
             else
@@ -205,22 +219,23 @@ namespace MCGalaxy
                 int newLevel = checkLevelUp(curXP, number);
 
                 Player pl = PlayerInfo.FindExact(player); // Find person receiving XP
-                if (actor != null)
-                {
-                    string message = 0 > number ? MANUAL_TAKE_MSG : MANUAL_GIVE_MSG;
-                    pl.Message(message = message
-                        .Replace("{actor}", pl.FormatNick(actor))
-                        .Replace("{number}", Math.Abs(number).ToString())
-                    );
-                }
                 int curLevel = GetInt(rows[0][2]);
+
+                Database.UpdateRows("Levels", "XP=@1, Level=@2", "WHERE NAME=@0", player, curXP + number, newLevel); // Update XP and level
                 if (pl != null && curLevel != newLevel)
                 {
+                    if (actor != null)
+                    {
+                        string message = 0 > number ? MANUAL_TAKE_MSG : MANUAL_GIVE_MSG;
+                        pl.Message(message = message
+                            .Replace("{actor}", pl.FormatNick(actor))
+                            .Replace("{number}", Math.Abs(number).ToString())
+                        );
+                    }
+
                     pl.SetPrefix();
                     pl.Message("You are now level &b" + newLevel);
                 }
-
-                Database.UpdateRows("XP", "XP=@1, Level=@2", "WHERE NAME=@0", player, curXP + number, newLevel); // Update XP and level
             }
         }
 
@@ -278,7 +293,7 @@ namespace MCGalaxy
             else
             {
                 string pl = message.Length == 0 ? p.truename : args[0];
-                List<string[]> rows = Database.GetRows("XP", "Name,XP,Level", "WHERE Name=@0", pl);
+                List<string[]> rows = Database.GetRows("Levels", "Name,XP,Level", "WHERE Name=@0", pl);
 
                 int userLevel = rows.Count == 0 ? 0 : int.Parse(rows[0][2]);  // User level
                 int curXP = rows.Count == 0 ? 0 : int.Parse(rows[0][1]);  // User XP
@@ -292,6 +307,7 @@ namespace MCGalaxy
                     if (PlayerInfo.FindMatchesPreferOnline(p, args[0]) == null) return;
                     p.Message("&b" + args[0] + "&e's Information:");
                 }
+
 
                 if (userLevel == 100)
                 {
