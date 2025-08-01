@@ -24,7 +24,7 @@ namespace MCGalaxy
 {
     public class XP : Plugin
     {
-        public override string creator { get { return "RainZhang"; } }
+        public override string creator { get { return "Venk"; } }
         public override string MCGalaxy_Version { get { return "1.9.3.0"; } }
         public override string name { get { return "XP"; } }
 
