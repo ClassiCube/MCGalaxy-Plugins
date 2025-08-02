@@ -26,11 +26,11 @@ namespace MCGalaxy
     {
         public override string creator { get { return "Venk"; } }
         public override string MCGalaxy_Version { get { return "1.9.3.0"; } }
-        public override string name { get { return "XP"; } }
+        public override string name { get { return "_XP"; } }
 
         #region Variables
         // DO NOT MODIFY.
-        public const string PATH                = "plugins/XP/";
+        public const string PATH                = "plugins/_XP/";
         public const string PATH_SECRET_CODE    = PATH + "secretcode.txt";
         public static string SECRET_CODE        = "notset";
 
@@ -61,18 +61,6 @@ namespace MCGalaxy
             
             TopStat.Unregister(xpStat);
             TopStat.Unregister(levelStat);
-        }
-
-        ColumnDesc[] createXP = new ColumnDesc[] {
-            new ColumnDesc("Name", ColumnType.VarChar, 16),
-            new ColumnDesc("XP", ColumnType.Int32),
-            new ColumnDesc("Level", ColumnType.Int32),
-        };
-
-
-        void InitDB()
-        {
-            Database.CreateTable("Levels", createXP);
         }
 
         private void HandleConfigUpdated()
@@ -112,6 +100,27 @@ namespace MCGalaxy
             }
             return str;
         }
+
+        #region Database Related Methods
+        ColumnDesc[] createXP = new ColumnDesc[] {
+            new ColumnDesc("Name", ColumnType.VarChar, 16),
+            new ColumnDesc("XP", ColumnType.Int32),
+            new ColumnDesc("Level", ColumnType.Int32),
+        };
+
+
+        void InitDB()
+        {
+            Database.CreateTable("Levels", createXP);
+        }
+
+        public static void GetXPData(string name, out int level, out int xp)
+        {
+            List<string[]> rows = Database.GetRows("Levels", "Name, XP, Level", "WHERE Name=@0", name);
+            level = rows.Count == 0 ? 0 : int.Parse(rows[0][2]);
+            xp = rows.Count == 0 ? 0 : int.Parse(rows[0][1]);
+        }
+        #endregion
     }
 
     public sealed class CmdXP : Command2

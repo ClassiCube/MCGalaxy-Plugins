@@ -1,4 +1,5 @@
 //reference System.dll
+//pluginref _XP.dll
 
 /*
  * Omegabuild Development
@@ -24,16 +25,8 @@ namespace External
         public override string MCGalaxy_Version { get { return "1.9.4.2"; } }
         public override string creator { get { return "SpicyCombo"; } }
 
-        // yeah
-        public const string referee_tag = "&2[Ref] ";
-
-
-        static int GetLevel(string name)
-        {
-            List<string[]> rows = Database.GetRows("Levels", "Name, XP, Level", "WHERE Name=@0", name);
-            int level = rows.Count == 0 ? 0 : int.Parse(rows[0][2]);
-            return level;
-        }
+        // The default MCGalaxy referee tag, so we can replace it with the shortened version 
+        public const string REFEREE_TAG = "&2[Ref] ";
 
         static string Path; const string key = "HIDDEN_PREFIX_KEY";
 
@@ -166,18 +159,18 @@ namespace External
             PlayerPrefixSetting pps = Get(p);
             bool change = false;
 
-            if (p.Game.Referee && list.Contains(referee_tag))
+            if (p.Game.Referee && list.Contains(REFEREE_TAG))
             {
                 change = true;
-                int index = list.IndexOf(referee_tag);
-                list.Remove(referee_tag);
+                int index = list.IndexOf(REFEREE_TAG);
+                list.Remove(REFEREE_TAG);
                 list.Insert(index, "&2(R) ");
             }
 
             if (!pps.Level)
             {
                 change = true;
-                int userLevel = GetLevel(p.name);
+                XP.GetXPData(p.name, out int userLevel, out _);
 
                 list.Insert(0, "&a" + userLevel.ToString() + " " + p.color);
             }
