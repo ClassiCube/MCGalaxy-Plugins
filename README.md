@@ -122,7 +122,8 @@ These plugins add new features to the server.
 | **VenkLib** | Essential commands every server should have.
 | **VenkSurvival** | Adds survival options such as PvP, drowning, fall damage, hunger, mining and more. Requires VenkLib plugin. Note: Extremely old.
 | **VisualBasicCompiler** | Allows compilation of plugins written in Visual Basic.
-| **XP** | Adds an XP leveling system.
+| **_XP** | Adds an XP leveling system.
+| **FormatPrefix** | Adds a prefix in front of the player indicating their current level from the XP plugin, alongside an expansible /HidePrefix command.
 
 #### Utilities
 These plugins are tools designed to help staff, improve server quality, and automate tasks.
