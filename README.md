@@ -153,6 +153,8 @@ https://github.com/AllergenStudios/MCGalaxy-Plugins
 
 https://github.com/brycemthompson/McClassic-ClassiCube-Plugins-Cmds
 
+https://github.com/commaster101/alright-classicube-plugins
+
 https://github.com/commaster101/classicube-thingys
 
 https://github.com/dflat2/MCGalaxyPlugins
